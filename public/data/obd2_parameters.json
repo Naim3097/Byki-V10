@@ -1,0 +1,1102 @@
+{
+  "_meta": {
+    "source": "BYKI Workshop Diagnostic — src/data/obd2-parameters.ts",
+    "standard": "SAE J1979 / ISO 15031-5",
+    "description": "Complete OBD-II Mode 01 parameter database with normal ranges, warning thresholds, failure modes and diagnostic relevance",
+    "categories": [
+      "ENGINE_CORE", "FUEL_SYSTEM", "IGNITION", "EMISSIONS", "OXYGEN_SENSORS",
+      "CATALYST", "EVAP", "TEMPERATURE", "SPEED_LOAD", "AIR_FLOW",
+      "FUEL_TRIM", "TIMING", "EGR", "TURBO", "TRANSMISSION",
+      "VOLTAGE", "SECONDARY_AIR", "MISFIRE", "FREEZE_FRAME"
+    ],
+    "total_parameters": 40
+  },
+  "parameters": {
+    "0x0104": {
+      "pid": "0x0104",
+      "name": "Calculated Engine Load",
+      "shortName": "Load",
+      "description": "Indicates percentage of peak available torque. Calculated from MAF, RPM, and other inputs.",
+      "category": "ENGINE_CORE",
+      "unit": "%",
+      "formula": "A * 100 / 255",
+      "minValue": 0,
+      "maxValue": 100,
+      "normalRange": {
+        "idle": { "min": 15, "max": 35 },
+        "cruise": { "min": 25, "max": 55 },
+        "wot": { "min": 85, "max": 100 },
+        "decel": { "min": 0, "max": 20 }
+      },
+      "warningThresholds": { "high": 90, "criticalHigh": 98 },
+      "responseTime": 50,
+      "updateRate": 10,
+      "bitLength": 8,
+      "signed": false,
+      "relatedPIDs": ["0x010C", "0x0110", "0x0111", "0x010B"],
+      "failureModes": [
+        {
+          "condition": "Load > 95% at idle",
+          "symptom": "Engine struggling, possible stall",
+          "possibleCauses": ["Vacuum leak", "Clogged air filter", "MAF sensor failure", "Throttle body malfunction"],
+          "severity": "critical",
+          "dtcCodes": ["P0171", "P0174", "P0101", "P0102"]
+        },
+        {
+          "condition": "Load < 10% at cruise",
+          "symptom": "Poor acceleration, possible misfire",
+          "possibleCauses": ["Fuel delivery issue", "Ignition problem", "Compression loss"],
+          "severity": "warning",
+          "dtcCodes": ["P0300", "P0171", "P0174"]
+        }
+      ],
+      "diagnosticRelevance": "critical"
+    },
+    "0x0105": {
+      "pid": "0x0105",
+      "name": "Engine Coolant Temperature",
+      "shortName": "ECT",
+      "description": "Engine coolant temperature from the ECT sensor. Critical for fuel calculations and emissions.",
+      "category": "TEMPERATURE",
+      "unit": "°C",
+      "formula": "A - 40",
+      "minValue": -40,
+      "maxValue": 215,
+      "normalRange": {
+        "idle": { "min": 80, "max": 105 },
+        "cruise": { "min": 85, "max": 100 },
+        "wot": { "min": 90, "max": 110 },
+        "decel": { "min": 80, "max": 100 }
+      },
+      "warningThresholds": { "low": 60, "high": 105, "criticalLow": 40, "criticalHigh": 115 },
+      "responseTime": 100,
+      "updateRate": 2,
+      "bitLength": 8,
+      "signed": false,
+      "relatedPIDs": ["0x010F", "0x0106", "0x0107", "0x0146"],
+      "failureModes": [
+        {
+          "condition": "ECT > 110°C",
+          "symptom": "Engine overheating, possible damage",
+          "possibleCauses": ["Thermostat stuck closed", "Cooling fan failure", "Water pump failure", "Radiator blockage", "Head gasket leak", "Low coolant"],
+          "severity": "critical",
+          "dtcCodes": ["P0217", "P0118", "P0116"]
+        },
+        {
+          "condition": "ECT < 70°C after 10 min",
+          "symptom": "Poor fuel economy, rich running",
+          "possibleCauses": ["Thermostat stuck open", "ECT sensor failure", "Missing thermostat"],
+          "severity": "warning",
+          "dtcCodes": ["P0128", "P0117", "P0125"]
+        },
+        {
+          "condition": "ECT reading -40°C",
+          "symptom": "Open circuit in ECT sensor",
+          "possibleCauses": ["Broken wire", "Corroded connector", "Failed sensor"],
+          "severity": "critical",
+          "dtcCodes": ["P0117", "P0118"]
+        }
+      ],
+      "diagnosticRelevance": "critical"
+    },
+    "0x0106": {
+      "pid": "0x0106",
+      "name": "Short Term Fuel Trim - Bank 1",
+      "shortName": "STFT B1",
+      "description": "Immediate fuel correction applied by ECU. Positive = adding fuel (lean condition), Negative = removing fuel (rich condition).",
+      "category": "FUEL_TRIM",
+      "unit": "%",
+      "formula": "(A - 128) * 100 / 128",
+      "minValue": -100,
+      "maxValue": 99.2,
+      "normalRange": {
+        "idle": { "min": -8, "max": 8 },
+        "cruise": { "min": -5, "max": 5 },
+        "wot": { "min": -10, "max": 10 },
+        "decel": { "min": -15, "max": 15 }
+      },
+      "warningThresholds": { "low": -20, "high": 20, "criticalLow": -25, "criticalHigh": 25 },
+      "responseTime": 20,
+      "updateRate": 10,
+      "bitLength": 8,
+      "signed": false,
+      "relatedPIDs": ["0x0107", "0x0114", "0x0115", "0x0104", "0x0110"],
+      "failureModes": [
+        {
+          "condition": "STFT > 20% sustained",
+          "symptom": "Engine running lean, possible misfire",
+          "possibleCauses": ["Vacuum leak", "Low fuel pressure", "Clogged injector", "MAF sensor dirty/failed", "O2 sensor slow response", "Exhaust leak before O2"],
+          "severity": "warning",
+          "dtcCodes": ["P0171", "P0130", "P0131"]
+        },
+        {
+          "condition": "STFT < -20% sustained",
+          "symptom": "Engine running rich, black smoke",
+          "possibleCauses": ["Leaking injector", "High fuel pressure", "Stuck open purge valve", "MAF sensor over-reading", "Coolant temp sensor reading cold"],
+          "severity": "warning",
+          "dtcCodes": ["P0172", "P0132", "P0133"]
+        },
+        {
+          "condition": "STFT oscillating rapidly ±15%",
+          "symptom": "Unstable idle, surging",
+          "possibleCauses": ["O2 sensor failing", "Intermittent vacuum leak", "Injector balance issue"],
+          "severity": "warning",
+          "dtcCodes": ["P0130", "P0133", "P0171", "P0172"]
+        }
+      ],
+      "diagnosticRelevance": "critical"
+    },
+    "0x0107": {
+      "pid": "0x0107",
+      "name": "Long Term Fuel Trim - Bank 1",
+      "shortName": "LTFT B1",
+      "description": "Learned fuel correction stored in memory. Represents ongoing compensation for system variations.",
+      "category": "FUEL_TRIM",
+      "unit": "%",
+      "formula": "(A - 128) * 100 / 128",
+      "minValue": -100,
+      "maxValue": 99.2,
+      "normalRange": {
+        "idle": { "min": -10, "max": 10 },
+        "cruise": { "min": -8, "max": 8 },
+        "wot": { "min": -12, "max": 12 },
+        "decel": { "min": -12, "max": 12 }
+      },
+      "warningThresholds": { "low": -15, "high": 15, "criticalLow": -25, "criticalHigh": 25 },
+      "responseTime": 100,
+      "updateRate": 1,
+      "bitLength": 8,
+      "signed": false,
+      "relatedPIDs": ["0x0106", "0x0114", "0x0115", "0x0104", "0x0110"],
+      "failureModes": [
+        {
+          "condition": "LTFT + STFT > 25%",
+          "symptom": "Severe lean condition, possible engine damage",
+          "possibleCauses": ["Large vacuum leak", "Fuel pump weak", "Clogged fuel filter", "Multiple clogged injectors", "MAF sensor contaminated"],
+          "severity": "critical",
+          "dtcCodes": ["P0171", "P0174", "P0087"]
+        },
+        {
+          "condition": "LTFT + STFT < -25%",
+          "symptom": "Severe rich condition, catalyst damage risk",
+          "possibleCauses": ["Fuel pressure regulator failed", "Leaking injectors", "Saturated charcoal canister", "Faulty ECT sensor"],
+          "severity": "critical",
+          "dtcCodes": ["P0172", "P0175", "P0420"]
+        }
+      ],
+      "diagnosticRelevance": "critical"
+    },
+    "0x0108": {
+      "pid": "0x0108",
+      "name": "Short Term Fuel Trim - Bank 2",
+      "shortName": "STFT B2",
+      "description": "Immediate fuel correction for bank 2 (V-engines). Compare with Bank 1 for imbalance detection.",
+      "category": "FUEL_TRIM",
+      "unit": "%",
+      "formula": "(A - 128) * 100 / 128",
+      "minValue": -100,
+      "maxValue": 99.2,
+      "normalRange": {
+        "idle": { "min": -8, "max": 8 },
+        "cruise": { "min": -5, "max": 5 },
+        "wot": { "min": -10, "max": 10 },
+        "decel": { "min": -15, "max": 15 }
+      },
+      "warningThresholds": { "low": -20, "high": 20, "criticalLow": -25, "criticalHigh": 25 },
+      "responseTime": 20,
+      "updateRate": 10,
+      "bitLength": 8,
+      "signed": false,
+      "relatedPIDs": ["0x0109", "0x0107", "0x0106", "0x0116", "0x0117"],
+      "diagnosticRelevance": "critical"
+    },
+    "0x0109": {
+      "pid": "0x0109",
+      "name": "Long Term Fuel Trim - Bank 2",
+      "shortName": "LTFT B2",
+      "description": "Learned fuel correction for bank 2. Key for detecting bank-specific fuel issues on V-engines.",
+      "category": "FUEL_TRIM",
+      "unit": "%",
+      "formula": "(A - 128) * 100 / 128",
+      "minValue": -100,
+      "maxValue": 99.2,
+      "normalRange": {
+        "idle": { "min": -10, "max": 10 },
+        "cruise": { "min": -8, "max": 8 },
+        "wot": { "min": -12, "max": 12 },
+        "decel": { "min": -12, "max": 12 }
+      },
+      "warningThresholds": { "low": -15, "high": 15, "criticalLow": -25, "criticalHigh": 25 },
+      "responseTime": 100,
+      "updateRate": 1,
+      "bitLength": 8,
+      "signed": false,
+      "relatedPIDs": ["0x0108", "0x0107", "0x0106"],
+      "diagnosticRelevance": "critical"
+    },
+    "0x010B": {
+      "pid": "0x010B",
+      "name": "Intake Manifold Absolute Pressure",
+      "shortName": "MAP",
+      "description": "Absolute pressure in intake manifold. Inverse of vacuum on naturally aspirated engines; above atmospheric on boosted.",
+      "category": "AIR_FLOW",
+      "unit": "kPa",
+      "formula": "A",
+      "minValue": 0,
+      "maxValue": 255,
+      "normalRange": {
+        "idle": { "min": 25, "max": 45 },
+        "cruise": { "min": 40, "max": 75 },
+        "wot": { "min": 90, "max": 105 },
+        "decel": { "min": 10, "max": 30 }
+      },
+      "warningThresholds": { "high": 110 },
+      "responseTime": 10,
+      "updateRate": 10,
+      "bitLength": 8,
+      "signed": false,
+      "relatedPIDs": ["0x0111", "0x0104", "0x0133"],
+      "failureModes": [
+        {
+          "condition": "MAP high at idle (>55 kPa)",
+          "symptom": "High idle, lean condition, rough running",
+          "possibleCauses": ["Vacuum leak", "MAP sensor failed", "Throttle plate issue"],
+          "severity": "warning",
+          "dtcCodes": ["P0106", "P0171", "P0507"]
+        }
+      ],
+      "diagnosticRelevance": "high"
+    },
+    "0x010C": {
+      "pid": "0x010C",
+      "name": "Engine RPM",
+      "shortName": "RPM",
+      "description": "Engine crankshaft speed. Foundation PID used in nearly all system calculations.",
+      "category": "ENGINE_CORE",
+      "unit": "rpm",
+      "formula": "((A * 256) + B) / 4",
+      "minValue": 0,
+      "maxValue": 16383.75,
+      "normalRange": {
+        "idle": { "min": 600, "max": 900 },
+        "cruise": { "min": 1500, "max": 3000 },
+        "wot": { "min": 4000, "max": 7000 },
+        "decel": { "min": 600, "max": 1200 }
+      },
+      "warningThresholds": { "low": 500, "high": 6500, "criticalLow": 400, "criticalHigh": 7500 },
+      "responseTime": 10,
+      "updateRate": 10,
+      "bitLength": 16,
+      "signed": false,
+      "relatedPIDs": ["0x010D", "0x0104", "0x010E", "0x0111"],
+      "diagnosticRelevance": "critical"
+    },
+    "0x010D": {
+      "pid": "0x010D",
+      "name": "Vehicle Speed",
+      "shortName": "Speed",
+      "description": "Vehicle speed from VSS. Used for RPM/speed ratio (gear determination) and transmission analysis.",
+      "category": "SPEED_LOAD",
+      "unit": "km/h",
+      "formula": "A",
+      "minValue": 0,
+      "maxValue": 255,
+      "normalRange": {
+        "idle": { "min": 0, "max": 0 },
+        "cruise": { "min": 60, "max": 130 },
+        "wot": { "min": 0, "max": 255 },
+        "decel": { "min": 0, "max": 100 }
+      },
+      "warningThresholds": {},
+      "responseTime": 50,
+      "updateRate": 5,
+      "bitLength": 8,
+      "signed": false,
+      "relatedPIDs": ["0x010C"],
+      "diagnosticRelevance": "high"
+    },
+    "0x010E": {
+      "pid": "0x010E",
+      "name": "Timing Advance",
+      "shortName": "Timing",
+      "description": "Spark timing advance relative to TDC. Critical for combustion efficiency and knock prevention.",
+      "category": "TIMING",
+      "unit": "° BTDC",
+      "formula": "(A / 2) - 64",
+      "minValue": -64,
+      "maxValue": 63.5,
+      "normalRange": {
+        "idle": { "min": 8, "max": 20 },
+        "cruise": { "min": 20, "max": 35 },
+        "wot": { "min": 10, "max": 30 },
+        "decel": { "min": 0, "max": 10 }
+      },
+      "warningThresholds": { "low": -5, "high": 45 },
+      "responseTime": 20,
+      "updateRate": 10,
+      "bitLength": 8,
+      "signed": false,
+      "relatedPIDs": ["0x010C", "0x0104"],
+      "failureModes": [
+        {
+          "condition": "Timing retarded to 0° or negative",
+          "symptom": "Power loss, overheating, poor fuel economy",
+          "possibleCauses": ["Knock sensor failure", "Excessive knock", "Carbon buildup", "Incorrect fuel octane"],
+          "severity": "warning",
+          "dtcCodes": ["P0325", "P0330", "P0327"]
+        }
+      ],
+      "diagnosticRelevance": "high"
+    },
+    "0x010F": {
+      "pid": "0x010F",
+      "name": "Intake Air Temperature",
+      "shortName": "IAT",
+      "description": "Temperature of air entering the engine. Affects fuel calculations. Compare to ECT for thermal anomalies.",
+      "category": "TEMPERATURE",
+      "unit": "°C",
+      "formula": "A - 40",
+      "minValue": -40,
+      "maxValue": 215,
+      "normalRange": {
+        "idle": { "min": 10, "max": 50 },
+        "cruise": { "min": 10, "max": 60 },
+        "wot": { "min": 10, "max": 70 },
+        "decel": { "min": 10, "max": 60 }
+      },
+      "warningThresholds": { "high": 70, "criticalHigh": 80 },
+      "responseTime": 200,
+      "updateRate": 1,
+      "bitLength": 8,
+      "signed": false,
+      "relatedPIDs": ["0x0105"],
+      "diagnosticRelevance": "medium"
+    },
+    "0x0110": {
+      "pid": "0x0110",
+      "name": "Mass Air Flow Rate",
+      "shortName": "MAF",
+      "description": "Mass air flow measured by MAF sensor. Used to calculate fuel delivery. Most important air measurement PID.",
+      "category": "AIR_FLOW",
+      "unit": "g/s",
+      "formula": "((A * 256) + B) / 100",
+      "minValue": 0,
+      "maxValue": 655.35,
+      "normalRange": {
+        "idle": { "min": 1.5, "max": 8 },
+        "cruise": { "min": 10, "max": 30 },
+        "wot": { "min": 40, "max": 120 },
+        "decel": { "min": 0, "max": 5 }
+      },
+      "warningThresholds": {},
+      "responseTime": 10,
+      "updateRate": 10,
+      "bitLength": 16,
+      "signed": false,
+      "relatedPIDs": ["0x0104", "0x010C", "0x0111"],
+      "failureModes": [
+        {
+          "condition": "MAF < 2 g/s at idle (650-900 RPM)",
+          "symptom": "Lean condition, poor performance",
+          "possibleCauses": ["MAF sensor contaminated", "Air element damaged", "Wiring fault"],
+          "severity": "warning",
+          "dtcCodes": ["P0101", "P0102", "P0171"]
+        },
+        {
+          "condition": "MAF > 10 g/s at idle",
+          "symptom": "Rich condition, excessive fuel consumption",
+          "possibleCauses": ["Air leak causing turbulence on MAF element", "Wrong MAF installed", "MAF sensor failure"],
+          "severity": "warning",
+          "dtcCodes": ["P0101", "P0103", "P0172"]
+        }
+      ],
+      "diagnosticRelevance": "critical"
+    },
+    "0x0111": {
+      "pid": "0x0111",
+      "name": "Throttle Position Sensor",
+      "shortName": "TPS",
+      "description": "Throttle plate position. 0% = fully closed, 100% = fully open (WOT). Drive-by-wire vehicles have dual TPS.",
+      "category": "ENGINE_CORE",
+      "unit": "%",
+      "formula": "A * 100 / 255",
+      "minValue": 0,
+      "maxValue": 100,
+      "normalRange": {
+        "idle": { "min": 0, "max": 15 },
+        "cruise": { "min": 15, "max": 35 },
+        "wot": { "min": 95, "max": 100 },
+        "decel": { "min": 0, "max": 15 }
+      },
+      "warningThresholds": {},
+      "responseTime": 10,
+      "updateRate": 10,
+      "bitLength": 8,
+      "signed": false,
+      "relatedPIDs": ["0x010C", "0x0104"],
+      "diagnosticRelevance": "critical"
+    },
+    "0x0114": {
+      "pid": "0x0114",
+      "name": "O2 Sensor Voltage - Bank 1 Sensor 1",
+      "shortName": "O2 B1S1",
+      "description": "Upstream (pre-catalyst) narrowband O2 sensor. Should switch rapidly between 0.1V-0.9V in closed loop. Key closed-loop fuel control feedback.",
+      "category": "OXYGEN_SENSORS",
+      "unit": "V",
+      "formula": "A / 200",
+      "minValue": 0,
+      "maxValue": 1.275,
+      "normalRange": {
+        "idle": { "min": 0.1, "max": 0.9 },
+        "cruise": { "min": 0.1, "max": 0.9 },
+        "wot": { "min": 0.7, "max": 1.0 },
+        "decel": { "min": 0, "max": 0.2 }
+      },
+      "warningThresholds": {},
+      "responseTime": 30,
+      "updateRate": 5,
+      "bitLength": 8,
+      "signed": false,
+      "relatedPIDs": ["0x0115", "0x0106", "0x0107"],
+      "failureModes": [
+        {
+          "condition": "O2 stuck 0.45V (mid-range)",
+          "symptom": "Heater circuit failure, stuck in open loop",
+          "possibleCauses": ["O2 heater failed", "Wiring fault", "ECU relay issue"],
+          "severity": "warning",
+          "dtcCodes": ["P0135", "P0141"]
+        },
+        {
+          "condition": "O2 switching rate < 2 cycles / 10 sec at cruise",
+          "symptom": "Sluggish sensor, fuel trim accuracy degraded",
+          "possibleCauses": ["Aged sensor", "O2 contamination", "Exhaust leak"],
+          "severity": "warning",
+          "dtcCodes": ["P0133", "P0153"]
+        }
+      ],
+      "diagnosticRelevance": "critical"
+    },
+    "0x0115": {
+      "pid": "0x0115",
+      "name": "O2 Sensor Voltage - Bank 1 Sensor 2",
+      "shortName": "O2 B1S2",
+      "description": "Downstream (post-catalyst) narrowband O2 sensor. Should be stable near 0.6V if catalyst is healthy. Switching mirrors pre-cat = failed catalyst.",
+      "category": "OXYGEN_SENSORS",
+      "unit": "V",
+      "formula": "A / 200",
+      "minValue": 0,
+      "maxValue": 1.275,
+      "normalRange": {
+        "idle": { "min": 0, "max": 0.8 },
+        "cruise": { "min": 0.4, "max": 0.7 },
+        "wot": { "min": 0.6, "max": 1.0 },
+        "decel": { "min": 0, "max": 0.5 }
+      },
+      "warningThresholds": {},
+      "responseTime": 100,
+      "updateRate": 2,
+      "bitLength": 8,
+      "signed": false,
+      "relatedPIDs": ["0x0114", "0x013C"],
+      "failureModes": [
+        {
+          "condition": "Post-cat O2 switching as rapidly as pre-cat",
+          "symptom": "Catalyst efficiency below threshold",
+          "possibleCauses": ["Catalyst degraded", "Catalyst contaminated", "Wrong O2 sensor installed"],
+          "severity": "warning",
+          "dtcCodes": ["P0420", "P0430"]
+        }
+      ],
+      "diagnosticRelevance": "high"
+    },
+    "0x0116": {
+      "pid": "0x0116",
+      "name": "O2 Sensor Voltage - Bank 2 Sensor 1",
+      "shortName": "O2 B2S1",
+      "description": "Upstream pre-catalyst O2 sensor, bank 2. V-engines only. Compare bank 1 vs bank 2 for bank-specific fuel issues.",
+      "category": "OXYGEN_SENSORS",
+      "unit": "V",
+      "formula": "A / 200",
+      "minValue": 0,
+      "maxValue": 1.275,
+      "normalRange": {
+        "idle": { "min": 0.1, "max": 0.9 },
+        "cruise": { "min": 0.1, "max": 0.9 },
+        "wot": { "min": 0.7, "max": 1.0 },
+        "decel": { "min": 0, "max": 0.2 }
+      },
+      "warningThresholds": {},
+      "responseTime": 30,
+      "updateRate": 5,
+      "bitLength": 8,
+      "signed": false,
+      "relatedPIDs": ["0x0117", "0x0108", "0x0109"],
+      "diagnosticRelevance": "high"
+    },
+    "0x0117": {
+      "pid": "0x0117",
+      "name": "O2 Sensor Voltage - Bank 2 Sensor 2",
+      "shortName": "O2 B2S2",
+      "description": "Downstream post-catalyst O2 sensor, bank 2. Should be stable if bank 2 catalyst is healthy.",
+      "category": "OXYGEN_SENSORS",
+      "unit": "V",
+      "formula": "A / 200",
+      "minValue": 0,
+      "maxValue": 1.275,
+      "normalRange": {
+        "idle": { "min": 0.4, "max": 0.7 },
+        "cruise": { "min": 0.4, "max": 0.7 },
+        "wot": { "min": 0.6, "max": 1.0 },
+        "decel": { "min": 0, "max": 0.5 }
+      },
+      "warningThresholds": {},
+      "responseTime": 100,
+      "updateRate": 2,
+      "bitLength": 8,
+      "signed": false,
+      "relatedPIDs": ["0x0116", "0x013D"],
+      "diagnosticRelevance": "high"
+    },
+    "0x012C": {
+      "pid": "0x012C",
+      "name": "EGR Commanded",
+      "shortName": "EGR Cmd",
+      "description": "Commanded EGR opening percentage. At idle should be 0%. Opens at cruise to reduce NOx emissions.",
+      "category": "EGR",
+      "unit": "%",
+      "formula": "A * 100 / 255",
+      "minValue": 0,
+      "maxValue": 100,
+      "normalRange": {
+        "idle": { "min": 0, "max": 2 },
+        "cruise": { "min": 10, "max": 40 },
+        "wot": { "min": 0, "max": 5 },
+        "decel": { "min": 0, "max": 0 }
+      },
+      "warningThresholds": {},
+      "responseTime": 50,
+      "updateRate": 5,
+      "bitLength": 8,
+      "signed": false,
+      "relatedPIDs": ["0x012D", "0x010B"],
+      "diagnosticRelevance": "medium"
+    },
+    "0x012D": {
+      "pid": "0x012D",
+      "name": "EGR Error",
+      "shortName": "EGR Err",
+      "description": "Difference between commanded and actual EGR position. High error indicates stuck valve.",
+      "category": "EGR",
+      "unit": "%",
+      "formula": "(A - 128) * 100 / 128",
+      "minValue": -100,
+      "maxValue": 99.2,
+      "normalRange": {
+        "idle": { "min": -5, "max": 5 },
+        "cruise": { "min": -10, "max": 10 },
+        "wot": { "min": -5, "max": 5 },
+        "decel": { "min": -5, "max": 5 }
+      },
+      "warningThresholds": { "low": -20, "high": 20 },
+      "responseTime": 50,
+      "updateRate": 5,
+      "bitLength": 8,
+      "signed": false,
+      "relatedPIDs": ["0x012C"],
+      "diagnosticRelevance": "medium"
+    },
+    "0x012E": {
+      "pid": "0x012E",
+      "name": "EVAP Purge",
+      "shortName": "EVAP Purge",
+      "description": "Commanded EVAP canister purge valve duty cycle. Active at cruise. Shift in fuel trims validates purge.",
+      "category": "EVAP",
+      "unit": "%",
+      "formula": "A * 100 / 255",
+      "minValue": 0,
+      "maxValue": 100,
+      "normalRange": {
+        "idle": { "min": 0, "max": 5 },
+        "cruise": { "min": 10, "max": 80 },
+        "wot": { "min": 0, "max": 20 },
+        "decel": { "min": 0, "max": 10 }
+      },
+      "warningThresholds": {},
+      "responseTime": 50,
+      "updateRate": 5,
+      "bitLength": 8,
+      "signed": false,
+      "relatedPIDs": ["0x0106"],
+      "diagnosticRelevance": "medium"
+    },
+    "0x012F": {
+      "pid": "0x012F",
+      "name": "Fuel Level Input",
+      "shortName": "Fuel Level",
+      "description": "Fuel tank level from sender. Used to validate EVAP system and mileage analysis.",
+      "category": "FUEL_SYSTEM",
+      "unit": "%",
+      "formula": "A * 100 / 255",
+      "minValue": 0,
+      "maxValue": 100,
+      "normalRange": {
+        "idle": { "min": 0, "max": 100 },
+        "cruise": { "min": 0, "max": 100 },
+        "wot": { "min": 0, "max": 100 },
+        "decel": { "min": 0, "max": 100 }
+      },
+      "warningThresholds": { "criticalLow": 5 },
+      "responseTime": 500,
+      "updateRate": 0.5,
+      "bitLength": 8,
+      "signed": false,
+      "relatedPIDs": [],
+      "diagnosticRelevance": "low"
+    },
+    "0x0133": {
+      "pid": "0x0133",
+      "name": "Barometric Pressure",
+      "shortName": "BARO",
+      "description": "Ambient barometric pressure. Used to compare with MAP sensor and altitude compensation.",
+      "category": "AIR_FLOW",
+      "unit": "kPa",
+      "formula": "A",
+      "minValue": 0,
+      "maxValue": 255,
+      "normalRange": {
+        "idle": { "min": 90, "max": 105 },
+        "cruise": { "min": 90, "max": 105 },
+        "wot": { "min": 90, "max": 105 },
+        "decel": { "min": 90, "max": 105 }
+      },
+      "warningThresholds": {},
+      "responseTime": 1000,
+      "updateRate": 0.5,
+      "bitLength": 8,
+      "signed": false,
+      "relatedPIDs": ["0x010B"],
+      "diagnosticRelevance": "medium"
+    },
+    "0x013C": {
+      "pid": "0x013C",
+      "name": "Catalyst Temperature - Bank 1 Sensor 1",
+      "shortName": "Cat Temp B1S1",
+      "description": "Catalytic converter temperature, bank 1 upstream sensor. Above 850°C indicates misfire or rich condition flooding the catalyst.",
+      "category": "CATALYST",
+      "unit": "°C",
+      "formula": "((A * 256) + B) / 10 - 40",
+      "minValue": -40,
+      "maxValue": 6513.5,
+      "normalRange": {
+        "idle": { "min": 400, "max": 650 },
+        "cruise": { "min": 500, "max": 750 },
+        "wot": { "min": 650, "max": 850 },
+        "decel": { "min": 300, "max": 600 }
+      },
+      "warningThresholds": { "high": 800, "criticalHigh": 900 },
+      "responseTime": 2000,
+      "updateRate": 0.5,
+      "bitLength": 16,
+      "signed": false,
+      "relatedPIDs": ["0x0114", "0x0115"],
+      "failureModes": [
+        {
+          "condition": "Cat temp > 850°C",
+          "symptom": "Catalyst melting, fire risk",
+          "possibleCauses": ["Misfire feeding unburned fuel to cat", "Severe rich condition", "Ignition timing issue"],
+          "severity": "critical",
+          "dtcCodes": ["P0420", "P0300", "P0172"]
+        }
+      ],
+      "diagnosticRelevance": "high"
+    },
+    "0x0142": {
+      "pid": "0x0142",
+      "name": "Control Module Voltage",
+      "shortName": "ECU Voltage",
+      "description": "Battery/charging system voltage as seen by the ECU. Key charging system PID. Normal running: 13.5-14.8V.",
+      "category": "VOLTAGE",
+      "unit": "V",
+      "formula": "((A * 256) + B) / 1000",
+      "minValue": 0,
+      "maxValue": 65.535,
+      "normalRange": {
+        "idle": { "min": 13.2, "max": 14.8 },
+        "cruise": { "min": 13.2, "max": 14.8 },
+        "wot": { "min": 13.0, "max": 14.8 },
+        "decel": { "min": 12.8, "max": 14.8 }
+      },
+      "warningThresholds": { "low": 12.8, "high": 15.0, "criticalLow": 11.5, "criticalHigh": 15.5 },
+      "responseTime": 100,
+      "updateRate": 2,
+      "bitLength": 16,
+      "signed": false,
+      "relatedPIDs": ["0x010C"],
+      "failureModes": [
+        {
+          "condition": "Voltage < 12.8V while running",
+          "symptom": "Charging system failure, electrical issues",
+          "possibleCauses": ["Alternator failure", "Belt slip", "Battery failing", "Connection corrosion"],
+          "severity": "warning",
+          "dtcCodes": ["P0562"]
+        },
+        {
+          "condition": "Voltage > 15.0V while running",
+          "symptom": "Overcharging, battery damage risk",
+          "possibleCauses": ["Voltage regulator failed", "ECU ground issue"],
+          "severity": "warning",
+          "dtcCodes": ["P0563"]
+        }
+      ],
+      "diagnosticRelevance": "high"
+    },
+    "0x0145": {
+      "pid": "0x0145",
+      "name": "Relative Throttle Position",
+      "shortName": "Rel TPS",
+      "description": "Throttle position relative to learned closed position. Useful for absolute position validation.",
+      "category": "ENGINE_CORE",
+      "unit": "%",
+      "formula": "A * 100 / 255",
+      "minValue": 0,
+      "maxValue": 100,
+      "normalRange": {
+        "idle": { "min": 0, "max": 3 },
+        "cruise": { "min": 15, "max": 35 },
+        "wot": { "min": 95, "max": 100 },
+        "decel": { "min": 0, "max": 3 }
+      },
+      "warningThresholds": {},
+      "responseTime": 10,
+      "updateRate": 10,
+      "bitLength": 8,
+      "signed": false,
+      "relatedPIDs": ["0x0111"],
+      "diagnosticRelevance": "medium"
+    },
+    "0x0146": {
+      "pid": "0x0146",
+      "name": "Ambient Air Temperature",
+      "shortName": "Ambient Temp",
+      "description": "Outside air temperature. Useful for tropical climate diagnostics — Malaysia runs 28-38°C ambient.",
+      "category": "TEMPERATURE",
+      "unit": "°C",
+      "formula": "A - 40",
+      "minValue": -40,
+      "maxValue": 215,
+      "normalRange": {
+        "idle": { "min": -20, "max": 50 },
+        "cruise": { "min": -20, "max": 50 },
+        "wot": { "min": -20, "max": 50 },
+        "decel": { "min": -20, "max": 50 }
+      },
+      "warningThresholds": {},
+      "responseTime": 2000,
+      "updateRate": 0.1,
+      "bitLength": 8,
+      "signed": false,
+      "relatedPIDs": ["0x010F"],
+      "diagnosticRelevance": "low"
+    },
+    "0x015B": {
+      "pid": "0x015B",
+      "name": "Oil Pressure",
+      "shortName": "Oil Press",
+      "description": "Engine oil pressure. Should increase with RPM. Low pressure at high RPM indicates pump wear or bearing failure.",
+      "category": "ENGINE_CORE",
+      "unit": "kPa",
+      "formula": "((A * 256) + B) / 1000",
+      "minValue": 0,
+      "maxValue": 655.35,
+      "normalRange": {
+        "idle": { "min": 100, "max": 300 },
+        "cruise": { "min": 200, "max": 500 },
+        "wot": { "min": 300, "max": 600 },
+        "decel": { "min": 50, "max": 300 }
+      },
+      "warningThresholds": { "criticalLow": 100 },
+      "responseTime": 100,
+      "updateRate": 5,
+      "bitLength": 16,
+      "signed": false,
+      "relatedPIDs": ["0x010C", "0x015C"],
+      "failureModes": [
+        {
+          "condition": "Oil pressure < 100 kPa at running RPM",
+          "symptom": "Engine bearing damage risk",
+          "possibleCauses": ["Oil pump wear", "Low oil level", "Clogged oil pickup", "Worn bearings"],
+          "severity": "critical",
+          "dtcCodes": ["P0520", "P0521", "P0522"]
+        }
+      ],
+      "diagnosticRelevance": "critical"
+    },
+    "0x015C": {
+      "pid": "0x015C",
+      "name": "Oil Temperature",
+      "shortName": "Oil Temp",
+      "description": "Engine oil temperature. Normally 10-20°C above coolant. High oil temp indicates oil cooler issue or low oil level.",
+      "category": "TEMPERATURE",
+      "unit": "°C",
+      "formula": "A - 40",
+      "minValue": -40,
+      "maxValue": 215,
+      "normalRange": {
+        "idle": { "min": 80, "max": 120 },
+        "cruise": { "min": 90, "max": 130 },
+        "wot": { "min": 100, "max": 140 },
+        "decel": { "min": 80, "max": 120 }
+      },
+      "warningThresholds": { "high": 130, "criticalHigh": 150 },
+      "responseTime": 500,
+      "updateRate": 1,
+      "bitLength": 8,
+      "signed": false,
+      "relatedPIDs": ["0x0105", "0x015B"],
+      "failureModes": [
+        {
+          "condition": "Oil temp > 140°C",
+          "symptom": "Oil oxidation, bearing damage risk",
+          "possibleCauses": ["Oil cooler blocked", "Low oil level", "Wrong viscosity", "Internal leak"],
+          "severity": "critical",
+          "dtcCodes": ["P0196", "P0197", "P0198"]
+        }
+      ],
+      "diagnosticRelevance": "high"
+    },
+    "0x0170": {
+      "pid": "0x0170",
+      "name": "Boost Pressure",
+      "shortName": "Boost",
+      "description": "Turbocharger boost pressure. Above atmospheric on boosted engines. Compare to MAP for boost leak detection.",
+      "category": "TURBO",
+      "unit": "kPa",
+      "formula": "A",
+      "minValue": 0,
+      "maxValue": 255,
+      "normalRange": {
+        "idle": { "min": 95, "max": 105 },
+        "cruise": { "min": 100, "max": 150 },
+        "wot": { "min": 140, "max": 220 },
+        "decel": { "min": 80, "max": 105 }
+      },
+      "warningThresholds": { "high": 230 },
+      "responseTime": 50,
+      "updateRate": 10,
+      "bitLength": 8,
+      "signed": false,
+      "relatedPIDs": ["0x010B", "0x0111", "0x0171"],
+      "diagnosticRelevance": "high"
+    },
+    "0x0174": {
+      "pid": "0x0174",
+      "name": "Turbo RPM",
+      "shortName": "Turbo RPM",
+      "description": "Turbocharger shaft speed. Correlates with engine RPM and load. Overspeeding causes bearing failure.",
+      "category": "TURBO",
+      "unit": "RPM",
+      "formula": "((A * 256) + B) * 150",
+      "minValue": 0,
+      "maxValue": 16383.75,
+      "normalRange": {
+        "idle": { "min": 0, "max": 20000 },
+        "cruise": { "min": 50000, "max": 150000 },
+        "wot": { "min": 100000, "max": 200000 },
+        "decel": { "min": 0, "max": 50000 }
+      },
+      "warningThresholds": { "criticalHigh": 250000 },
+      "responseTime": 50,
+      "updateRate": 10,
+      "bitLength": 16,
+      "signed": false,
+      "relatedPIDs": ["0x0170", "0x010C"],
+      "diagnosticRelevance": "high"
+    },
+    "0x017C": {
+      "pid": "0x017C",
+      "name": "DPF Temperature",
+      "shortName": "DPF Temp",
+      "description": "Diesel Particulate Filter temperature. Should reach 550-650°C during active regeneration.",
+      "category": "EMISSIONS",
+      "unit": "°C",
+      "formula": "((A * 256) + B) / 10 - 40",
+      "minValue": -40,
+      "maxValue": 6513.5,
+      "normalRange": {
+        "idle": { "min": 150, "max": 400 },
+        "cruise": { "min": 250, "max": 500 },
+        "wot": { "min": 350, "max": 650 },
+        "decel": { "min": 100, "max": 400 }
+      },
+      "warningThresholds": { "criticalHigh": 750 },
+      "responseTime": 2000,
+      "updateRate": 0.5,
+      "bitLength": 16,
+      "signed": false,
+      "relatedPIDs": ["0x017D"],
+      "diagnosticRelevance": "high"
+    },
+    "0x017D": {
+      "pid": "0x017D",
+      "name": "DPF Differential Pressure",
+      "shortName": "DPF DP",
+      "description": "Pressure drop across the DPF. Increases as soot accumulates. High DP triggers regeneration.",
+      "category": "EMISSIONS",
+      "unit": "kPa",
+      "formula": "((A * 256) + B) / 100",
+      "minValue": 0,
+      "maxValue": 655.35,
+      "normalRange": {
+        "idle": { "min": 0.1, "max": 2 },
+        "cruise": { "min": 1, "max": 10 },
+        "wot": { "min": 2, "max": 20 },
+        "decel": { "min": 0, "max": 5 }
+      },
+      "warningThresholds": { "high": 15, "criticalHigh": 25 },
+      "responseTime": 500,
+      "updateRate": 1,
+      "bitLength": 16,
+      "signed": false,
+      "relatedPIDs": ["0x017C", "0x0104"],
+      "diagnosticRelevance": "high"
+    },
+    "0x01A3": {
+      "pid": "0x01A3",
+      "name": "Gear Selected",
+      "shortName": "Gear",
+      "description": "Currently selected gear as reported by TCM. 0 = neutral/park. Used for RPM/speed ratio validation.",
+      "category": "TRANSMISSION",
+      "unit": "gear",
+      "formula": "A",
+      "minValue": 0,
+      "maxValue": 8,
+      "normalRange": {
+        "idle": { "min": 0, "max": 1 },
+        "cruise": { "min": 3, "max": 6 },
+        "wot": { "min": 1, "max": 4 },
+        "decel": { "min": 3, "max": 6 }
+      },
+      "warningThresholds": {},
+      "responseTime": 100,
+      "updateRate": 5,
+      "bitLength": 8,
+      "signed": false,
+      "relatedPIDs": ["0x010C", "0x010D", "0x01A4"],
+      "diagnosticRelevance": "high"
+    },
+    "0x01A4": {
+      "pid": "0x01A4",
+      "name": "Transmission Fluid Temperature",
+      "shortName": "Trans Temp",
+      "description": "ATF temperature. Normal operating: 60-100°C. Above 120°C causes rapid ATF degradation (Arrhenius rule).",
+      "category": "TRANSMISSION",
+      "unit": "°C",
+      "formula": "A - 40",
+      "minValue": -40,
+      "maxValue": 215,
+      "normalRange": {
+        "idle": { "min": 40, "max": 90 },
+        "cruise": { "min": 60, "max": 100 },
+        "wot": { "min": 70, "max": 110 },
+        "decel": { "min": 60, "max": 100 }
+      },
+      "warningThresholds": { "high": 110, "criticalHigh": 125 },
+      "responseTime": 500,
+      "updateRate": 1,
+      "bitLength": 8,
+      "signed": false,
+      "relatedPIDs": ["0x0104", "0x010D"],
+      "failureModes": [
+        {
+          "condition": "Trans temp > 120°C",
+          "symptom": "ATF degradation, clutch slippage risk",
+          "possibleCauses": ["Torque converter slipping", "Trans cooler blocked", "Low ATF", "Towing beyond capacity"],
+          "severity": "critical",
+          "dtcCodes": ["P0710", "P0711", "P0218"]
+        }
+      ],
+      "diagnosticRelevance": "critical"
+    },
+    "0x0200": {
+      "pid": "0x0200",
+      "name": "Misfire Counter - Cylinder 1",
+      "shortName": "Misfire C1",
+      "description": "Misfire event count for cylinder 1, accumulated over a drive cycle.",
+      "category": "MISFIRE",
+      "unit": "count",
+      "formula": "(A * 256) + B",
+      "minValue": 0,
+      "maxValue": 65535,
+      "normalRange": {
+        "idle": { "min": 0, "max": 0 },
+        "cruise": { "min": 0, "max": 0 },
+        "wot": { "min": 0, "max": 2 },
+        "decel": { "min": 0, "max": 5 }
+      },
+      "warningThresholds": { "high": 5, "criticalHigh": 50 },
+      "responseTime": 100,
+      "updateRate": 1,
+      "bitLength": 16,
+      "signed": false,
+      "relatedPIDs": ["0x0201", "0x0202", "0x0203", "0x0204"],
+      "diagnosticRelevance": "critical"
+    },
+    "0x0201": {
+      "pid": "0x0201",
+      "name": "Misfire Counter - Cylinder 2",
+      "shortName": "Misfire C2",
+      "description": "Misfire event count for cylinder 2.",
+      "category": "MISFIRE",
+      "unit": "count",
+      "formula": "(A * 256) + B",
+      "minValue": 0,
+      "maxValue": 65535,
+      "normalRange": { "idle": { "min": 0, "max": 0 }, "cruise": { "min": 0, "max": 0 }, "wot": { "min": 0, "max": 2 }, "decel": { "min": 0, "max": 5 } },
+      "warningThresholds": { "high": 5, "criticalHigh": 50 },
+      "responseTime": 100,
+      "updateRate": 1,
+      "bitLength": 16,
+      "signed": false,
+      "relatedPIDs": ["0x0200", "0x0202", "0x0203"],
+      "diagnosticRelevance": "critical"
+    },
+    "0x0202": {
+      "pid": "0x0202",
+      "name": "Misfire Counter - Cylinder 3",
+      "shortName": "Misfire C3",
+      "description": "Misfire event count for cylinder 3.",
+      "category": "MISFIRE",
+      "unit": "count",
+      "formula": "(A * 256) + B",
+      "minValue": 0,
+      "maxValue": 65535,
+      "normalRange": { "idle": { "min": 0, "max": 0 }, "cruise": { "min": 0, "max": 0 }, "wot": { "min": 0, "max": 2 }, "decel": { "min": 0, "max": 5 } },
+      "warningThresholds": { "high": 5, "criticalHigh": 50 },
+      "responseTime": 100,
+      "updateRate": 1,
+      "bitLength": 16,
+      "signed": false,
+      "relatedPIDs": ["0x0200", "0x0201", "0x0203"],
+      "diagnosticRelevance": "critical"
+    },
+    "0x0203": {
+      "pid": "0x0203",
+      "name": "Misfire Counter - Cylinder 4",
+      "shortName": "Misfire C4",
+      "description": "Misfire event count for cylinder 4.",
+      "category": "MISFIRE",
+      "unit": "count",
+      "formula": "(A * 256) + B",
+      "minValue": 0,
+      "maxValue": 65535,
+      "normalRange": { "idle": { "min": 0, "max": 0 }, "cruise": { "min": 0, "max": 0 }, "wot": { "min": 0, "max": 2 }, "decel": { "min": 0, "max": 5 } },
+      "warningThresholds": { "high": 5, "criticalHigh": 50 },
+      "responseTime": 100,
+      "updateRate": 1,
+      "bitLength": 16,
+      "signed": false,
+      "relatedPIDs": ["0x0200", "0x0202", "0x0201"],
+      "diagnosticRelevance": "critical"
+    }
+  }
+}

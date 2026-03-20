@@ -1,0 +1,418 @@
+{
+  "_meta": {
+    "source": "BYKI Mobile V2 — lib/engine/derived_metrics.dart (DataCoverage class) + lib/engine/rules/ (analyzer insights)",
+    "description": "PID coverage tracking groups, derived metric definitions, and data confidence scoring for the 7-system health engine. Used to calculate how much diagnostic confidence can be placed on each system's score based on which PIDs are available from the vehicle.",
+    "version": "V2.0",
+    "language": "Dart 3.12+ (transcribed to JSON for V5 use)",
+    "concept": "The DataCoverage class tracks which PIDs have been successfully read, groups them by system relevance, and computes a coverage score per system. Low coverage = lower confidence in health score.",
+    "coverageScore": {
+      "formula": "coverage_score = PIDs_received / PIDs_expected_for_system",
+      "interpretation": {
+        "0.8_to_1.0": "High confidence — most expected PIDs received",
+        "0.5_to_0.8": "Medium confidence — key PIDs likely present",
+        "below_0.5": "Low confidence — insufficient data for reliable scoring"
+      }
+    }
+  },
+  "pidCoverageGroups": {
+    "charging": {
+      "description": "PIDs tracked to evaluate charging system coverage",
+      "required": [
+        {
+          "field": "voltageCount",
+          "pid": "0x0142",
+          "name": "Control Module Voltage (ECU Voltage)",
+          "weight": "primary",
+          "note": "Most critical PID — without voltage data charging system cannot be scored"
+        }
+      ],
+      "supporting": [
+        {
+          "field": "rpmCount",
+          "pid": "0x010C",
+          "name": "Engine RPM",
+          "weight": "secondary",
+          "note": "Used to separate idle vs. running voltage comparisons"
+        },
+        {
+          "field": "loadCount",
+          "pid": "0x0104",
+          "name": "Engine Load",
+          "weight": "secondary",
+          "note": "Used for load-vs-voltage correlation (R6)"
+        }
+      ],
+      "minimumForScore": ["voltageCount"],
+      "optimalCoverage": ["voltageCount", "rpmCount", "loadCount"]
+    },
+    "combustion": {
+      "description": "PIDs tracked to evaluate combustion quality coverage",
+      "required": [
+        {
+          "field": "ltftCount",
+          "pid": "0x0107",
+          "name": "LTFT Bank 1",
+          "weight": "primary"
+        },
+        {
+          "field": "stftCount",
+          "pid": "0x0106",
+          "name": "STFT Bank 1",
+          "weight": "primary"
+        }
+      ],
+      "supporting": [
+        {
+          "field": "o2UpstreamCount",
+          "pid": "0x0114",
+          "name": "O2 Sensor Bank 1 Sensor 1",
+          "weight": "secondary"
+        },
+        {
+          "field": "rpmCount",
+          "pid": "0x010C",
+          "name": "Engine RPM",
+          "weight": "secondary"
+        },
+        {
+          "field": "misfireCount",
+          "pids": ["0x0200", "0x0201", "0x0202", "0x0203"],
+          "name": "Misfire Counters (Cylinder 1-4)",
+          "weight": "secondary"
+        }
+      ],
+      "minimumForScore": ["ltftCount", "stftCount"],
+      "optimalCoverage": ["ltftCount", "stftCount", "o2UpstreamCount", "rpmCount", "misfireCount"]
+    },
+    "fuel": {
+      "description": "PIDs tracked to evaluate fuel delivery system coverage",
+      "required": [
+        {
+          "field": "ltftCount",
+          "pid": "0x0107",
+          "name": "LTFT Bank 1",
+          "weight": "primary"
+        },
+        {
+          "field": "stftCount",
+          "pid": "0x0106",
+          "name": "STFT Bank 1",
+          "weight": "primary"
+        }
+      ],
+      "supporting": [
+        {
+          "field": "o2UpstreamCount",
+          "pid": "0x0114",
+          "name": "O2 Bank 1 Sensor 1",
+          "weight": "secondary"
+        },
+        {
+          "field": "loadCount",
+          "pid": "0x0104",
+          "name": "Engine Load",
+          "weight": "secondary"
+        },
+        {
+          "field": "fuelPressureCount",
+          "pid": "0x010A",
+          "name": "Fuel Pressure",
+          "weight": "optional",
+          "note": "Not supported by all vehicles — provides direct fuel pressure data for R4"
+        }
+      ],
+      "minimumForScore": ["ltftCount", "stftCount"],
+      "optimalCoverage": ["ltftCount", "stftCount", "o2UpstreamCount", "loadCount", "fuelPressureCount"]
+    },
+    "cooling": {
+      "description": "PIDs tracked to evaluate cooling system coverage",
+      "required": [
+        {
+          "field": "coolantCount",
+          "pid": "0x0105",
+          "name": "Engine Coolant Temperature",
+          "weight": "primary"
+        }
+      ],
+      "supporting": [
+        {
+          "field": "runTimeCount",
+          "pid": "0x011F",
+          "name": "Run Time Since Engine Start",
+          "weight": "secondary",
+          "note": "Used for warm-up rate calculations in R1, R2, R6"
+        },
+        {
+          "field": "speedCount",
+          "pid": "0x010D",
+          "name": "Vehicle Speed",
+          "weight": "secondary",
+          "note": "Used for cruise temp drop analysis in R8"
+        }
+      ],
+      "minimumForScore": ["coolantCount"],
+      "optimalCoverage": ["coolantCount", "runTimeCount", "speedCount"]
+    },
+    "emission": {
+      "description": "PIDs tracked to evaluate catalyst and emissions system coverage",
+      "required": [
+        {
+          "field": "o2UpstreamCount",
+          "pids": ["0x0114", "0x0116"],
+          "name": "O2 Sensor Upstream (B1S1 / B2S1)",
+          "weight": "primary"
+        },
+        {
+          "field": "o2DownstreamCount",
+          "pids": ["0x0115", "0x0117"],
+          "name": "O2 Sensor Downstream (B1S2 / B2S2)",
+          "weight": "primary"
+        }
+      ],
+      "supporting": [
+        {
+          "field": "catalystTempCount",
+          "pids": ["0x013C", "0x013D"],
+          "name": "Catalyst Temperature B1/B2",
+          "weight": "optional",
+          "note": "Available on diesel and some petrol — provides direct catalyst temp for overheat detection"
+        },
+        {
+          "field": "egrCount",
+          "pid": "0x012C",
+          "name": "EGR Command",
+          "weight": "optional",
+          "note": "Only applicable to engines with EGR fitted"
+        }
+      ],
+      "minimumForScore": ["o2UpstreamCount", "o2DownstreamCount"],
+      "optimalCoverage": ["o2UpstreamCount", "o2DownstreamCount", "catalystTempCount", "egrCount"]
+    },
+    "oil": {
+      "description": "PIDs tracked for oil behavioral inference model",
+      "note": "All oil scoring is inference-based. No direct oil quality PID exists in standard OBD-II. Higher PID coverage allows better-quality inference.",
+      "required": [
+        {
+          "field": "coolantCount",
+          "pid": "0x0105",
+          "name": "Engine Coolant Temp",
+          "weight": "primary",
+          "note": "Proxy for engine thermal load applied to oil"
+        },
+        {
+          "field": "rpmCount",
+          "pid": "0x010C",
+          "name": "Engine RPM",
+          "weight": "primary",
+          "note": "Used for high-RPM stress rule"
+        }
+      ],
+      "supporting": [
+        {
+          "field": "speedCount",
+          "pid": "0x010D",
+          "name": "Vehicle Speed",
+          "weight": "secondary",
+          "note": "Used for inferred distance accumulation (R4)"
+        },
+        {
+          "field": "runTimeCount",
+          "pid": "0x011F",
+          "name": "Run Time",
+          "weight": "secondary",
+          "note": "Used for idle fraction calculation (R3, R7)"
+        },
+        {
+          "field": "oilTempCount",
+          "pid": "0x015C",
+          "name": "Engine Oil Temperature",
+          "weight": "optional",
+          "note": "When available, allows direct R8 trigger instead of inference from coolant"
+        }
+      ],
+      "minimumForScore": ["coolantCount", "rpmCount"],
+      "optimalCoverage": ["coolantCount", "rpmCount", "speedCount", "runTimeCount", "oilTempCount"]
+    },
+    "transmission": {
+      "description": "TCM-specific PIDs — NONE are standard OBD Mode 01. All require UDS/ISO-TP via Rust agent.",
+      "transport": "RUST_AGENT_REQUIRED",
+      "protocol": "UDS Mode 22 / ISO-TP",
+      "required": [
+        {
+          "field": "tcmFluidTempCount",
+          "name": "TCM Transmission Fluid Temperature",
+          "did": "manufacturer_specific",
+          "note": "DID varies by make/model — e.g., Proton uses 0x1801, Perodua uses 0x1815"
+        },
+        {
+          "field": "tcmInputSpeedCount",
+          "name": "TCM Input Shaft Speed (Turbine Speed)",
+          "did": "manufacturer_specific"
+        }
+      ],
+      "supporting": [
+        {
+          "field": "tcmOutputSpeedCount",
+          "name": "TCM Output Shaft Speed",
+          "did": "manufacturer_specific",
+          "note": "Combined with input speed to calculate gear ratios and TC slip"
+        },
+        {
+          "field": "tcmGearCount",
+          "name": "TCM Current Gear / Commanded Gear",
+          "did": "manufacturer_specific"
+        },
+        {
+          "field": "tcmDtcInfoCount",
+          "name": "TCM DTC Status Flags",
+          "did": "manufacturer_specific",
+          "note": "Includes limp mode flag, shift quality DTCs"
+        }
+      ],
+      "minimumForScore": ["tcmFluidTempCount"],
+      "optimalCoverage": ["tcmFluidTempCount", "tcmInputSpeedCount", "tcmOutputSpeedCount", "tcmGearCount", "tcmDtcInfoCount"]
+    }
+  },
+  "derivedMetricDefinitions": [
+    {
+      "id": "DERIVED_TC_SLIP",
+      "name": "Torque Converter Slip Percentage",
+      "formula": "tc_slip = (turbine_speed - output_speed * gear_ratio) / max(turbine_speed, 1) * 100",
+      "requiredPIDs": ["tcmInputSpeedCount", "tcmOutputSpeedCount", "tcmGearCount"],
+      "unit": "%",
+      "normalRange": { "idle": "10-30%", "cruise": "<5%", "lockup": "0-2%" },
+      "system": "transmission"
+    },
+    {
+      "id": "DERIVED_GEAR_RATIO",
+      "name": "Actual Gear Ratio",
+      "formula": "gear_ratio = input_speed / output_speed",
+      "requiredPIDs": ["tcmInputSpeedCount", "tcmOutputSpeedCount"],
+      "unit": "ratio",
+      "system": "transmission"
+    },
+    {
+      "id": "DERIVED_IDLE_FRACTION",
+      "name": "Idle Time Fraction",
+      "formula": "idle_fraction = idle_samples / total_samples (where RPM < 900 AND throttle < 5%)",
+      "requiredPIDs": ["rpmCount"],
+      "unit": "fraction (0.0-1.0)",
+      "normalRange": "< 0.30 for normal urban driving",
+      "system": "oil"
+    },
+    {
+      "id": "DERIVED_WARMUP_RATE",
+      "name": "Engine Warm-Up Rate",
+      "formula": "warmup_rate = delta_ECT / delta_run_time",
+      "requiredPIDs": ["coolantCount", "runTimeCount"],
+      "unit": "°C/sec",
+      "normalRange": "0.2 - 0.5 °C/sec pre-thermostat",
+      "system": "cooling"
+    },
+    {
+      "id": "DERIVED_COMBINED_FUEL_TRIM",
+      "name": "Combined Fuel Trim",
+      "formula": "combined_trim = STFT + LTFT",
+      "requiredPIDs": ["stftCount", "ltftCount"],
+      "unit": "%",
+      "normalRange": "±10%",
+      "alertRange": "> ±15%",
+      "systems": ["fuel", "combustion"]
+    },
+    {
+      "id": "DERIVED_O2_SWITCHING_RATE",
+      "name": "O2 Switching Rate",
+      "formula": "switching_rate = zero_crossings_around_0.5V / sample_window_seconds",
+      "requiredPIDs": ["o2UpstreamCount"],
+      "unit": "switches/sec",
+      "normalRange": "3-8 switches/sec at idle in closed loop",
+      "system": "combustion"
+    },
+    {
+      "id": "DERIVED_CATALYST_EFFICIENCY",
+      "name": "Catalyst Efficiency Estimate",
+      "formula": "efficiency = 1 - (downstream_switching_rate / upstream_switching_rate)",
+      "requiredPIDs": ["o2UpstreamCount", "o2DownstreamCount"],
+      "unit": "fraction (0.0-1.0)",
+      "normalRange": "> 0.80 (80% damping)",
+      "alertRange": "< 0.60 (60% damping — catalyst degraded)",
+      "system": "emission"
+    },
+    {
+      "id": "DERIVED_VOLUMETRIC_EFFICIENCY",
+      "name": "Volumetric Efficiency",
+      "formula": "VE = (MAF_g_per_sec * 3456) / (RPM * engine_displacement_L * air_density_g_per_L)",
+      "requiredPIDs": ["0x0110", "0x010C"],
+      "constants": {
+        "air_density_g_per_L": "1.184 at sea level, 25°C",
+        "note": "Adjust air density using IAT and BARO if available"
+      },
+      "unit": "fraction (0.0-1.0, typically 0.75-1.00)",
+      "normalRange": "0.80-0.98 at WOT, 0.60-0.80 at cruise",
+      "system": "combustion"
+    },
+    {
+      "id": "DERIVED_BANK_DIFFERENTIAL",
+      "name": "Bank 1 vs Bank 2 LTFT Differential",
+      "formula": "bank_diff = LTFT_B2 - LTFT_B1",
+      "requiredPIDs": ["0x0107", "0x0109"],
+      "unit": "%",
+      "normalRange": "< ±5%",
+      "alertRange": "> ±7%",
+      "systems": ["fuel", "combustion"]
+    },
+    {
+      "id": "DERIVED_OIL_STRESS_INDEX",
+      "name": "Oil Stress Index",
+      "formula": "stress = (heat_factor * 0.35) + (rpm_factor * 0.20) + (idle_factor * 0.15) + (distance_factor * 0.30)",
+      "components": {
+        "heat_factor": "Max(0, (ECT - 95) / 20) — normalized thermal deviation above 95°C",
+        "rpm_factor": "Max(0, (RPM - 4000) / 2000) — normalized above 4000 RPM",
+        "idle_factor": "idle_fraction > 0.30 ? (idle_fraction - 0.30) / 0.40 : 0",
+        "distance_factor": "estimated_km / 7000"
+      },
+      "unit": "0.0-1.0 (0 = fresh oil, 1.0 = change recommended)",
+      "alertThreshold": 0.75,
+      "system": "oil"
+    },
+    {
+      "id": "DERIVED_CHARGING_HEALTH",
+      "name": "Charging Voltage Health Band",
+      "formula": "voltage_health = 1.0 if voltage in [13.5, 14.8] else scaled_penalty",
+      "requiredPIDs": ["0x0142"],
+      "unit": "0.0-1.0",
+      "normalRange": "1.0 when voltage 13.5-14.8V",
+      "system": "charging"
+    }
+  ],
+  "pidTrackingFields": {
+    "description": "Complete list of DataCoverage tracking fields from V2 Dart implementation. Each field is an integer count of successful readings for that PID category.",
+    "fields": [
+      { "field": "voltageCount", "pid": "0x0142", "system": "charging" },
+      { "field": "rpmCount", "pid": "0x010C", "systems": ["charging", "combustion", "fuel", "oil"] },
+      { "field": "loadCount", "pid": "0x0104", "systems": ["charging", "fuel"] },
+      { "field": "ltftCount", "pid": "0x0107", "systems": ["combustion", "fuel", "emission"] },
+      { "field": "stftCount", "pid": "0x0106", "systems": ["combustion", "fuel"] },
+      { "field": "o2UpstreamCount", "pids": ["0x0114", "0x0116"], "systems": ["combustion", "fuel", "emission"] },
+      { "field": "o2DownstreamCount", "pids": ["0x0115", "0x0117"], "systems": ["emission"] },
+      { "field": "misfireCount", "pids": ["0x0200", "0x0201", "0x0202", "0x0203", "0x0204"], "systems": ["combustion"] },
+      { "field": "coolantCount", "pid": "0x0105", "systems": ["cooling", "oil"] },
+      { "field": "runTimeCount", "pid": "0x011F", "systems": ["cooling", "oil"] },
+      { "field": "speedCount", "pid": "0x010D", "systems": ["cooling", "oil"] },
+      { "field": "iatCount", "pid": "0x010F", "systems": ["combustion"] },
+      { "field": "timingCount", "pid": "0x010E", "systems": ["combustion"] },
+      { "field": "mapCount", "pid": "0x010B", "systems": ["combustion"] },
+      { "field": "mafCount", "pid": "0x0110", "systems": ["combustion", "fuel"] },
+      { "field": "tpsCount", "pid": "0x0111", "systems": ["combustion", "fuel"] },
+      { "field": "catalystTempCount", "pids": ["0x013C", "0x013D"], "systems": ["emission"] },
+      { "field": "egrCount", "pid": "0x012C", "systems": ["emission"] },
+      { "field": "oilTempCount", "pid": "0x015C", "systems": ["oil"] },
+      { "field": "oilPressureCount", "pid": "0x015B", "systems": ["oil"] },
+      { "field": "tcmFluidTempCount", "source": "TCM DID", "systems": ["transmission"] },
+      { "field": "tcmInputSpeedCount", "source": "TCM DID", "systems": ["transmission"] },
+      { "field": "tcmOutputSpeedCount", "source": "TCM DID", "systems": ["transmission"] },
+      { "field": "tcmGearCount", "source": "TCM DID", "systems": ["transmission"] },
+      { "field": "tcmDtcInfoCount", "source": "TCM DID", "systems": ["transmission"] }
+    ]
+  }
+}

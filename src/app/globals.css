@@ -1,0 +1,108 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #000000;
+  --bg-raised: #0a0a0a;
+  --bg-card: #111111;
+  --bg-card-hover: #161616;
+  --fg: #ededed;
+  --fg-muted: #888888;
+  --fg-dim: #555555;
+  --border: #1a1a1a;
+  --border-subtle: #ffffff0d;
+  --accent: #00ff88;
+  --accent-mid: #00dd77;
+  --accent-dim: #00bb66;
+  --accent-glow: #00ff8822;
+  --danger: #ff4444;
+  --danger-dim: #ff444420;
+  --warning: #ffaa00;
+  --warning-dim: #ffaa0020;
+  --info: #4488ff;
+  --info-dim: #4488ff20;
+  --success: #00ff88;
+  --success-dim: #00ff8820;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+}
+
+/* ── Base ─────────────────────────────────────── */
+body {
+  background: var(--bg);
+  color: var(--fg);
+}
+
+/* ── Glass card surface ───────────────────────── */
+.glass {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.glass-hover:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* ── Score ring animation ─────────────────────── */
+@keyframes score-fill {
+  from { stroke-dashoffset: var(--circumference); }
+  to { stroke-dashoffset: var(--offset); }
+}
+.score-ring-animate {
+  animation: score-fill 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* ── Pulse glow for status dots ───────────────── */
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 4px var(--accent); opacity: 1; }
+  50% { box-shadow: 0 0 12px var(--accent); opacity: 0.7; }
+}
+.status-dot {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+/* ── Fade-in for page transitions ─────────────── */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up {
+  animation: fade-up 0.4s ease-out;
+}
+
+/* ── Count up number animation ────────────────── */
+@keyframes count-appear {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
+}
+.animate-count {
+  animation: count-appear 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Grid background pattern ─────────────────── */
+.bg-grid {
+  background-image:
+    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/* ── Shimmer loading ──────────────────────────── */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* ── Scrollbar styling ────────────────────────── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
