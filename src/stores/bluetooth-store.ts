@@ -17,7 +17,6 @@ interface BluetoothState {
   state: BleConnectionState;
   connectedAdapter: AdapterInfo | null;
   errorMessage: string | null;
-  bleService: WebBluetoothService;
   obdScanService: OBDScanService | null;
 
   // Computed
@@ -39,18 +38,24 @@ function friendlyError(error: string): string {
   return 'Connection failed — check adapter and try again';
 }
 
+// Lazy singleton — only instantiated when first accessed in the browser
+let _bleService: WebBluetoothService | null = null;
+function getBleService(): WebBluetoothService {
+  if (!_bleService) _bleService = new WebBluetoothService();
+  return _bleService;
+}
+
 export const useBluetoothStore = create<BluetoothState>((set, get) => ({
   state: 'disconnected',
   connectedAdapter: null,
   errorMessage: null,
-  bleService: new WebBluetoothService(),
   obdScanService: null,
   isConnected: false,
 
   connect: async () => {
     set({ state: 'connecting', errorMessage: null, obdScanService: null });
     try {
-      const ble = get().bleService;
+      const ble = getBleService();
       let info = await ble.requestAndConnect();
       info = await ble.detectAdapterType(info);
       set({ connectedAdapter: info, state: 'connected', isConnected: true });
@@ -62,9 +67,9 @@ export const useBluetoothStore = create<BluetoothState>((set, get) => ({
   },
 
   disconnect: async () => {
-    const { bleService, obdScanService } = get();
+    const { obdScanService } = get();
     obdScanService?.dispose();
-    bleService.disconnect();
+    getBleService().disconnect();
     set({
       connectedAdapter: null,
       obdScanService: null,
@@ -76,7 +81,7 @@ export const useBluetoothStore = create<BluetoothState>((set, get) => ({
   getOrCreateObdScan: async () => {
     const existing = get().obdScanService;
     if (existing) return existing;
-    const svc = new OBDScanService(get().bleService);
+    const svc = new OBDScanService(getBleService());
     await svc.initializeAdapter(get().connectedAdapter ?? undefined);
     set({ obdScanService: svc });
     return svc;
@@ -85,7 +90,7 @@ export const useBluetoothStore = create<BluetoothState>((set, get) => ({
   getOrCreateRaw: () => {
     const existing = get().obdScanService;
     if (existing) return existing;
-    const svc = new OBDScanService(get().bleService);
+    const svc = new OBDScanService(getBleService());
     set({ obdScanService: svc });
     return svc;
   },

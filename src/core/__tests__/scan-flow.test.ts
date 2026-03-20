@@ -338,9 +338,13 @@ describe('Live Data Stream', () => {
     const svc = createInitializedService(ble);
 
     let snap: PidSnapshot | null = null;
+    let count = 0;
     for await (const s of svc.streamLiveData()) {
       snap = s;
-      break; // just need one
+      count++;
+      // Collect enough snapshots for accumulated values to include both RPM and coolant
+      if (snap.rpm !== null && snap.coolant_temp !== null) break;
+      if (count >= 20) break;
     }
 
     expect(snap).not.toBeNull();
