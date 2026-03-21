@@ -6,7 +6,7 @@ import { Card, Button } from '@/components/ui';
 
 const FEATURES = [
   {
-    href: '/scan',
+    href: '/diag',
     title: 'Health Scan',
     desc: 'Full vehicle diagnostic with health score, system analysis, and actionable insights.',
     icon: (
@@ -19,7 +19,7 @@ const FEATURES = [
     primary: true,
   },
   {
-    href: '/live',
+    href: '/diag',
     title: 'Live Data',
     desc: 'Real-time OBD2 parameter monitoring with visual gauges and trend tracking.',
     icon: (
@@ -29,7 +29,7 @@ const FEATURES = [
     ),
   },
   {
-    href: '/dtc',
+    href: '/diag',
     title: 'Trouble Codes',
     desc: 'Read and clear diagnostic trouble codes with severity ratings and descriptions.',
     icon: (
@@ -82,9 +82,9 @@ export default function HomePage() {
 
         {/* CTA */}
         <div className="mt-10 animate-fade-up" style={{ animationDelay: '0.2s' }}>
-          <Link href="/scan">
+          <Link href="/diag">
             <Button size="lg" className="text-base">
-              Start Health Scan
+              Start Diagnostics
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                 <path d="M3 7h8m0 0L8 4m3 3L8 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
@@ -97,7 +97,7 @@ export default function HomePage() {
       <section className="relative max-w-4xl mx-auto px-6 pb-16">
         <div className="grid gap-4 sm:grid-cols-3">
           {FEATURES.map((f, i) => (
-            <Link key={f.href} href={f.href} className="group">
+            <Link key={f.title} href={f.href} className="group">
               <Card hover className={`h-full flex flex-col gap-3 animate-fade-up ${f.primary ? 'border-[var(--accent)]/15' : ''}`} >
                 <div className={`${f.primary ? 'text-[var(--accent)]' : 'text-white/30 group-hover:text-white/60'} transition-colors`}>
                   {f.icon}

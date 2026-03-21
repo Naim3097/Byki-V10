@@ -105,9 +105,7 @@ export function ScoreRing({
 
 const NAV_ITEMS = [
   { href: '/', label: 'Home', icon: HomeIcon },
-  { href: '/scan', label: 'Scan', icon: ScanIcon },
-  { href: '/live', label: 'Live', icon: LiveIcon },
-  { href: '/dtc', label: 'DTC', icon: DtcIcon },
+  { href: '/diag', label: 'Diagnostics', icon: ScanIcon },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
