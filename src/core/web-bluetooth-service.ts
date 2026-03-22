@@ -5,14 +5,36 @@
 import { type AdapterInfo, AdapterChipType, createAdapterInfo } from '../models/adapter-info';
 import { AdapterQuirks } from './obd-protocol';
 
-// Known OBD adapter BLE service UUIDs (same as V8)
+// Known OBD adapter BLE service UUIDs
+// Includes standard short UUIDs and full 128-bit UUIDs for common BLE UART chips.
 const KNOWN_SERVICE_UUIDS: (number | string)[] = [
+  // Common ELM327 / OBD adapter services
   0xFFF0, 0x18F0, 0xFFE0,
+  // Microchip/ISSC Transparent UART (very common in cheap "OBD BLE" adapters)
+  '49535343-fe7d-4ae5-8fa9-9fafd205e455',
+  // Nordic UART Service (NUS)
+  '6e400001-b5a3-f393-e0a9-e50e24dcca9e',
+  // Some VGATE / iCar adapters
   'e7810a71-73ae-499d-8c15-faa9aef0c3f2',
+  // Misc Chinese adapter UUIDs
+  0xABF0,
+  'bee5d050-7b8c-11e2-b930-0800200c9a66',
+  'bef8d6c9-9c21-4c9e-b632-bd58c1009f9f',
 ];
 
-// Known characteristic UUIDs (TX/RX often share the same UUID)
-const KNOWN_CHAR_UUIDS: number[] = [0xFFF1, 0xFFF2, 0x18F1, 0x18F2, 0xFFE1];
+// Known characteristic UUIDs (TX/RX)
+const KNOWN_CHAR_UUIDS: (number | string)[] = [
+  // Standard short UUIDs
+  0xFFF1, 0xFFF2, 0x18F1, 0x18F2, 0xFFE1,
+  // Microchip/ISSC TX (write) and RX (notify)
+  '49535343-8841-43f4-a8d4-ecbe34729bb3',
+  '49535343-1e4d-4bd9-ba61-23c647249616',
+  // Nordic UART TX (write) and RX (notify)
+  '6e400002-b5a3-f393-e0a9-e50e24dcca9e',
+  '6e400003-b5a3-f393-e0a9-e50e24dcca9e',
+  // Misc
+  0xABF1, 0xABF2,
+];
 
 // Adapter name filters for browser device picker
 const ADAPTER_NAME_PREFIXES = [
@@ -189,7 +211,9 @@ export class WebBluetoothService {
     // Try known characteristic UUIDs
     for (const charUuid of KNOWN_CHAR_UUIDS) {
       try {
-        const resolvedChar = BluetoothUUID.getCharacteristic(charUuid);
+        const resolvedChar = typeof charUuid === 'number'
+          ? BluetoothUUID.getCharacteristic(charUuid)
+          : charUuid;
         const char = await service.getCharacteristic(resolvedChar);
         if (!tx && (char.properties.write || char.properties.writeWithoutResponse)) tx = char;
         if (!rx && char.properties.notify) rx = char;
