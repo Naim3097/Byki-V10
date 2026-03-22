@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { useBluetoothStore } from '@/stores/bluetooth-store';
 import { useLiveDataStore } from '@/stores/live-data-store';
 import { useScanStore } from '@/stores/scan-store';
@@ -13,11 +13,11 @@ import { DtcSource } from '@/models';
 import { ScoreRing, Button, Card, Badge, ProgressBar, scoreColor, riskColor, riskBg, severityColor } from '@/components/ui';
 
 // ═══════════════════════════════════════════════════════════════════
-// UNIFIED DIAGNOSTIC PAGE
+// BYKI — Unified Diagnostics
 // Flow: Connect → Live Data → Health Scan → DTC
 // ═══════════════════════════════════════════════════════════════════
 
-// ── Gauge definitions ───────────────────────────────────────────────
+/* ── Gauge definitions ─────────────────────────────────────────── */
 
 interface GaugeDef {
   key: keyof PidSnapshot;
@@ -45,7 +45,16 @@ const COMPACT_GAUGES: GaugeDef[] = [
   { key: 'ecu_voltage', label: 'Voltage', unit: 'V', min: 0, max: 65 },
 ];
 
-// ── SVG Arc helpers ─────────────────────────────────────────────────
+const SYSTEMS = [
+  { key: 'engine', icon: '⚙️', name: 'Engine' },
+  { key: 'fuel', icon: '⛽', name: 'Fuel' },
+  { key: 'emission', icon: '🌿', name: 'Emission' },
+  { key: 'electrical', icon: '🔋', name: 'Electrical' },
+  { key: 'thermal', icon: '🌡️', name: 'Thermal' },
+  { key: 'air_intake', icon: '💨', name: 'Intake' },
+];
+
+/* ── SVG Arc helpers ───────────────────────────────────────────── */
 
 function polarToCartesian(cx: number, cy: number, r: number, angleDeg: number) {
   const rad = (angleDeg * Math.PI) / 180;
@@ -65,9 +74,9 @@ function formatValue(v: number): string {
   return v.toFixed(1);
 }
 
-// ── Arc Gauge (hero size) ───────────────────────────────────────────
+/* ── ArcGauge (hero) ───────────────────────────────────────────── */
 
-function ArcGauge({ label, value, unit, min, max, size = 130 }: Omit<GaugeDef, 'key'> & { value: number | null | undefined; size?: number }) {
+function ArcGauge({ label, value, unit, min, max, size = 150 }: Omit<GaugeDef, 'key'> & { value: number | null | undefined; size?: number }) {
   const v = value ?? 0;
   const pct = Math.max(0, Math.min(1, (v - min) / (max - min)));
   const hasValue = value != null;
@@ -80,27 +89,34 @@ function ArcGauge({ label, value, unit, min, max, size = 130 }: Omit<GaugeDef, '
   return (
     <div className="flex flex-col items-center">
       <div className="relative" style={{ width: size, height: size * 0.75 }}>
-        <svg width={size} height={size * 0.75} viewBox={`0 0 ${size} ${size * 0.75}`} className="overflow-visible">
-          <path d={describeArc(size / 2, size * 0.7, r, 225, -45)} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="4" strokeLinecap="round" />
+        {/* Ambient glow */}
+        {hasValue && (
+          <div
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/3 w-3/4 h-3/4 rounded-full opacity-15 blur-2xl pointer-events-none transition-opacity duration-700"
+            style={{ backgroundColor: color }}
+          />
+        )}
+        <svg width={size} height={size * 0.75} viewBox={`0 0 ${size} ${size * 0.75}`} className="overflow-visible relative z-[1]">
+          <path d={describeArc(size / 2, size * 0.7, r, 225, -45)} fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="4" strokeLinecap="round" />
           {hasValue && (
             <path d={describeArc(size / 2, size * 0.7, r, 225, -45)} fill="none" stroke={color} strokeWidth="4" strokeLinecap="round"
               strokeDasharray={circumference} strokeDashoffset={offset}
-              className="transition-all duration-200" style={{ filter: `drop-shadow(0 0 4px ${color}30)` }} />
+              className="transition-all duration-500" style={{ filter: `drop-shadow(0 0 6px ${color}40)` }} />
           )}
         </svg>
-        <div className="absolute inset-0 flex flex-col items-center justify-end pb-1">
-          <span className={`text-xl font-bold font-mono ${hasValue ? 'text-white' : 'text-white/10'}`}>
+        <div className="absolute inset-0 flex flex-col items-center justify-end pb-1 z-[2]">
+          <span className={`text-2xl font-bold font-mono tabular-nums ${hasValue ? 'text-white' : 'text-white/8'} transition-colors`}>
             {hasValue ? formatValue(v) : '—'}
           </span>
-          <span className="text-[9px] text-white/25">{unit}</span>
+          <span className="text-[9px] text-white/20 mt-0.5">{unit}</span>
         </div>
       </div>
-      <span className="text-[10px] text-white/35 mt-0.5">{label}</span>
+      <span className="text-[10px] text-white/30 mt-1 font-medium">{label}</span>
     </div>
   );
 }
 
-// ── Compact Gauge (grid) ────────────────────────────────────────────
+/* ── MiniGauge (compact grid) ──────────────────────────────────── */
 
 function MiniGauge({ label, value, unit, min, max }: Omit<GaugeDef, 'key'> & { value: number | null | undefined }) {
   const v = value ?? 0;
@@ -109,20 +125,22 @@ function MiniGauge({ label, value, unit, min, max }: Omit<GaugeDef, 'key'> & { v
   const color = pct < 70 ? 'var(--accent)' : pct < 90 ? '#fbbf24' : '#ef4444';
 
   return (
-    <div className="flex flex-col gap-1.5 rounded-xl bg-white/[0.02] border border-white/[0.04] p-2.5">
-      <div className="flex justify-between items-center">
-        <span className="text-[10px] text-white/30">{label}</span>
-        <span className="text-[9px] text-white/12 font-mono">{unit}</span>
+    <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-3 hover:border-white/[0.08] transition-all">
+      <div className="flex items-baseline justify-between mb-1.5">
+        <span className="text-[10px] text-white/25 font-medium">{label}</span>
+        <span className="text-[9px] text-white/10 font-mono">{unit}</span>
       </div>
-      <span className={`text-base font-bold font-mono leading-none ${hasValue ? 'text-white' : 'text-white/10'}`}>
+      <span className={`block text-lg font-bold font-mono tabular-nums leading-none ${hasValue ? 'text-white/90' : 'text-white/8'} transition-colors`}>
         {hasValue ? formatValue(v) : '—'}
       </span>
-      <ProgressBar value={hasValue ? pct : 0} color={color} />
+      <div className="mt-2 h-0.5 rounded-full bg-white/[0.04] overflow-hidden">
+        <div className="h-full rounded-full transition-all duration-300" style={{ width: `${hasValue ? pct : 0}%`, backgroundColor: color }} />
+      </div>
     </div>
   );
 }
 
-// ── Scan Feed Line ──────────────────────────────────────────────────
+/* ── Scan Feed Line ────────────────────────────────────────────── */
 
 function FeedLine({ card }: { card: ScanFeedCard }) {
   switch (card.type) {
@@ -146,7 +164,7 @@ function FeedLine({ card }: { card: ScanFeedCard }) {
       return (
         <div className="flex items-center justify-between pl-3 py-0.5">
           <span className="text-[11px] text-white/40">{sys.icon} {sys.consumerName}</span>
-          <span className="text-[11px] font-bold font-mono" style={{ color: scoreColor(sys.score) }}>{Math.round(sys.score)}</span>
+          <span className="text-[11px] font-bold font-mono tabular-nums" style={{ color: scoreColor(sys.score) }}>{Math.round(sys.score)}</span>
         </div>
       );
     }
@@ -155,25 +173,25 @@ function FeedLine({ card }: { card: ScanFeedCard }) {
   }
 }
 
-// ── System pill (during scan) ───────────────────────────────────────
+/* ── System pill (during scan) ─────────────────────────────────── */
 
 function SystemPill({ name, icon, score, done }: { name: string; icon: string; score?: number; done: boolean }) {
   return (
-    <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium transition-all duration-500 ${
+    <div className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-medium transition-all duration-500 ${
       done && score != null
         ? `border ${riskBg(score >= 85 ? 'Healthy' : score >= 70 ? 'Monitor' : score >= 50 ? 'Warning' : 'Critical')}`
-        : 'bg-white/3 border border-white/5 text-white/20'
+        : 'bg-white/[0.03] border border-white/[0.05] text-white/20'
     }`}>
       <span>{icon}</span>
       <span>{name}</span>
       {done && score != null && (
-        <span className="font-bold font-mono ml-0.5" style={{ color: scoreColor(score) }}>{Math.round(score)}</span>
+        <span className="font-bold font-mono tabular-nums ml-0.5" style={{ color: scoreColor(score) }}>{Math.round(score)}</span>
       )}
     </div>
   );
 }
 
-// ── Mini Score Ring ─────────────────────────────────────────────────
+/* ── Mini Score Ring ───────────────────────────────────────────── */
 
 function MiniScoreRing({ score, size = 44 }: { score: number; size?: number }) {
   const sw = 3;
@@ -182,19 +200,20 @@ function MiniScoreRing({ score, size = 44 }: { score: number; size?: number }) {
   const offset = circ - (Math.max(0, Math.min(100, score)) / 100) * circ;
   const color = scoreColor(score);
   return (
-    <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
+    <div className="relative flex items-center justify-center flex-shrink-0" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
         <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth={sw} />
         <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={sw}
           strokeLinecap="round" strokeDasharray={circ} strokeDashoffset={offset}
+          className="transition-all duration-500"
           style={{ filter: `drop-shadow(0 0 4px ${color}30)` }} />
       </svg>
-      <span className="absolute text-[11px] font-bold font-mono" style={{ color }}>{Math.round(score)}</span>
+      <span className="absolute text-[11px] font-bold font-mono tabular-nums" style={{ color }}>{Math.round(score)}</span>
     </div>
   );
 }
 
-// ── System Detail Panel (expandable) ────────────────────────────────
+/* ── System Detail Panel (expandable) ──────────────────────────── */
 
 function SystemDetailPanel({ sys }: { sys: SystemHealthReport }) {
   const [open, setOpen] = useState(false);
@@ -214,8 +233,8 @@ function SystemDetailPanel({ sys }: { sys: SystemHealthReport }) {
           <p className="text-[11px] text-white/25 mt-0.5 truncate">{sys.findings[0] ?? 'System operating normally'}</p>
         </div>
         <div className="flex items-center gap-2">
-          {sys.dataCoverage < 1 && <span className="text-[9px] font-mono text-white/12">{Math.round(sys.dataCoverage * 100)}%</span>}
-          <svg width="10" height="10" viewBox="0 0 10 10" className={`text-white/15 transition-transform ${open ? 'rotate-180' : ''}`}>
+          {sys.dataCoverage < 1 && <span className="text-[9px] font-mono text-white/12 tabular-nums">{Math.round(sys.dataCoverage * 100)}%</span>}
+          <svg width="10" height="10" viewBox="0 0 10 10" className={`text-white/15 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}>
             <polyline points="2,3.5 5,6.5 8,3.5" stroke="currentColor" strokeWidth="1.3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </div>
@@ -227,7 +246,7 @@ function SystemDetailPanel({ sys }: { sys: SystemHealthReport }) {
           <div className="space-y-1">
             <div className="flex items-center justify-between">
               <span className="text-[10px] text-white/25">Health Score</span>
-              <span className="text-xs font-bold font-mono" style={{ color }}>{Math.round(sys.score)} / 100</span>
+              <span className="text-xs font-bold font-mono tabular-nums" style={{ color }}>{Math.round(sys.score)} / 100</span>
             </div>
             <div className="h-1.5 rounded-full bg-white/[0.04] overflow-hidden">
               <div className="h-full rounded-full transition-all duration-700" style={{ width: `${sys.score}%`, backgroundColor: color, boxShadow: `0 0 8px ${color}40` }} />
@@ -298,7 +317,7 @@ function RuleCard({ rule }: { rule: EvaluatedRule }) {
           <p className="text-[10px] text-white/30 mt-0.5">{rule.consumerMessage}</p>
         </div>
         <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
-          <span className="text-[9px] font-mono font-bold" style={{ color }}>{pct}%</span>
+          <span className="text-[9px] font-mono font-bold tabular-nums" style={{ color }}>{pct}%</span>
           <div className="w-8 h-0.5 rounded-full bg-white/[0.04] overflow-hidden">
             <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: color }} />
           </div>
@@ -323,14 +342,14 @@ function ComponentRiskBar({ risk }: { risk: ComponentRisk }) {
     <div className="flex items-center gap-2">
       <span className="text-[11px] text-white/40 w-28 truncate flex-shrink-0">{risk.component}</span>
       <div className="flex-1 h-1 rounded-full bg-white/[0.04] overflow-hidden">
-        <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: color }} />
+        <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, backgroundColor: color }} />
       </div>
-      <span className="text-[9px] font-mono font-bold w-6 text-right" style={{ color }}>{pct}%</span>
+      <span className="text-[9px] font-mono font-bold tabular-nums w-6 text-right" style={{ color }}>{pct}%</span>
     </div>
   );
 }
 
-// ── DTC Card ────────────────────────────────────────────────────────
+/* ── DTC Card ──────────────────────────────────────────────────── */
 
 function DtcCard({ dtc }: { dtc: DtcCode }) {
   const [open, setOpen] = useState(false);
@@ -345,7 +364,7 @@ function DtcCard({ dtc }: { dtc: DtcCode }) {
         <span className="flex-1 text-xs text-white/50 truncate">{dtc.description || 'Unknown code'}</span>
         {dtc.severity && <Badge className={severityColor(dtc.severity)}>{dtc.severity}</Badge>}
         {dtc.source === DtcSource.PERMANENT && <Badge color="red">PERM</Badge>}
-        <svg width="10" height="10" viewBox="0 0 10 10" className={`text-white/15 transition-transform ${open ? 'rotate-180' : ''}`}>
+        <svg width="10" height="10" viewBox="0 0 10 10" className={`text-white/15 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}>
           <polyline points="2,3.5 5,6.5 8,3.5" stroke="currentColor" strokeWidth="1.3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </button>
@@ -381,18 +400,92 @@ function DtcGroup({ label, color, count, children }: { label: string; color: str
   );
 }
 
+/* ── Section Navigation (sticky scroll-spy) ────────────────────── */
+
+function SectionNav({
+  activeSection,
+  onNavigate,
+  isStreaming,
+  scanScore,
+  dtcCount,
+}: {
+  activeSection: string;
+  onNavigate: (id: string) => void;
+  isStreaming: boolean;
+  scanScore: number | null;
+  dtcCount: number;
+}) {
+  const items = [
+    {
+      id: 'live',
+      label: 'Live Data',
+      badge: isStreaming ? <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 status-dot" /> : null,
+    },
+    {
+      id: 'scan',
+      label: 'Health Scan',
+      badge: scanScore != null ? (
+        <span className="text-[9px] font-mono font-bold tabular-nums" style={{ color: scoreColor(scanScore) }}>{Math.round(scanScore)}</span>
+      ) : null,
+    },
+    {
+      id: 'dtc',
+      label: 'Fault Codes',
+      badge: dtcCount > 0 ? (
+        <span className="min-w-[16px] h-4 rounded-full bg-red-500/15 text-red-400 text-[9px] font-bold flex items-center justify-center px-1">{dtcCount}</span>
+      ) : null,
+    },
+  ];
+
+  return (
+    <div className="sticky top-0 md:top-[53px] z-40 bg-black/80 backdrop-blur-xl border-b border-white/[0.04]">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6">
+        <div className="flex items-center justify-center py-2">
+          {items.map((item, i) => (
+            <div key={item.id} className="flex items-center">
+              {i > 0 && <div className="w-5 h-px bg-white/[0.06] mx-1" />}
+              <button
+                onClick={() => onNavigate(item.id)}
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                  activeSection === item.id
+                    ? 'text-[var(--accent)] bg-[var(--accent)]/8'
+                    : 'text-white/30 hover:text-white/50 hover:bg-white/[0.03]'
+                }`}
+              >
+                {item.label}
+                {item.badge}
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Flow Guide (contextual section divider) ───────────────────── */
+
+function FlowGuide({ text }: { text: string }) {
+  if (!text) return null;
+  return (
+    <div className="py-6">
+      <div className="flex items-center gap-3">
+        <div className="flex-1 h-px bg-gradient-to-r from-transparent to-white/[0.04]" />
+        <div className="flex items-center gap-1.5 text-[10px] font-mono text-white/15 select-none">
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className="text-white/10">
+            <path d="M5 2v6M3 6l2 2 2-2" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          {text}
+        </div>
+        <div className="flex-1 h-px bg-gradient-to-l from-transparent to-white/[0.04]" />
+      </div>
+    </div>
+  );
+}
+
 // ═══════════════════════════════════════════════════════════════════
 // ── MAIN PAGE COMPONENT ─────────────────────────────────────────
 // ═══════════════════════════════════════════════════════════════════
-
-const SYSTEMS = [
-  { key: 'engine', icon: '⚙️', name: 'Engine' },
-  { key: 'fuel', icon: '⛽', name: 'Fuel' },
-  { key: 'emission', icon: '🌿', name: 'Emission' },
-  { key: 'electrical', icon: '🔋', name: 'Electrical' },
-  { key: 'thermal', icon: '🌡️', name: 'Thermal' },
-  { key: 'air_intake', icon: '💨', name: 'Intake' },
-];
 
 export default function DiagPage() {
   const bt = useBluetoothStore();
@@ -401,60 +494,144 @@ export default function DiagPage() {
   const dtcStore = useDtcStore();
 
   const feedEndRef = useRef<HTMLDivElement>(null);
+  const [activeSection, setActiveSection] = useState('live');
   const [confirmClear, setConfirmClear] = useState(false);
   const [dtcSearch, setDtcSearch] = useState('');
 
+  // ── Derived state ─────────────────────────────────────────────
   const isStreaming = live.state === 'streaming' || live.state === 'paused';
   const isPaused = live.state === 'paused';
   const isScanning = ['startingAgent', 'discoveringPids', 'scanning', 'analyzing'].includes(scan.state);
   const isScanComplete = scan.state === 'complete';
   const latest = live.latestSnapshot;
 
-  // Auto-scroll scan feed
+  // ── Intersection observer for section nav ─────────────────────
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting && entry.target.id) {
+            setActiveSection(entry.target.id);
+          }
+        }
+      },
+      { rootMargin: '-20% 0px -70% 0px' }
+    );
+
+    const ids = ['live', 'scan', 'dtc'];
+    ids.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, [bt.isConnected]);
+
+  // ── Scroll navigation ────────────────────────────────────────
+  const scrollTo = useCallback((id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, []);
+
+  // ── Auto-scroll scan feed ────────────────────────────────────
   useEffect(() => {
     feedEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [scan.feedCards.length]);
 
-  // Reset live data if disconnected
+  // ── Reset live data if disconnected ──────────────────────────
   useEffect(() => {
     if (!bt.isConnected && isStreaming) live.reset();
   }, [bt.isConnected, isStreaming, live]);
 
-  // System scores for scan animation pills
-  const systemScores: Record<string, { icon: string; name: string; score: number }> = {};
-  for (const fc of scan.feedCards) {
-    if (fc.type === 'systemScore' && fc.systemReport) {
-      systemScores[fc.systemReport.system] = {
-        icon: fc.systemReport.icon,
-        name: fc.systemReport.consumerName,
-        score: fc.systemReport.score,
-      };
+  // ── Auto-scroll to results when scan completes ───────────────
+  useEffect(() => {
+    if (scan.state === 'complete') {
+      const t = setTimeout(() => scrollTo('scan'), 400);
+      return () => clearTimeout(t);
     }
-  }
+  }, [scan.state, scrollTo]);
 
-  // DTC filtering
-  const matchesDtcSearch = (dtc: DtcCode) => {
-    if (!dtcSearch) return true;
-    const q = dtcSearch.toLowerCase();
-    return dtc.code.toLowerCase().includes(q) || (dtc.description ?? '').toLowerCase().includes(q);
-  };
-  const fStored = dtcStore.storedDtcs.filter(matchesDtcSearch);
-  const fPending = dtcStore.pendingDtcs.filter(matchesDtcSearch);
-  const fPermanent = dtcStore.permanentDtcs.filter(matchesDtcSearch);
+  // ── Memoized computations ────────────────────────────────────
+  const systemScores = useMemo(() => {
+    const scores: Record<string, { icon: string; name: string; score: number }> = {};
+    for (const fc of scan.feedCards) {
+      if (fc.type === 'systemScore' && fc.systemReport) {
+        scores[fc.systemReport.system] = {
+          icon: fc.systemReport.icon,
+          name: fc.systemReport.consumerName,
+          score: fc.systemReport.score,
+        };
+      }
+    }
+    return scores;
+  }, [scan.feedCards]);
 
-  // Active PID count
-  const activeKeys = latest ? PID_SNAPSHOT_KEYS.filter(k => latest[k as keyof PidSnapshot] != null) : [];
+  const activeKeys = useMemo(() => {
+    return latest ? PID_SNAPSHOT_KEYS.filter(k => latest[k as keyof PidSnapshot] != null) : [];
+  }, [latest]);
 
-  // ═════════════════════════════════════════════════════════════════
-  // SECTION 0: Connect adapter (if not connected)
-  // ═════════════════════════════════════════════════════════════════
+  const filteredDtcs = useMemo(() => {
+    const match = (dtc: DtcCode) => {
+      if (!dtcSearch) return true;
+      const q = dtcSearch.toLowerCase();
+      return dtc.code.toLowerCase().includes(q) || (dtc.description ?? '').toLowerCase().includes(q);
+    };
+    return {
+      stored: dtcStore.storedDtcs.filter(match),
+      pending: dtcStore.pendingDtcs.filter(match),
+      permanent: dtcStore.permanentDtcs.filter(match),
+    };
+  }, [dtcStore.storedDtcs, dtcStore.pendingDtcs, dtcStore.permanentDtcs, dtcSearch]);
+
+  // ── Contextual flow guide text ───────────────────────────────
+  const liveToScanGuide = useMemo(() => {
+    if (isScanning) return 'Scan in progress…';
+    if (live.state === 'streaming') return 'Data flowing — ready to analyze';
+    if (isScanComplete) return '';
+    return 'Start monitoring, then run a diagnostic scan';
+  }, [live.state, isScanning, isScanComplete]);
+
+  const scanToDtcGuide = useMemo(() => {
+    if (isScanComplete && scan.result) {
+      const issues = scan.result.systems.reduce((n, s) => n + s.evaluatedRules.length, 0);
+      if (issues > 0) return `${issues} issue${issues > 1 ? 's' : ''} detected — check fault codes`;
+      return 'Systems healthy — verify with a fault code scan';
+    }
+    return 'Read and clear diagnostic trouble codes';
+  }, [isScanComplete, scan.result]);
+
+  // ── Handlers ─────────────────────────────────────────────────
+  const handleStartScan = useCallback(() => {
+    // Auto-pause live data so scan can use the OBD connection
+    if (live.state === 'streaming') live.pauseStream();
+    scan.startHealthScan();
+  }, [live, scan]);
+
+  // ═════════════════════════════════════════════════════════════
+  // CONNECT SCREEN
+  // ═════════════════════════════════════════════════════════════
 
   if (!bt.isConnected) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[80vh] px-6 text-center">
-        <div className="animate-fade-up">
-          <div className="glass max-w-sm mx-auto flex flex-col items-center gap-5 p-8 rounded-3xl border border-white/[0.06]">
-            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[var(--accent)]/10 to-[var(--accent)]/3 flex items-center justify-center border border-[var(--accent)]/10">
+        <div className="animate-fade-up max-w-sm w-full">
+          {/* Flow steps */}
+          <div className="flex items-center justify-center gap-2 mb-8">
+            {['Connect', 'Monitor', 'Diagnose'].map((step, i) => (
+              <div key={step} className="flex items-center gap-2">
+                <div className={`flex items-center gap-1.5 ${i === 0 ? 'text-[var(--accent)]' : 'text-white/15'}`}>
+                  <span className={`w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center ${
+                    i === 0 ? 'bg-[var(--accent)] text-black' : 'bg-white/[0.05]'
+                  }`}>{i + 1}</span>
+                  <span className="text-[10px] font-medium">{step}</span>
+                </div>
+                {i < 2 && <div className="w-6 h-px bg-white/[0.06]" />}
+              </div>
+            ))}
+          </div>
+
+          {/* Card */}
+          <div className="glass rounded-3xl p-8 border border-white/[0.06]">
+            <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-[var(--accent)]/10 to-transparent flex items-center justify-center border border-[var(--accent)]/10 breathe">
               <svg width="32" height="32" viewBox="0 0 28 28" fill="none" className="text-[var(--accent)]">
                 <rect x="4" y="8" width="20" height="12" rx="3" stroke="currentColor" strokeWidth="1.5" />
                 <line x1="10" y1="12" x2="10" y2="16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
@@ -462,22 +639,30 @@ export default function DiagPage() {
                 <line x1="18" y1="12" x2="18" y2="16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
               </svg>
             </div>
-            <div>
-              <h2 className="text-xl font-bold">Connect OBD2 Adapter</h2>
-              <p className="text-xs text-white/30 mt-2 leading-relaxed max-w-xs">
-                Pair your ELM327 Bluetooth adapter to begin live monitoring and vehicle diagnostics
-              </p>
-            </div>
+            <h2 className="text-xl font-bold mt-5">Connect Adapter</h2>
+            <p className="text-xs text-white/30 mt-2 leading-relaxed">
+              Pair your ELM327 Bluetooth adapter to begin live monitoring and diagnostics
+            </p>
+
             {bt.errorMessage && (
-              <div className="w-full bg-red-500/5 border border-red-500/10 rounded-xl px-4 py-3 text-xs text-red-400 text-left">
+              <div className="mt-4 bg-red-500/5 border border-red-500/10 rounded-xl px-4 py-3 text-xs text-red-400 text-left">
                 {bt.errorMessage}
               </div>
             )}
-            <Button onClick={() => bt.connect()} disabled={bt.state === 'connecting'} className="w-full" size="lg">
-              {bt.state === 'connecting' ? 'Connecting…' : 'Select Adapter'}
+
+            <Button onClick={() => bt.connect()} disabled={bt.state === 'connecting'} className="w-full mt-6" size="lg">
+              {bt.state === 'connecting' ? (
+                <span className="flex items-center gap-2">
+                  <span className="w-3.5 h-3.5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                  Connecting…
+                </span>
+              ) : (
+                'Select Adapter'
+              )}
             </Button>
-            <p className="text-[10px] text-white/12 leading-relaxed max-w-xs">
-              Your browser will show a Bluetooth device picker. Select your OBD2 adapter.
+
+            <p className="text-[10px] text-white/12 mt-3 leading-relaxed">
+              Uses Web Bluetooth — select your OBD2 adapter from the browser picker
             </p>
           </div>
         </div>
@@ -485,304 +670,352 @@ export default function DiagPage() {
     );
   }
 
-  // ═════════════════════════════════════════════════════════════════
-  // CONNECTED — Single scrollable page
-  // ═════════════════════════════════════════════════════════════════
+  // ═════════════════════════════════════════════════════════════
+  // CONNECTED — Unified Flow
+  // ═════════════════════════════════════════════════════════════
 
   return (
-    <div className="px-4 sm:px-6 py-5 max-w-5xl mx-auto space-y-5 animate-fade-up">
+    <>
+      <SectionNav
+        activeSection={activeSection}
+        onNavigate={scrollTo}
+        isStreaming={live.state === 'streaming'}
+        scanScore={isScanComplete && scan.result ? scan.result.overallScore : null}
+        dtcCount={dtcStore.totalCount}
+      />
 
-      {/* ══════════════════════════════════════════════════════════
-          SECTION 1: LIVE DATA
-          Always visible on top — shows real-time sensor values
-          ══════════════════════════════════════════════════════════ */}
-      <section>
-        {/* Live data header/controls */}
-        <div className="flex items-center gap-2.5 glass rounded-2xl p-2.5 mb-4">
-          {!isStreaming && (
-            <Button onClick={() => live.startStream()} size="sm">
-              Start Live
-            </Button>
-          )}
-          {isStreaming && !isPaused && (
-            <Button onClick={() => live.pauseStream()} size="sm" variant="secondary">Pause</Button>
-          )}
-          {isStreaming && isPaused && (
-            <Button onClick={() => live.resumeStream()} size="sm">Resume</Button>
-          )}
-          {isStreaming && (
-            <Button onClick={() => live.reset()} size="sm" variant="ghost">Stop</Button>
-          )}
-          <div className="ml-auto flex items-center gap-3 text-[10px] font-mono text-white/20">
-            {live.sampleCount > 0 && <span>{live.sampleCount} samples</span>}
-            {activeKeys.length > 0 && <span>{activeKeys.length} PIDs</span>}
-            {isStreaming && !isPaused && (
-              <span className="text-emerald-400 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 status-dot" />
-                LIVE
-              </span>
-            )}
-            {isPaused && <span className="text-yellow-400">PAUSED</span>}
-          </div>
-        </div>
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-3 pb-8">
 
-        {live.state === 'error' && (
-          <Card className="border-red-500/15 text-center mb-4">
-            <p className="text-xs text-red-400">Stream error — try reconnecting</p>
-          </Card>
-        )}
+        {/* ═══════════════════════════════════════════════════════
+            SECTION 1: LIVE DATA
+            ═══════════════════════════════════════════════════════ */}
+        <section id="live" className="scroll-mt-14 md:scroll-mt-[70px] py-4">
 
-        {/* Hero gauges: RPM + Speed */}
-        <div className="flex justify-center gap-6 sm:gap-12 mb-4">
-          {HERO_GAUGES.map(g => (
-            <ArcGauge key={g.key} label={g.label} value={latest?.[g.key] as number | null | undefined} unit={g.unit} min={g.min} max={g.max} size={140} />
-          ))}
-        </div>
-
-        {/* Compact gauge grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-          {COMPACT_GAUGES.map(g => (
-            <MiniGauge key={g.key} label={g.label} value={latest?.[g.key] as number | null | undefined} unit={g.unit} min={g.min} max={g.max} />
-          ))}
-        </div>
-
-        {/* All PIDs expandable */}
-        {activeKeys.length > 0 && (
-          <details className="group mt-3">
-            <summary className="text-[10px] font-mono text-white/12 cursor-pointer hover:text-white/25 transition-colors">
-              All Active PIDs ({activeKeys.length})
-            </summary>
-            <div className="mt-1.5 glass rounded-xl p-3">
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-0.5 text-[10px] font-mono">
-                {activeKeys.map(k => {
-                  const val = latest![k as keyof PidSnapshot];
-                  return (
-                    <div key={k} className="flex justify-between py-0.5 border-b border-white/3">
-                      <span className="text-white/25">{k}</span>
-                      <span className="text-white/50">{typeof val === 'number' ? val.toFixed(2) : String(val)}</span>
-                    </div>
-                  );
-                })}
+          {/* Idle — not streaming, not scanning */}
+          {live.state === 'idle' && !isScanning && (
+            <div className="flex flex-col items-center py-14 text-center animate-fade-up">
+              <div className="w-14 h-14 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center mb-4">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-white/15">
+                  <polyline points="2,12 6,6 10,16 14,8 18,14 22,6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
               </div>
+              <h3 className="text-sm font-semibold text-white/50">Start Live Monitoring</h3>
+              <p className="text-[11px] text-white/20 mt-1.5 max-w-xs leading-relaxed">
+                Stream real-time sensor data from your vehicle&apos;s ECU
+              </p>
+              <Button onClick={() => live.startStream()} className="mt-5">
+                Start Stream
+              </Button>
             </div>
-          </details>
-        )}
-      </section>
-
-      {/* Divider */}
-      <div className="h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
-
-      {/* ══════════════════════════════════════════════════════════
-          SECTION 2: HEALTH SCAN
-          Start scan → progress → results
-          ══════════════════════════════════════════════════════════ */}
-      <section>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-xs font-mono text-white/20 uppercase tracking-wider">Health Scan</h2>
-          {isScanComplete && (
-            <button onClick={() => scan.reset()} className="text-[10px] font-mono text-white/15 hover:text-white/40 transition-colors">
-              New Scan
-            </button>
           )}
-        </div>
 
-        {/* Idle: Start scan button */}
-        {scan.state === 'idle' && (
-          <div className="flex flex-col items-center gap-5 py-8 animate-fade-up">
-            <div className="w-40 h-40 rounded-full border border-white/[0.04] flex items-center justify-center bg-gradient-to-b from-white/[0.01] to-transparent">
-              <div className="w-28 h-28 rounded-full border border-white/[0.04] flex items-center justify-center bg-gradient-to-b from-white/[0.02] to-transparent">
-                <Button onClick={() => scan.startHealthScan()} size="lg" className="rounded-full !px-6">
-                  Scan
-                </Button>
+          {/* Starting */}
+          {live.state === 'starting' && (
+            <div className="flex flex-col items-center py-14 text-center animate-fade-up">
+              <div className="w-10 h-10 border-2 border-[var(--accent)]/20 border-t-[var(--accent)] rounded-full animate-spin mb-4" />
+              <p className="text-xs text-white/30">Initializing stream…</p>
+            </div>
+          )}
+
+          {/* Error */}
+          {live.state === 'error' && (
+            <Card className="border-red-500/15 text-center animate-fade-up">
+              <p className="text-xs text-red-400 mb-3">Stream error — try reconnecting</p>
+              <div className="flex justify-center gap-2">
+                <Button size="sm" onClick={() => live.startStream()}>Retry</Button>
+                <Button size="sm" variant="ghost" onClick={() => live.reset()}>Dismiss</Button>
               </div>
-            </div>
-            <p className="text-[10px] text-white/12 font-mono">10 cycles · multi-system analysis</p>
-            <div className="flex flex-wrap justify-center gap-1.5">
-              {SYSTEMS.map(s => <SystemPill key={s.key} name={s.name} icon={s.icon} done={false} />)}
-            </div>
-          </div>
-        )}
+            </Card>
+          )}
 
-        {/* Scanning: Progress */}
-        {isScanning && (
-          <div className="flex flex-col items-center gap-4 py-4 animate-fade-up">
-            <div className="relative">
-              <ScoreRing score={scan.progress * 100} size={160} strokeWidth={4} />
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-2xl font-bold text-[var(--accent)]">{Math.round(scan.progress * 100)}</span>
-                <span className="text-[9px] text-white/15 font-mono">SCANNING</span>
-              </div>
+          {/* Paused during scan */}
+          {live.state === 'paused' && isScanning && (
+            <div className="text-center py-8 animate-fade-up">
+              <p className="text-[11px] text-white/20 font-mono">Live data paused during scan</p>
             </div>
-            <div className="text-center">
-              <p className="text-xs font-semibold text-white/50">{scan.progressMessage}</p>
-              {scan.progressDetail && <p className="text-[11px] text-white/15 mt-0.5">{scan.progressDetail}</p>}
-            </div>
-            <div className="flex flex-wrap justify-center gap-1.5">
-              {SYSTEMS.map(s => {
-                const found = systemScores[s.key];
-                return <SystemPill key={s.key} name={s.name} icon={found?.icon ?? s.icon} score={found?.score} done={!!found} />;
-              })}
-            </div>
-            {scan.feedCards.length > 0 && (
-              <div className="w-full mt-2 glass rounded-xl p-2.5 max-h-32 overflow-y-auto border border-white/[0.04]">
-                <div className="text-[9px] font-mono text-white/10 uppercase tracking-wider mb-1">Scan Log</div>
-                {scan.feedCards.slice(-10).map((card, i) => <FeedLine key={i} card={card} />)}
-                <div ref={feedEndRef} />
-              </div>
-            )}
-          </div>
-        )}
+          )}
 
-        {/* Error */}
-        {scan.state === 'error' && (
-          <div className="flex flex-col items-center gap-3 py-8">
-            <div className="w-12 h-12 rounded-full bg-red-500/8 flex items-center justify-center">
-              <svg width="18" height="18" viewBox="0 0 18 18" className="text-red-400">
-                <circle cx="9" cy="9" r="7" stroke="currentColor" strokeWidth="1.3" fill="none" />
-                <line x1="9" y1="5.5" x2="9" y2="9.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-                <circle cx="9" cy="12" r="0.7" fill="currentColor" />
-              </svg>
-            </div>
-            <p className="text-sm font-bold text-red-400">Scan Failed</p>
-            <p className="text-xs text-white/25 text-center max-w-xs">{scan.errorMessage}</p>
-            <div className="flex gap-2">
-              <Button variant="secondary" onClick={() => scan.reset()} size="sm">Retry</Button>
-              <Button variant="ghost" onClick={() => { bt.disconnect(); scan.reset(); }} size="sm">Disconnect</Button>
-            </div>
-          </div>
-        )}
+          {/* Active: streaming or paused (not during scan) */}
+          {(live.state === 'streaming' || (live.state === 'paused' && !isScanning)) && (
+            <div className="space-y-4 animate-fade-up">
+              {/* Controls bar */}
+              <div className="flex items-center gap-2">
+                {live.state === 'streaming' && (
+                  <Button onClick={() => live.pauseStream()} size="sm" variant="secondary">Pause</Button>
+                )}
+                {live.state === 'paused' && (
+                  <Button onClick={() => live.resumeStream()} size="sm">Resume</Button>
+                )}
+                <Button onClick={() => live.reset()} size="sm" variant="ghost">Stop</Button>
 
-        {/* Results */}
-        {isScanComplete && scan.result && (
-          <div className="space-y-5 animate-fade-up">
-            {/* Hero score */}
-            <div className="relative overflow-hidden rounded-2xl border border-white/[0.05] bg-gradient-to-br from-white/[0.03] to-transparent p-5 sm:p-6">
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 rounded-full opacity-15 blur-[80px] pointer-events-none" style={{ backgroundColor: scoreColor(scan.result.overallScore) }} />
-              <div className="relative flex flex-col sm:flex-row items-center gap-5 sm:gap-8">
-                <ScoreRing score={scan.result.overallScore} size={150} strokeWidth={5} />
-                <div className="text-center sm:text-left flex-1">
-                  <h3 className="text-xl sm:text-2xl font-bold tracking-tight">Vehicle Health</h3>
-                  <p className={`text-xs font-bold mt-1 ${riskColor(scan.result.overallRiskTier)}`}>{scan.result.overallRiskTier}</p>
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-3 text-[10px] font-mono text-white/15">
-                    <span>{scan.result.supportedPidCount} PIDs</span>
-                    <span>{scan.result.scanCycles} cycles</span>
-                    <span>{(scan.result.scanDurationMs / 1000).toFixed(1)}s</span>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5 mt-2">
-                    {(() => {
-                      const r = scan.result!;
-                      const healthy = r.systems.filter(s => s.riskTier === 'Healthy').length;
-                      const issues = r.systems.reduce((n, s) => n + s.evaluatedRules.length, 0);
-                      return (
-                        <>
-                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-emerald-500/8 text-emerald-400/70 border border-emerald-500/10">
-                            {healthy}/{r.systems.length} healthy
-                          </span>
-                          {issues > 0 && (
-                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-orange-500/8 text-orange-400/70 border border-orange-500/10">
-                              {issues} rules triggered
-                            </span>
-                          )}
-                          {r.diagnosticMatches.length > 0 && (
-                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-red-500/8 text-red-400/70 border border-red-500/10">
-                              {r.diagnosticMatches.length} diagnostics
-                            </span>
-                          )}
-                        </>
-                      );
-                    })()}
-                  </div>
+                <div className="ml-auto flex items-center gap-3 text-[10px] font-mono text-white/15">
+                  {live.sampleCount > 0 && <span className="tabular-nums">{live.sampleCount} samples</span>}
+                  {activeKeys.length > 0 && <span>{activeKeys.length} PIDs</span>}
+                  {live.state === 'streaming' && (
+                    <span className="text-emerald-400 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 status-dot" />
+                      LIVE
+                    </span>
+                  )}
+                  {live.state === 'paused' && <span className="text-yellow-400">PAUSED</span>}
                 </div>
               </div>
-            </div>
 
-            {/* Per-system analysis */}
-            <div>
-              <div className="flex items-center justify-between mb-2.5">
-                <h3 className="text-[10px] font-mono text-white/15 uppercase tracking-wider">System Analysis</h3>
-                <span className="text-[9px] font-mono text-white/8">{scan.result.systems.length} systems</span>
+              {/* Hero gauges: RPM + Speed */}
+              <div className="flex justify-center gap-8 sm:gap-14 py-2">
+                {HERO_GAUGES.map(g => (
+                  <ArcGauge key={g.key} label={g.label} value={latest?.[g.key] as number | null | undefined} unit={g.unit} min={g.min} max={g.max} size={150} />
+                ))}
               </div>
-              <div className="space-y-2">
-                {scan.result.systems.sort((a, b) => a.score - b.score).map(sys => (
-                  <SystemDetailPanel key={sys.system} sys={sys} />
+
+              {/* Compact gauge grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                {COMPACT_GAUGES.map(g => (
+                  <MiniGauge key={g.key} label={g.label} value={latest?.[g.key] as number | null | undefined} unit={g.unit} min={g.min} max={g.max} />
+                ))}
+              </div>
+
+              {/* All PIDs expandable */}
+              {activeKeys.length > 0 && (
+                <details className="group">
+                  <summary className="text-[10px] font-mono text-white/12 cursor-pointer hover:text-white/25 transition-colors select-none">
+                    All Active PIDs ({activeKeys.length})
+                  </summary>
+                  <div className="mt-1.5 glass rounded-xl p-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-0.5 text-[10px] font-mono">
+                      {activeKeys.map(k => {
+                        const val = latest![k as keyof PidSnapshot];
+                        return (
+                          <div key={k} className="flex justify-between py-0.5 border-b border-white/[0.03]">
+                            <span className="text-white/25">{k}</span>
+                            <span className="text-white/50 tabular-nums">{typeof val === 'number' ? val.toFixed(2) : String(val)}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </details>
+              )}
+            </div>
+          )}
+        </section>
+
+        <FlowGuide text={liveToScanGuide} />
+
+        {/* ═══════════════════════════════════════════════════════
+            SECTION 2: HEALTH SCAN
+            ═══════════════════════════════════════════════════════ */}
+        <section id="scan" className="scroll-mt-14 md:scroll-mt-[70px] py-4">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-semibold text-white/50">Health Scan</h2>
+            {isScanComplete && (
+              <button onClick={() => scan.reset()} className="text-[10px] font-mono text-white/15 hover:text-white/40 transition-colors">
+                New Scan
+              </button>
+            )}
+          </div>
+
+          {/* Idle */}
+          {scan.state === 'idle' && (
+            <div className="flex flex-col items-center py-10 text-center animate-fade-up">
+              <Button onClick={handleStartScan} size="lg" className="rounded-2xl !px-8">
+                Scan Vehicle
+              </Button>
+              <p className="text-[10px] text-white/12 mt-3 font-mono">10 cycles · 6 systems · ~30 seconds</p>
+              <div className="flex flex-wrap justify-center gap-2 mt-3">
+                {SYSTEMS.map(s => (
+                  <span key={s.key} className="text-[10px] text-white/15 flex items-center gap-0.5">
+                    <span>{s.icon}</span>{s.name}
+                  </span>
                 ))}
               </div>
             </div>
+          )}
 
-            {/* Diagnostics */}
-            {scan.result.diagnosticMatches.length > 0 && (
-              <div>
-                <div className="flex items-center gap-2 mb-2.5">
-                  <h3 className="text-[10px] font-mono text-white/15 uppercase tracking-wider">Diagnostics</h3>
-                  <Badge color="red">{scan.result.diagnosticMatches.length}</Badge>
+          {/* Scanning */}
+          {isScanning && (
+            <div className="space-y-4 animate-fade-up">
+              {/* Progress header */}
+              <div className="flex items-center gap-4">
+                <MiniScoreRing score={scan.progress * 100} size={48} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-white/50">{scan.progressMessage}</p>
+                  {scan.progressDetail && <p className="text-[10px] text-white/15 mt-0.5 truncate">{scan.progressDetail}</p>}
+                  <div className="h-1 rounded-full bg-white/[0.04] overflow-hidden mt-2">
+                    <div
+                      className="h-full rounded-full bg-[var(--accent)] transition-all duration-500"
+                      style={{ width: `${scan.progress * 100}%`, boxShadow: '0 0 8px var(--accent-glow)' }}
+                    />
+                  </div>
                 </div>
-                <div className="space-y-1.5">
-                  {scan.result.diagnosticMatches.sort((a, b) => b.repairPriority - a.repairPriority).map((d, i) => (
-                    <div key={i} className="rounded-xl border border-white/[0.04] bg-white/[0.02] p-3 space-y-1.5">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <Badge className={severityColor(d.severity)}>{d.severity}</Badge>
-                        <span className="text-[10px] text-white/15">{d.category}</span>
-                        {d.confidence < 1 && <span className="text-[9px] font-mono text-white/10 ml-auto">{Math.round(d.confidence * 100)}%</span>}
-                      </div>
-                      <p className="text-xs text-white/60">{d.description}</p>
-                      {d.recommendation && <p className="text-[11px] text-white/25">{d.recommendation}</p>}
+              </div>
+
+              {/* System pills */}
+              <div className="flex flex-wrap justify-center gap-1.5">
+                {SYSTEMS.map(s => {
+                  const found = systemScores[s.key];
+                  return <SystemPill key={s.key} name={s.name} icon={found?.icon ?? s.icon} score={found?.score} done={!!found} />;
+                })}
+              </div>
+
+              {/* Feed log */}
+              {scan.feedCards.length > 0 && (
+                <div className="glass rounded-xl p-2.5 max-h-32 overflow-y-auto border border-white/[0.04]">
+                  <div className="text-[9px] font-mono text-white/8 uppercase tracking-wider mb-1">Scan Feed</div>
+                  {scan.feedCards.slice(-8).map((card, i) => <FeedLine key={i} card={card} />)}
+                  <div ref={feedEndRef} />
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Error */}
+          {scan.state === 'error' && (
+            <div className="flex flex-col items-center gap-3 py-8 animate-fade-up">
+              <div className="w-12 h-12 rounded-full bg-red-500/8 flex items-center justify-center">
+                <svg width="18" height="18" viewBox="0 0 18 18" className="text-red-400">
+                  <circle cx="9" cy="9" r="7" stroke="currentColor" strokeWidth="1.3" fill="none" />
+                  <line x1="9" y1="5.5" x2="9" y2="9.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+                  <circle cx="9" cy="12" r="0.7" fill="currentColor" />
+                </svg>
+              </div>
+              <p className="text-sm font-bold text-red-400">Scan Failed</p>
+              <p className="text-xs text-white/25 text-center max-w-xs">{scan.errorMessage}</p>
+              <div className="flex gap-2">
+                <Button variant="secondary" onClick={() => scan.reset()} size="sm">Retry</Button>
+                <Button variant="ghost" onClick={() => { bt.disconnect(); scan.reset(); }} size="sm">Disconnect</Button>
+              </div>
+            </div>
+          )}
+
+          {/* Results */}
+          {isScanComplete && scan.result && (
+            <div className="space-y-5 animate-fade-up">
+              {/* Hero score */}
+              <div className="relative overflow-hidden rounded-2xl border border-white/[0.05] bg-gradient-to-br from-white/[0.03] to-transparent p-5 sm:p-6">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 rounded-full opacity-15 blur-[80px] pointer-events-none" style={{ backgroundColor: scoreColor(scan.result.overallScore) }} />
+                <div className="relative flex flex-col sm:flex-row items-center gap-5 sm:gap-8">
+                  <ScoreRing score={scan.result.overallScore} size={140} strokeWidth={5} />
+                  <div className="text-center sm:text-left flex-1">
+                    <h3 className="text-xl sm:text-2xl font-bold tracking-tight">Vehicle Health</h3>
+                    <p className={`text-xs font-bold mt-1 ${riskColor(scan.result.overallRiskTier)}`}>{scan.result.overallRiskTier}</p>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-3 text-[10px] font-mono text-white/15 tabular-nums">
+                      <span>{scan.result.supportedPidCount} PIDs</span>
+                      <span>{scan.result.scanCycles} cycles</span>
+                      <span>{(scan.result.scanDurationMs / 1000).toFixed(1)}s</span>
                     </div>
+                    <div className="flex flex-wrap gap-1.5 mt-2">
+                      {(() => {
+                        const r = scan.result!;
+                        const healthy = r.systems.filter(s => s.riskTier === 'Healthy').length;
+                        const issues = r.systems.reduce((n, s) => n + s.evaluatedRules.length, 0);
+                        return (
+                          <>
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-emerald-500/8 text-emerald-400/70 border border-emerald-500/10">
+                              {healthy}/{r.systems.length} healthy
+                            </span>
+                            {issues > 0 && (
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-orange-500/8 text-orange-400/70 border border-orange-500/10">
+                                {issues} rules triggered
+                              </span>
+                            )}
+                            {r.diagnosticMatches.length > 0 && (
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-red-500/8 text-red-400/70 border border-red-500/10">
+                                {r.diagnosticMatches.length} diagnostics
+                              </span>
+                            )}
+                          </>
+                        );
+                      })()}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* System analysis */}
+              <div>
+                <div className="flex items-center justify-between mb-2.5">
+                  <h3 className="text-[10px] font-mono text-white/15 uppercase tracking-wider">System Analysis</h3>
+                  <span className="text-[9px] font-mono text-white/8">{scan.result.systems.length} systems</span>
+                </div>
+                <div className="space-y-2">
+                  {scan.result.systems.sort((a, b) => a.score - b.score).map(sys => (
+                    <SystemDetailPanel key={sys.system} sys={sys} />
                   ))}
                 </div>
               </div>
-            )}
 
-            {/* Correlations */}
-            {scan.result.correlationResults && scan.result.correlationResults.length > 0 && (
-              <div>
-                <h3 className="text-[10px] font-mono text-white/15 uppercase tracking-wider mb-2.5">Correlations</h3>
-                <div className="grid gap-1.5 sm:grid-cols-2">
-                  {scan.result.correlationResults.map((c, i) => (
-                    <div key={i} className="rounded-xl border border-white/[0.04] bg-white/[0.02] p-2.5 space-y-1">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-medium text-white/45">{c.name}</span>
-                        <span className={`text-[9px] font-mono font-bold ${c.status === 'normal' ? 'text-emerald-400/50' : 'text-yellow-400/60'}`}>{c.status}</span>
+              {/* Diagnostics */}
+              {scan.result.diagnosticMatches.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-2 mb-2.5">
+                    <h3 className="text-[10px] font-mono text-white/15 uppercase tracking-wider">Diagnostics</h3>
+                    <Badge color="red">{scan.result.diagnosticMatches.length}</Badge>
+                  </div>
+                  <div className="space-y-1.5">
+                    {scan.result.diagnosticMatches.sort((a, b) => b.repairPriority - a.repairPriority).map((d, i) => (
+                      <div key={i} className="rounded-xl border border-white/[0.04] bg-white/[0.02] p-3 space-y-1.5">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <Badge className={severityColor(d.severity)}>{d.severity}</Badge>
+                          <span className="text-[10px] text-white/15">{d.category}</span>
+                          {d.confidence < 1 && <span className="text-[9px] font-mono text-white/10 ml-auto tabular-nums">{Math.round(d.confidence * 100)}%</span>}
+                        </div>
+                        <p className="text-xs text-white/60">{d.description}</p>
+                        {d.recommendation && <p className="text-[11px] text-white/25">{d.recommendation}</p>}
                       </div>
-                      <p className="text-[10px] text-white/20">{c.consumerMessage}</p>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* Scan log */}
-            {scan.feedCards.length > 0 && (
-              <details className="group">
-                <summary className="text-[10px] font-mono text-white/10 cursor-pointer hover:text-white/20 transition-colors">
-                  Scan Log ({scan.feedCards.length})
-                </summary>
-                <div className="mt-1.5 glass rounded-xl p-2.5 max-h-40 overflow-y-auto border border-white/[0.04]">
-                  {scan.feedCards.map((card, i) => <FeedLine key={i} card={card} />)}
+              {/* Correlations */}
+              {scan.result.correlationResults && scan.result.correlationResults.length > 0 && (
+                <div>
+                  <h3 className="text-[10px] font-mono text-white/15 uppercase tracking-wider mb-2.5">Correlations</h3>
+                  <div className="grid gap-1.5 sm:grid-cols-2">
+                    {scan.result.correlationResults.map((c, i) => (
+                      <div key={i} className="rounded-xl border border-white/[0.04] bg-white/[0.02] p-2.5 space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-medium text-white/45">{c.name}</span>
+                          <span className={`text-[9px] font-mono font-bold ${c.status === 'normal' ? 'text-emerald-400/50' : 'text-yellow-400/60'}`}>{c.status}</span>
+                        </div>
+                        <p className="text-[10px] text-white/20">{c.consumerMessage}</p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </details>
-            )}
-          </div>
-        )}
-      </section>
+              )}
 
-      {/* Divider */}
-      <div className="h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
+              {/* Scan log */}
+              {scan.feedCards.length > 0 && (
+                <details className="group">
+                  <summary className="text-[10px] font-mono text-white/10 cursor-pointer hover:text-white/20 transition-colors select-none">
+                    Scan Log ({scan.feedCards.length})
+                  </summary>
+                  <div className="mt-1.5 glass rounded-xl p-2.5 max-h-40 overflow-y-auto border border-white/[0.04]">
+                    {scan.feedCards.map((card, i) => <FeedLine key={i} card={card} />)}
+                  </div>
+                </details>
+              )}
+            </div>
+          )}
+        </section>
 
-      {/* ══════════════════════════════════════════════════════════
-          SECTION 3: DTC / FAULT CODES
-          Read, view, and clear trouble codes
-          ══════════════════════════════════════════════════════════ */}
-      <section>
-        <h2 className="text-xs font-mono text-white/20 uppercase tracking-wider mb-3">Fault Codes</h2>
+        <FlowGuide text={scanToDtcGuide} />
 
-        {/* Controls */}
-        <div className="flex items-center gap-2.5 glass rounded-2xl p-2.5 mb-4">
-          <Button onClick={() => dtcStore.readDtcs()} disabled={dtcStore.state === 'reading'} size="sm">
-            {dtcStore.state === 'reading' ? 'Reading…' : 'Read DTCs'}
-          </Button>
-          {dtcStore.totalCount > 0 && (
-            <>
-              {!confirmClear ? (
+        {/* ═══════════════════════════════════════════════════════
+            SECTION 3: FAULT CODES
+            ═══════════════════════════════════════════════════════ */}
+        <section id="dtc" className="scroll-mt-14 md:scroll-mt-[70px] py-4">
+          <h2 className="text-sm font-semibold text-white/50 mb-4">Fault Codes</h2>
+
+          {/* Controls */}
+          <div className="flex items-center gap-2.5 mb-4">
+            <Button onClick={() => dtcStore.readDtcs()} disabled={dtcStore.state === 'reading'} size="sm">
+              {dtcStore.state === 'reading' ? 'Reading…' : 'Read DTCs'}
+            </Button>
+            {dtcStore.totalCount > 0 && (
+              !confirmClear ? (
                 <Button variant="danger" size="sm" onClick={() => setConfirmClear(true)} disabled={dtcStore.state === 'clearing'}>
                   Clear
                 </Button>
@@ -792,79 +1025,83 @@ export default function DiagPage() {
                   <Button variant="danger" size="sm" onClick={() => { dtcStore.clearDtcs(); setConfirmClear(false); }}>Yes</Button>
                   <Button variant="ghost" size="sm" onClick={() => setConfirmClear(false)}>No</Button>
                 </div>
-              )}
-            </>
-          )}
-          <div className="ml-auto flex items-center gap-1.5">
-            {dtcStore.storedDtcs.length > 0 && <Badge color="red">{dtcStore.storedDtcs.length} stored</Badge>}
-            {dtcStore.pendingDtcs.length > 0 && <Badge color="yellow">{dtcStore.pendingDtcs.length} pending</Badge>}
-            {dtcStore.permanentDtcs.length > 0 && <Badge color="orange">{dtcStore.permanentDtcs.length} perm</Badge>}
+              )
+            )}
+            <div className="ml-auto flex items-center gap-1.5">
+              {dtcStore.storedDtcs.length > 0 && <Badge color="red">{dtcStore.storedDtcs.length} stored</Badge>}
+              {dtcStore.pendingDtcs.length > 0 && <Badge color="yellow">{dtcStore.pendingDtcs.length} pending</Badge>}
+              {dtcStore.permanentDtcs.length > 0 && <Badge color="orange">{dtcStore.permanentDtcs.length} perm</Badge>}
+            </div>
           </div>
-        </div>
 
-        {/* Error */}
-        {dtcStore.errorMessage && (
-          <Card className="border-red-500/15 mb-3">
-            <p className="text-xs text-red-400">{dtcStore.errorMessage}</p>
-          </Card>
-        )}
-
-        {/* Search */}
-        {dtcStore.totalCount > 0 && (
-          <div className="relative mb-3">
-            <svg width="12" height="12" viewBox="0 0 12 12" className="absolute left-3 top-1/2 -translate-y-1/2 text-white/12">
-              <circle cx="5" cy="5" r="3.5" stroke="currentColor" strokeWidth="1.2" fill="none" />
-              <line x1="7.5" y1="7.5" x2="10.5" y2="10.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-            </svg>
-            <input
-              type="text"
-              placeholder="Search codes…"
-              value={dtcSearch}
-              onChange={e => setDtcSearch(e.target.value)}
-              className="w-full pl-8 pr-3 py-2 glass rounded-xl text-xs text-white placeholder-white/12 focus:outline-none focus:ring-1 focus:ring-[var(--accent)]/30"
-            />
-          </div>
-        )}
-
-        {/* DTC lists */}
-        <div className="space-y-3">
-          {fStored.length > 0 && (
-            <DtcGroup label="Confirmed" color="red" count={fStored.length}>
-              {fStored.map(dtc => <DtcCard key={`s-${dtc.code}`} dtc={dtc} />)}
-            </DtcGroup>
-          )}
-          {fPending.length > 0 && (
-            <DtcGroup label="Pending" color="yellow" count={fPending.length}>
-              {fPending.map(dtc => <DtcCard key={`p-${dtc.code}`} dtc={dtc} />)}
-            </DtcGroup>
-          )}
-          {fPermanent.length > 0 && (
-            <DtcGroup label="Permanent" color="orange" count={fPermanent.length}>
-              {fPermanent.map(dtc => <DtcCard key={`pm-${dtc.code}`} dtc={dtc} />)}
-            </DtcGroup>
+          {/* Error */}
+          {dtcStore.errorMessage && (
+            <Card className="border-red-500/15 mb-3">
+              <p className="text-xs text-red-400">{dtcStore.errorMessage}</p>
+            </Card>
           )}
 
-          {/* Empty states */}
-          {dtcStore.state === 'complete' && dtcStore.totalCount === 0 && (
-            <div className="flex flex-col items-center py-10 text-center">
-              <div className="w-12 h-12 rounded-full bg-emerald-500/8 flex items-center justify-center mb-3">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="text-emerald-400">
-                  <circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="1.3" />
-                  <polyline points="6,10 9,13 14,7" stroke="currentColor" strokeWidth="1.3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-              <p className="text-sm font-bold text-emerald-400">No Trouble Codes</p>
-              <p className="text-xs text-white/25 mt-0.5">Your vehicle has no stored DTCs</p>
+          {/* Search */}
+          {dtcStore.totalCount > 0 && (
+            <div className="relative mb-3">
+              <svg width="12" height="12" viewBox="0 0 12 12" className="absolute left-3 top-1/2 -translate-y-1/2 text-white/12">
+                <circle cx="5" cy="5" r="3.5" stroke="currentColor" strokeWidth="1.2" fill="none" />
+                <line x1="7.5" y1="7.5" x2="10.5" y2="10.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+              </svg>
+              <input
+                type="text"
+                placeholder="Search codes…"
+                value={dtcSearch}
+                onChange={e => setDtcSearch(e.target.value)}
+                className="w-full pl-8 pr-3 py-2 glass rounded-xl text-xs text-white placeholder-white/12 focus:outline-none focus:ring-1 focus:ring-[var(--accent)]/30"
+              />
             </div>
           )}
-          {dtcStore.state === 'idle' && dtcStore.totalCount === 0 && (
-            <p className="text-center py-10 text-xs text-white/15">Press &quot;Read DTCs&quot; to scan for fault codes</p>
-          )}
-        </div>
-      </section>
 
-      {/* Bottom spacer for mobile nav bar */}
-      <div className="h-4" />
-    </div>
+          {/* DTC lists */}
+          <div className="space-y-3">
+            {filteredDtcs.stored.length > 0 && (
+              <DtcGroup label="Confirmed" color="red" count={filteredDtcs.stored.length}>
+                {filteredDtcs.stored.map(dtc => <DtcCard key={`s-${dtc.code}`} dtc={dtc} />)}
+              </DtcGroup>
+            )}
+            {filteredDtcs.pending.length > 0 && (
+              <DtcGroup label="Pending" color="yellow" count={filteredDtcs.pending.length}>
+                {filteredDtcs.pending.map(dtc => <DtcCard key={`p-${dtc.code}`} dtc={dtc} />)}
+              </DtcGroup>
+            )}
+            {filteredDtcs.permanent.length > 0 && (
+              <DtcGroup label="Permanent" color="orange" count={filteredDtcs.permanent.length}>
+                {filteredDtcs.permanent.map(dtc => <DtcCard key={`pm-${dtc.code}`} dtc={dtc} />)}
+              </DtcGroup>
+            )}
+
+            {/* Empty: no DTCs found */}
+            {dtcStore.state === 'complete' && dtcStore.totalCount === 0 && (
+              <div className="flex flex-col items-center py-10 text-center animate-fade-up">
+                <div className="w-12 h-12 rounded-full bg-emerald-500/8 flex items-center justify-center mb-3">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="text-emerald-400">
+                    <circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="1.3" />
+                    <polyline points="6,10 9,13 14,7" stroke="currentColor" strokeWidth="1.3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+                <p className="text-sm font-bold text-emerald-400">No Trouble Codes</p>
+                <p className="text-xs text-white/25 mt-0.5">Your vehicle has no stored DTCs</p>
+              </div>
+            )}
+
+            {/* Empty: haven't scanned yet */}
+            {dtcStore.state === 'idle' && dtcStore.totalCount === 0 && (
+              <div className="flex flex-col items-center py-10 text-center">
+                <p className="text-xs text-white/15">Press &quot;Read DTCs&quot; to scan for fault codes</p>
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* Bottom spacer for mobile nav */}
+        <div className="h-6" />
+      </div>
+    </>
   );
 }

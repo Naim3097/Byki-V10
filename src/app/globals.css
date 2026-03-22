@@ -101,6 +101,15 @@ body {
   animation: shimmer 1.5s ease-in-out infinite;
 }
 
+/* ── Breathing animation (connect screen) ─────── */
+@keyframes breathe {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.8; }
+}
+.breathe {
+  animation: breathe 3s ease-in-out infinite;
+}
+
 /* ── Scrollbar styling ────────────────────────── */
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
