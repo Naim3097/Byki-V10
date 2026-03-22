@@ -10,7 +10,7 @@ import type { PidSnapshot } from '@/models';
 import { PID_SNAPSHOT_KEYS } from '@/models';
 import type { SystemHealthReport, EvaluatedRule, ComponentRisk, DtcCode } from '@/models';
 import { DtcSource } from '@/models';
-import { ScoreRing, Button, Card, Badge, ProgressBar, scoreColor, riskColor, riskBg, severityColor } from '@/components/ui';
+import { ScoreRing, Button, Card, Badge, scoreColor, riskColor, severityColor } from '@/components/ui';
 
 // ═══════════════════════════════════════════════════════════════════
 // BYKI — Unified Diagnostics
@@ -46,12 +46,12 @@ const COMPACT_GAUGES: GaugeDef[] = [
 ];
 
 const SYSTEMS = [
-  { key: 'engine', icon: '⚙️', name: 'Engine' },
-  { key: 'fuel', icon: '⛽', name: 'Fuel' },
-  { key: 'emission', icon: '🌿', name: 'Emission' },
-  { key: 'electrical', icon: '🔋', name: 'Electrical' },
-  { key: 'thermal', icon: '🌡️', name: 'Thermal' },
-  { key: 'air_intake', icon: '💨', name: 'Intake' },
+  { key: 'engine', tag: 'ENG', name: 'Engine' },
+  { key: 'fuel', tag: 'FUEL', name: 'Fuel' },
+  { key: 'emission', tag: 'EMI', name: 'Emission' },
+  { key: 'electrical', tag: 'ELEC', name: 'Electrical' },
+  { key: 'thermal', tag: 'THM', name: 'Thermal' },
+  { key: 'air_intake', tag: 'AIR', name: 'Intake' },
 ];
 
 /* ── SVG Arc helpers ───────────────────────────────────────────── */
@@ -105,13 +105,13 @@ function ArcGauge({ label, value, unit, min, max, size = 150 }: Omit<GaugeDef, '
           )}
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-end pb-1 z-[2]">
-          <span className={`text-2xl font-bold font-mono tabular-nums ${hasValue ? 'text-white' : 'text-white/8'} transition-colors`}>
+          <span className={`text-3xl font-bold font-mono tabular-nums tracking-tight ${hasValue ? 'text-white' : 'text-white/10'} transition-colors`}>
             {hasValue ? formatValue(v) : '—'}
           </span>
-          <span className="text-[9px] text-white/20 mt-0.5">{unit}</span>
+          <span className="text-[11px] text-white/25 font-mono mt-0.5">{unit}</span>
         </div>
       </div>
-      <span className="text-[10px] text-white/30 mt-1 font-medium">{label}</span>
+      <span className="text-xs text-white/40 mt-1.5 font-semibold tracking-wide uppercase">{label}</span>
     </div>
   );
 }
@@ -126,14 +126,14 @@ function MiniGauge({ label, value, unit, min, max }: Omit<GaugeDef, 'key'> & { v
 
   return (
     <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-3 hover:border-white/[0.08] transition-all">
-      <div className="flex items-baseline justify-between mb-1.5">
-        <span className="text-[10px] text-white/25 font-medium">{label}</span>
-        <span className="text-[9px] text-white/10 font-mono">{unit}</span>
+      <div className="flex items-baseline justify-between mb-2">
+        <span className="text-[11px] text-white/35 font-medium tracking-wide">{label}</span>
+        <span className="text-[11px] text-white/15 font-mono">{unit}</span>
       </div>
-      <span className={`block text-lg font-bold font-mono tabular-nums leading-none ${hasValue ? 'text-white/90' : 'text-white/8'} transition-colors`}>
+      <span className={`block text-xl font-bold font-mono tabular-nums leading-none ${hasValue ? 'text-white' : 'text-white/10'} transition-colors`}>
         {hasValue ? formatValue(v) : '—'}
       </span>
-      <div className="mt-2 h-0.5 rounded-full bg-white/[0.04] overflow-hidden">
+      <div className="mt-2.5 h-[3px] rounded-full bg-white/[0.04] overflow-hidden">
         <div className="h-full rounded-full transition-all duration-300" style={{ width: `${hasValue ? pct : 0}%`, backgroundColor: color }} />
       </div>
     </div>
@@ -146,25 +146,25 @@ function FeedLine({ card }: { card: ScanFeedCard }) {
   switch (card.type) {
     case 'phase':
       return (
-        <div className="flex items-center gap-2 py-1">
+        <div className="flex items-center gap-2.5 py-1">
           <span className="w-1 h-1 rounded-full bg-[var(--accent)]" />
-          <span className="text-[11px] font-mono font-semibold text-[var(--accent)]">{card.title}</span>
-          {card.subtitle && <span className="text-[11px] text-white/25">{card.subtitle}</span>}
+          <span className="text-xs font-mono font-semibold text-[var(--accent)]">{card.title}</span>
+          {card.subtitle && <span className="text-xs text-white/30">{card.subtitle}</span>}
         </div>
       );
     case 'pulse':
       return (
-        <div className="flex items-center gap-2 py-0.5 pl-3">
-          <span className="text-[11px] font-mono text-white/20">{card.title}</span>
+        <div className="flex items-center gap-2 py-0.5 pl-3.5">
+          <span className="text-xs font-mono text-white/25">{card.title}</span>
         </div>
       );
     case 'systemScore': {
       const sys = card.systemReport;
       if (!sys) return null;
       return (
-        <div className="flex items-center justify-between pl-3 py-0.5">
-          <span className="text-[11px] text-white/40">{sys.icon} {sys.consumerName}</span>
-          <span className="text-[11px] font-bold font-mono tabular-nums" style={{ color: scoreColor(sys.score) }}>{Math.round(sys.score)}</span>
+        <div className="flex items-center justify-between pl-3.5 py-0.5">
+          <span className="text-xs text-white/45">{sys.consumerName}</span>
+          <span className="text-xs font-bold font-mono tabular-nums" style={{ color: scoreColor(sys.score) }}>{Math.round(sys.score)}</span>
         </div>
       );
     }
@@ -175,17 +175,17 @@ function FeedLine({ card }: { card: ScanFeedCard }) {
 
 /* ── System pill (during scan) ─────────────────────────────────── */
 
-function SystemPill({ name, icon, score, done }: { name: string; icon: string; score?: number; done: boolean }) {
+function SystemTag({ name, score, done }: { name: string; score?: number; done: boolean }) {
+  const tier = score != null ? (score >= 85 ? 'Healthy' : score >= 70 ? 'Monitor' : score >= 50 ? 'Warning' : 'Critical') : null;
   return (
-    <div className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-medium transition-all duration-500 ${
-      done && score != null
-        ? `border ${riskBg(score >= 85 ? 'Healthy' : score >= 70 ? 'Monitor' : score >= 50 ? 'Warning' : 'Critical')}`
-        : 'bg-white/[0.03] border border-white/[0.05] text-white/20'
+    <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-500 ${
+      done && tier
+        ? `border ${tier === 'Healthy' ? 'bg-emerald-500/8 border-emerald-500/15 text-emerald-400' : tier === 'Monitor' ? 'bg-yellow-500/8 border-yellow-500/15 text-yellow-400' : tier === 'Warning' ? 'bg-orange-500/8 border-orange-500/15 text-orange-400' : 'bg-red-500/8 border-red-500/15 text-red-400'}`
+        : 'bg-white/[0.03] border border-white/[0.06] text-white/25'
     }`}>
-      <span>{icon}</span>
       <span>{name}</span>
       {done && score != null && (
-        <span className="font-bold font-mono tabular-nums ml-0.5" style={{ color: scoreColor(score) }}>{Math.round(score)}</span>
+        <span className="font-bold font-mono tabular-nums" style={{ color: scoreColor(score) }}>{Math.round(score)}</span>
       )}
     </div>
   );
@@ -208,7 +208,7 @@ function MiniScoreRing({ score, size = 44 }: { score: number; size?: number }) {
           className="transition-all duration-500"
           style={{ filter: `drop-shadow(0 0 4px ${color}30)` }} />
       </svg>
-      <span className="absolute text-[11px] font-bold font-mono tabular-nums" style={{ color }}>{Math.round(score)}</span>
+      <span className="absolute text-xs font-bold font-mono tabular-nums" style={{ color }}>{Math.round(score)}</span>
     </div>
   );
 }
@@ -227,8 +227,8 @@ function SystemDetailPanel({ sys }: { sys: SystemHealthReport }) {
         <MiniScoreRing score={sys.score} size={40} />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold">{sys.icon} {sys.consumerName}</span>
-            <span className={`text-[9px] font-bold uppercase tracking-wider ${riskColor(sys.riskTier)}`}>{sys.riskTier}</span>
+            <span className="text-sm font-semibold text-white/90">{sys.consumerName}</span>
+            <span className={`text-[11px] font-bold uppercase tracking-wider ${riskColor(sys.riskTier)}`}>{sys.riskTier}</span>
           </div>
           <p className="text-[11px] text-white/25 mt-0.5 truncate">{sys.findings[0] ?? 'System operating normally'}</p>
         </div>
@@ -245,10 +245,10 @@ function SystemDetailPanel({ sys }: { sys: SystemHealthReport }) {
           {/* Score bar */}
           <div className="space-y-1">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] text-white/25">Health Score</span>
-              <span className="text-xs font-bold font-mono tabular-nums" style={{ color }}>{Math.round(sys.score)} / 100</span>
+              <span className="text-xs text-white/30">Health Score</span>
+              <span className="text-sm font-bold font-mono tabular-nums" style={{ color }}>{Math.round(sys.score)} / 100</span>
             </div>
-            <div className="h-1.5 rounded-full bg-white/[0.04] overflow-hidden">
+            <div className="h-[3px] rounded-full bg-white/[0.04] overflow-hidden">
               <div className="h-full rounded-full transition-all duration-700" style={{ width: `${sys.score}%`, backgroundColor: color, boxShadow: `0 0 8px ${color}40` }} />
             </div>
           </div>
@@ -256,12 +256,12 @@ function SystemDetailPanel({ sys }: { sys: SystemHealthReport }) {
           {/* Findings */}
           {sys.findings.length > 0 && sys.findings[0] !== 'System operating normally' && sys.findings[0] !== 'Insufficient sensor data for this system' && (
             <div>
-              <h4 className="text-[9px] font-mono text-white/15 uppercase tracking-wider mb-1.5">Findings</h4>
-              <div className="space-y-1">
+              <h4 className="text-[11px] font-mono text-white/20 uppercase tracking-wider mb-2">Findings</h4>
+              <div className="space-y-1.5">
                 {sys.findings.map((f, i) => (
-                  <div key={i} className="flex items-start gap-1.5">
-                    <span className="w-1 h-1 rounded-full mt-1.5 flex-shrink-0" style={{ backgroundColor: color }} />
-                    <span className="text-[11px] text-white/45">{f}</span>
+                  <div key={i} className="flex items-start gap-2">
+                    <span className="w-1 h-1 rounded-full mt-[7px] flex-shrink-0" style={{ backgroundColor: color }} />
+                    <span className="text-xs text-white/50 leading-relaxed">{f}</span>
                   </div>
                 ))}
               </div>
@@ -271,10 +271,10 @@ function SystemDetailPanel({ sys }: { sys: SystemHealthReport }) {
           {/* Evaluated rules */}
           {sys.evaluatedRules.length > 0 && (
             <div>
-              <h4 className="text-[9px] font-mono text-white/15 uppercase tracking-wider mb-1.5">
-                Analysis Rules <span className="text-white/8">({sys.evaluatedRules.length})</span>
+              <h4 className="text-[11px] font-mono text-white/20 uppercase tracking-wider mb-2">
+                Analysis Rules <span className="text-white/10">({sys.evaluatedRules.length})</span>
               </h4>
-              <div className="space-y-1.5">
+              <div className="space-y-2">
                 {sys.evaluatedRules.map((rule, i) => <RuleCard key={i} rule={rule} />)}
               </div>
             </div>
@@ -283,8 +283,8 @@ function SystemDetailPanel({ sys }: { sys: SystemHealthReport }) {
           {/* Component risks */}
           {sys.componentRisks.length > 0 && (
             <div>
-              <h4 className="text-[9px] font-mono text-white/15 uppercase tracking-wider mb-1.5">Component Risks</h4>
-              <div className="space-y-1.5">
+              <h4 className="text-[11px] font-mono text-white/20 uppercase tracking-wider mb-2">Component Risks</h4>
+              <div className="space-y-2">
                 {sys.componentRisks.sort((a, b) => b.probability - a.probability).map((cr, i) => (
                   <ComponentRiskBar key={i} risk={cr} />
                 ))}
@@ -293,12 +293,7 @@ function SystemDetailPanel({ sys }: { sys: SystemHealthReport }) {
           )}
 
           {!hasIssues && (
-            <div className="flex items-center gap-2 py-1">
-              <span className="w-4 h-4 rounded-full bg-emerald-500/10 flex items-center justify-center">
-                <svg width="8" height="8" viewBox="0 0 8 8"><polyline points="1.5,4.5 3,6 6.5,2" stroke="#00ff88" strokeWidth="1.2" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
-              </span>
-              <span className="text-[11px] text-emerald-400/50">All parameters normal</span>
-            </div>
+            <p className="text-xs text-emerald-400/60 py-1">All parameters within normal range</p>
           )}
         </div>
       )}
@@ -310,24 +305,24 @@ function RuleCard({ rule }: { rule: EvaluatedRule }) {
   const pct = Math.round(rule.strength * 100);
   const color = pct >= 70 ? '#ef4444' : pct >= 40 ? '#f97316' : '#fbbf24';
   return (
-    <div className="rounded-xl bg-white/[0.02] border border-white/[0.03] p-2.5 space-y-1.5">
-      <div className="flex items-start justify-between gap-2">
+    <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-3 space-y-2">
+      <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
-          <p className="text-[11px] font-medium text-white/60">{rule.name}</p>
-          <p className="text-[10px] text-white/30 mt-0.5">{rule.consumerMessage}</p>
+          <p className="text-xs font-medium text-white/65">{rule.name}</p>
+          <p className="text-[11px] text-white/35 mt-0.5 leading-relaxed">{rule.consumerMessage}</p>
         </div>
-        <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
-          <span className="text-[9px] font-mono font-bold tabular-nums" style={{ color }}>{pct}%</span>
-          <div className="w-8 h-0.5 rounded-full bg-white/[0.04] overflow-hidden">
+        <div className="flex flex-col items-end gap-1 flex-shrink-0">
+          <span className="text-xs font-mono font-bold tabular-nums" style={{ color }}>{pct}%</span>
+          <div className="w-10 h-[3px] rounded-full bg-white/[0.04] overflow-hidden">
             <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: color }} />
           </div>
         </div>
       </div>
       {rule.possibleDtcs.length > 0 && (
         <div className="flex items-center gap-1 flex-wrap">
-          <span className="text-[8px] text-white/12 uppercase">DTCs:</span>
+          <span className="text-[10px] text-white/15 uppercase font-mono">DTCs:</span>
           {rule.possibleDtcs.map(dtc => (
-            <span key={dtc} className="text-[9px] font-mono px-1 py-0.5 rounded bg-white/[0.03] text-white/25">{dtc}</span>
+            <span key={dtc} className="text-[11px] font-mono px-1.5 py-0.5 rounded bg-white/[0.04] text-white/30">{dtc}</span>
           ))}
         </div>
       )}
@@ -340,11 +335,11 @@ function ComponentRiskBar({ risk }: { risk: ComponentRisk }) {
   const color = pct >= 60 ? '#ef4444' : pct >= 30 ? '#f97316' : '#fbbf24';
   return (
     <div className="flex items-center gap-2">
-      <span className="text-[11px] text-white/40 w-28 truncate flex-shrink-0">{risk.component}</span>
-      <div className="flex-1 h-1 rounded-full bg-white/[0.04] overflow-hidden">
+      <span className="text-xs text-white/45 w-28 truncate flex-shrink-0">{risk.component}</span>
+      <div className="flex-1 h-[3px] rounded-full bg-white/[0.04] overflow-hidden">
         <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, backgroundColor: color }} />
       </div>
-      <span className="text-[9px] font-mono font-bold tabular-nums w-6 text-right" style={{ color }}>{pct}%</span>
+      <span className="text-[11px] font-mono font-bold tabular-nums w-7 text-right" style={{ color }}>{pct}%</span>
     </div>
   );
 }
@@ -355,32 +350,32 @@ function DtcCard({ dtc }: { dtc: DtcCode }) {
   const [open, setOpen] = useState(false);
   return (
     <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] overflow-hidden">
-      <button onClick={() => setOpen(!open)} className="w-full p-3 flex items-center gap-2.5 text-left hover:bg-white/[0.02] transition-colors">
-        <div className={`w-0.5 self-stretch rounded-full -my-3 -ml-3 mr-1 ${
+      <button onClick={() => setOpen(!open)} className="w-full p-3.5 flex items-center gap-3 text-left hover:bg-white/[0.02] transition-colors">
+        <div className={`w-[3px] self-stretch rounded-full -my-3.5 -ml-3.5 mr-0.5 ${
           dtc.severity === 'CRITICAL' ? 'bg-red-500' : dtc.severity === 'MAJOR' ? 'bg-orange-500' :
           dtc.severity === 'MODERATE' ? 'bg-yellow-500' : dtc.severity === 'MINOR' ? 'bg-blue-500' : 'bg-white/10'
         }`} />
-        <span className="text-xs font-mono font-bold text-[var(--accent)]">{dtc.code}</span>
+        <span className="text-sm font-mono font-bold text-[var(--accent)]">{dtc.code}</span>
         <span className="flex-1 text-xs text-white/50 truncate">{dtc.description || 'Unknown code'}</span>
         {dtc.severity && <Badge className={severityColor(dtc.severity)}>{dtc.severity}</Badge>}
         {dtc.source === DtcSource.PERMANENT && <Badge color="red">PERM</Badge>}
-        <svg width="10" height="10" viewBox="0 0 10 10" className={`text-white/15 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}>
-          <polyline points="2,3.5 5,6.5 8,3.5" stroke="currentColor" strokeWidth="1.3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+        <svg width="12" height="12" viewBox="0 0 12 12" className={`text-white/20 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}>
+          <polyline points="2.5,4.5 6,7.5 9.5,4.5" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </button>
       {open && (
-        <div className="px-3 pb-3 space-y-1.5 border-t border-white/[0.03] pt-2.5 animate-fade-up" style={{ animationDuration: '0.15s' }}>
-          {dtc.system && <p className="text-[11px]"><span className="text-white/20">System:</span> <span className="text-white/45">{dtc.system}</span></p>}
+        <div className="px-3.5 pb-3.5 space-y-2 border-t border-white/[0.04] pt-3 animate-fade-up" style={{ animationDuration: '0.15s' }}>
+          {dtc.system && <p className="text-xs"><span className="text-white/25">System</span> <span className="text-white/50 ml-2">{dtc.system}</span></p>}
           {dtc.possibleCauses && dtc.possibleCauses.length > 0 && (
             <div>
-              <p className="text-[11px] text-white/20 mb-0.5">Possible causes</p>
-              <ul className="text-[11px] text-white/45 list-disc list-inside space-y-0.5">
+              <p className="text-xs text-white/25 mb-1">Possible causes</p>
+              <ul className="text-xs text-white/50 list-disc list-inside space-y-0.5 leading-relaxed">
                 {dtc.possibleCauses.map((c: string, i: number) => <li key={i}>{c}</li>)}
               </ul>
             </div>
           )}
-          {dtc.consumerAdvice && <p className="text-[11px]"><span className="text-white/20">Advice:</span> <span className="text-white/45">{dtc.consumerAdvice}</span></p>}
-          {dtc.estimatedCost && <p className="text-[11px]"><span className="text-white/20">Est. cost:</span> <span className="text-white/45">{dtc.estimatedCost}</span></p>}
+          {dtc.consumerAdvice && <p className="text-xs"><span className="text-white/25">Advice</span> <span className="text-white/50 ml-2">{dtc.consumerAdvice}</span></p>}
+          {dtc.estimatedCost && <p className="text-xs"><span className="text-white/25">Est. cost</span> <span className="text-white/50 ml-2">{dtc.estimatedCost}</span></p>}
         </div>
       )}
     </div>
@@ -391,11 +386,11 @@ function DtcGroup({ label, color, count, children }: { label: string; color: str
   const dots: Record<string, string> = { red: 'bg-red-400', yellow: 'bg-yellow-400', orange: 'bg-orange-400' };
   return (
     <div>
-      <h4 className="text-[10px] font-mono text-white/20 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+      <h4 className="text-xs font-mono text-white/25 uppercase tracking-wider mb-2 flex items-center gap-2">
         <span className={`w-1.5 h-1.5 rounded-full ${dots[color] ?? 'bg-white/20'}`} />
         {label} ({count})
       </h4>
-      <div className="space-y-1.5">{children}</div>
+      <div className="space-y-2">{children}</div>
     </div>
   );
 }
@@ -425,37 +420,35 @@ function SectionNav({
       id: 'scan',
       label: 'Health Scan',
       badge: scanScore != null ? (
-        <span className="text-[9px] font-mono font-bold tabular-nums" style={{ color: scoreColor(scanScore) }}>{Math.round(scanScore)}</span>
+        <span className="text-[11px] font-mono font-bold tabular-nums" style={{ color: scoreColor(scanScore) }}>{Math.round(scanScore)}</span>
       ) : null,
     },
     {
       id: 'dtc',
       label: 'Fault Codes',
       badge: dtcCount > 0 ? (
-        <span className="min-w-[16px] h-4 rounded-full bg-red-500/15 text-red-400 text-[9px] font-bold flex items-center justify-center px-1">{dtcCount}</span>
+        <span className="min-w-[18px] h-[18px] rounded-full bg-red-500/15 text-red-400 text-[11px] font-bold flex items-center justify-center px-1">{dtcCount}</span>
       ) : null,
     },
   ];
 
   return (
-    <div className="sticky top-0 md:top-[53px] z-40 bg-black/80 backdrop-blur-xl border-b border-white/[0.04]">
+    <div className="sticky top-0 md:top-[53px] z-40 bg-black/90 backdrop-blur-xl border-b border-white/[0.06]">
       <div className="max-w-5xl mx-auto px-4 sm:px-6">
-        <div className="flex items-center justify-center py-2">
-          {items.map((item, i) => (
-            <div key={item.id} className="flex items-center">
-              {i > 0 && <div className="w-5 h-px bg-white/[0.06] mx-1" />}
-              <button
-                onClick={() => onNavigate(item.id)}
-                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                  activeSection === item.id
-                    ? 'text-[var(--accent)] bg-[var(--accent)]/8'
-                    : 'text-white/30 hover:text-white/50 hover:bg-white/[0.03]'
-                }`}
-              >
-                {item.label}
-                {item.badge}
-              </button>
-            </div>
+        <div className="flex items-center justify-center py-2.5 gap-1">
+          {items.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => onNavigate(item.id)}
+              className={`relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                activeSection === item.id
+                  ? 'text-[var(--accent)] bg-[var(--accent)]/8'
+                  : 'text-white/35 hover:text-white/55 hover:bg-white/[0.03]'
+              }`}
+            >
+              {item.label}
+              {item.badge}
+            </button>
           ))}
         </div>
       </div>
@@ -465,19 +458,14 @@ function SectionNav({
 
 /* ── Flow Guide (contextual section divider) ───────────────────── */
 
-function FlowGuide({ text }: { text: string }) {
+function SectionDivider({ text }: { text: string }) {
   if (!text) return null;
   return (
-    <div className="py-6">
-      <div className="flex items-center gap-3">
-        <div className="flex-1 h-px bg-gradient-to-r from-transparent to-white/[0.04]" />
-        <div className="flex items-center gap-1.5 text-[10px] font-mono text-white/15 select-none">
-          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className="text-white/10">
-            <path d="M5 2v6M3 6l2 2 2-2" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          {text}
-        </div>
-        <div className="flex-1 h-px bg-gradient-to-l from-transparent to-white/[0.04]" />
+    <div className="py-8">
+      <div className="flex items-center gap-4">
+        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
+        <span className="text-[11px] font-mono text-white/20 tracking-wider uppercase select-none">{text}</span>
+        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
       </div>
     </div>
   );
@@ -552,11 +540,10 @@ export default function DiagPage() {
 
   // ── Memoized computations ────────────────────────────────────
   const systemScores = useMemo(() => {
-    const scores: Record<string, { icon: string; name: string; score: number }> = {};
+    const scores: Record<string, { name: string; score: number }> = {};
     for (const fc of scan.feedCards) {
       if (fc.type === 'systemScore' && fc.systemReport) {
         scores[fc.systemReport.system] = {
-          icon: fc.systemReport.icon,
           name: fc.systemReport.consumerName,
           score: fc.systemReport.score,
         };
@@ -613,58 +600,35 @@ export default function DiagPage() {
   if (!bt.isConnected) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[80vh] px-6 text-center">
-        <div className="animate-fade-up max-w-sm w-full">
-          {/* Flow steps */}
-          <div className="flex items-center justify-center gap-2 mb-8">
-            {['Connect', 'Monitor', 'Diagnose'].map((step, i) => (
-              <div key={step} className="flex items-center gap-2">
-                <div className={`flex items-center gap-1.5 ${i === 0 ? 'text-[var(--accent)]' : 'text-white/15'}`}>
-                  <span className={`w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center ${
-                    i === 0 ? 'bg-[var(--accent)] text-black' : 'bg-white/[0.05]'
-                  }`}>{i + 1}</span>
-                  <span className="text-[10px] font-medium">{step}</span>
-                </div>
-                {i < 2 && <div className="w-6 h-px bg-white/[0.06]" />}
-              </div>
-            ))}
+        <div className="animate-fade-up max-w-sm w-full space-y-8">
+          <div>
+            <p className="text-[11px] font-mono text-white/20 tracking-widest uppercase mb-3">Diagnostics</p>
+            <h2 className="text-2xl font-bold tracking-tight">Connect Your Adapter</h2>
+            <p className="text-sm text-white/35 mt-3 leading-relaxed">
+              Pair your ELM327 Bluetooth adapter to begin live monitoring and vehicle diagnostics.
+            </p>
           </div>
 
-          {/* Card */}
-          <div className="glass rounded-3xl p-8 border border-white/[0.06]">
-            <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-[var(--accent)]/10 to-transparent flex items-center justify-center border border-[var(--accent)]/10 breathe">
-              <svg width="32" height="32" viewBox="0 0 28 28" fill="none" className="text-[var(--accent)]">
-                <rect x="4" y="8" width="20" height="12" rx="3" stroke="currentColor" strokeWidth="1.5" />
-                <line x1="10" y1="12" x2="10" y2="16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                <line x1="14" y1="12" x2="14" y2="16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                <line x1="18" y1="12" x2="18" y2="16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-              </svg>
+          {bt.errorMessage && (
+            <div className="bg-red-500/5 border border-red-500/10 rounded-xl px-4 py-3 text-sm text-red-400 text-left">
+              {bt.errorMessage}
             </div>
-            <h2 className="text-xl font-bold mt-5">Connect Adapter</h2>
-            <p className="text-xs text-white/30 mt-2 leading-relaxed">
-              Pair your ELM327 Bluetooth adapter to begin live monitoring and diagnostics
-            </p>
+          )}
 
-            {bt.errorMessage && (
-              <div className="mt-4 bg-red-500/5 border border-red-500/10 rounded-xl px-4 py-3 text-xs text-red-400 text-left">
-                {bt.errorMessage}
-              </div>
+          <Button onClick={() => bt.connect()} disabled={bt.state === 'connecting'} className="w-full" size="lg">
+            {bt.state === 'connecting' ? (
+              <span className="flex items-center gap-2">
+                <span className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                Connecting…
+              </span>
+            ) : (
+              'Select Adapter'
             )}
+          </Button>
 
-            <Button onClick={() => bt.connect()} disabled={bt.state === 'connecting'} className="w-full mt-6" size="lg">
-              {bt.state === 'connecting' ? (
-                <span className="flex items-center gap-2">
-                  <span className="w-3.5 h-3.5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
-                  Connecting…
-                </span>
-              ) : (
-                'Select Adapter'
-              )}
-            </Button>
-
-            <p className="text-[10px] text-white/12 mt-3 leading-relaxed">
-              Uses Web Bluetooth — select your OBD2 adapter from the browser picker
-            </p>
-          </div>
+          <p className="text-xs text-white/15 leading-relaxed">
+            Uses Web Bluetooth — your browser will show a device picker
+          </p>
         </div>
       </div>
     );
@@ -693,17 +657,12 @@ export default function DiagPage() {
 
           {/* Idle — not streaming, not scanning */}
           {live.state === 'idle' && !isScanning && (
-            <div className="flex flex-col items-center py-14 text-center animate-fade-up">
-              <div className="w-14 h-14 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center mb-4">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-white/15">
-                  <polyline points="2,12 6,6 10,16 14,8 18,14 22,6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-              <h3 className="text-sm font-semibold text-white/50">Start Live Monitoring</h3>
-              <p className="text-[11px] text-white/20 mt-1.5 max-w-xs leading-relaxed">
+            <div className="flex flex-col items-center py-16 text-center animate-fade-up">
+              <h3 className="text-lg font-semibold text-white/60">Live Monitoring</h3>
+              <p className="text-sm text-white/25 mt-2 max-w-xs leading-relaxed">
                 Stream real-time sensor data from your vehicle&apos;s ECU
               </p>
-              <Button onClick={() => live.startStream()} className="mt-5">
+              <Button onClick={() => live.startStream()} className="mt-6">
                 Start Stream
               </Button>
             </div>
@@ -711,9 +670,9 @@ export default function DiagPage() {
 
           {/* Starting */}
           {live.state === 'starting' && (
-            <div className="flex flex-col items-center py-14 text-center animate-fade-up">
+            <div className="flex flex-col items-center py-16 text-center animate-fade-up">
               <div className="w-10 h-10 border-2 border-[var(--accent)]/20 border-t-[var(--accent)] rounded-full animate-spin mb-4" />
-              <p className="text-xs text-white/30">Initializing stream…</p>
+              <p className="text-sm text-white/30">Initializing stream…</p>
             </div>
           )}
 
@@ -730,8 +689,8 @@ export default function DiagPage() {
 
           {/* Paused during scan */}
           {live.state === 'paused' && isScanning && (
-            <div className="text-center py-8 animate-fade-up">
-              <p className="text-[11px] text-white/20 font-mono">Live data paused during scan</p>
+            <div className="text-center py-10 animate-fade-up">
+              <p className="text-xs text-white/25 font-mono">Live data paused during scan</p>
             </div>
           )}
 
@@ -748,11 +707,11 @@ export default function DiagPage() {
                 )}
                 <Button onClick={() => live.reset()} size="sm" variant="ghost">Stop</Button>
 
-                <div className="ml-auto flex items-center gap-3 text-[10px] font-mono text-white/15">
+                <div className="ml-auto flex items-center gap-3 text-[11px] font-mono text-white/20">
                   {live.sampleCount > 0 && <span className="tabular-nums">{live.sampleCount} samples</span>}
                   {activeKeys.length > 0 && <span>{activeKeys.length} PIDs</span>}
                   {live.state === 'streaming' && (
-                    <span className="text-emerald-400 flex items-center gap-1">
+                    <span className="text-emerald-400 flex items-center gap-1.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 status-dot" />
                       LIVE
                     </span>
@@ -778,17 +737,17 @@ export default function DiagPage() {
               {/* All PIDs expandable */}
               {activeKeys.length > 0 && (
                 <details className="group">
-                  <summary className="text-[10px] font-mono text-white/12 cursor-pointer hover:text-white/25 transition-colors select-none">
+                  <summary className="text-[11px] font-mono text-white/15 cursor-pointer hover:text-white/30 transition-colors select-none">
                     All Active PIDs ({activeKeys.length})
                   </summary>
-                  <div className="mt-1.5 glass rounded-xl p-3">
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-0.5 text-[10px] font-mono">
+                  <div className="mt-2 glass rounded-xl p-3.5">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1 text-[11px] font-mono">
                       {activeKeys.map(k => {
                         const val = latest![k as keyof PidSnapshot];
                         return (
-                          <div key={k} className="flex justify-between py-0.5 border-b border-white/[0.03]">
-                            <span className="text-white/25">{k}</span>
-                            <span className="text-white/50 tabular-nums">{typeof val === 'number' ? val.toFixed(2) : String(val)}</span>
+                          <div key={k} className="flex justify-between py-1 border-b border-white/[0.03]">
+                            <span className="text-white/30">{k}</span>
+                            <span className="text-white/55 tabular-nums">{typeof val === 'number' ? val.toFixed(2) : String(val)}</span>
                           </div>
                         );
                       })}
@@ -800,16 +759,16 @@ export default function DiagPage() {
           )}
         </section>
 
-        <FlowGuide text={liveToScanGuide} />
+        <SectionDivider text={liveToScanGuide} />
 
         {/* ═══════════════════════════════════════════════════════
             SECTION 2: HEALTH SCAN
             ═══════════════════════════════════════════════════════ */}
         <section id="scan" className="scroll-mt-14 md:scroll-mt-[70px] py-4">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold text-white/50">Health Scan</h2>
+            <h2 className="text-base font-semibold text-white/60">Health Scan</h2>
             {isScanComplete && (
-              <button onClick={() => scan.reset()} className="text-[10px] font-mono text-white/15 hover:text-white/40 transition-colors">
+              <button onClick={() => scan.reset()} className="text-xs font-mono text-white/20 hover:text-white/45 transition-colors">
                 New Scan
               </button>
             )}
@@ -817,15 +776,15 @@ export default function DiagPage() {
 
           {/* Idle */}
           {scan.state === 'idle' && (
-            <div className="flex flex-col items-center py-10 text-center animate-fade-up">
+            <div className="flex flex-col items-center py-12 text-center animate-fade-up">
               <Button onClick={handleStartScan} size="lg" className="rounded-2xl !px-8">
                 Scan Vehicle
               </Button>
-              <p className="text-[10px] text-white/12 mt-3 font-mono">10 cycles · 6 systems · ~30 seconds</p>
+              <p className="text-xs text-white/15 mt-4 font-mono">10 cycles · 6 systems · ~30 seconds</p>
               <div className="flex flex-wrap justify-center gap-2 mt-3">
                 {SYSTEMS.map(s => (
-                  <span key={s.key} className="text-[10px] text-white/15 flex items-center gap-0.5">
-                    <span>{s.icon}</span>{s.name}
+                  <span key={s.key} className="text-[11px] font-mono text-white/20 px-2 py-0.5 rounded bg-white/[0.03]">
+                    {s.tag}
                   </span>
                 ))}
               </div>
@@ -839,8 +798,8 @@ export default function DiagPage() {
               <div className="flex items-center gap-4">
                 <MiniScoreRing score={scan.progress * 100} size={48} />
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-white/50">{scan.progressMessage}</p>
-                  {scan.progressDetail && <p className="text-[10px] text-white/15 mt-0.5 truncate">{scan.progressDetail}</p>}
+                  <p className="text-sm font-semibold text-white/55">{scan.progressMessage}</p>
+                  {scan.progressDetail && <p className="text-xs text-white/20 mt-0.5 truncate">{scan.progressDetail}</p>}
                   <div className="h-1 rounded-full bg-white/[0.04] overflow-hidden mt-2">
                     <div
                       className="h-full rounded-full bg-[var(--accent)] transition-all duration-500"
@@ -854,14 +813,14 @@ export default function DiagPage() {
               <div className="flex flex-wrap justify-center gap-1.5">
                 {SYSTEMS.map(s => {
                   const found = systemScores[s.key];
-                  return <SystemPill key={s.key} name={s.name} icon={found?.icon ?? s.icon} score={found?.score} done={!!found} />;
+                  return <SystemTag key={s.key} name={s.name} score={found?.score} done={!!found} />;
                 })}
               </div>
 
               {/* Feed log */}
               {scan.feedCards.length > 0 && (
                 <div className="glass rounded-xl p-2.5 max-h-32 overflow-y-auto border border-white/[0.04]">
-                  <div className="text-[9px] font-mono text-white/8 uppercase tracking-wider mb-1">Scan Feed</div>
+                  <div className="text-[11px] font-mono text-white/12 uppercase tracking-wider mb-1.5">Scan Feed</div>
                   {scan.feedCards.slice(-8).map((card, i) => <FeedLine key={i} card={card} />)}
                   <div ref={feedEndRef} />
                 </div>
@@ -871,16 +830,9 @@ export default function DiagPage() {
 
           {/* Error */}
           {scan.state === 'error' && (
-            <div className="flex flex-col items-center gap-3 py-8 animate-fade-up">
-              <div className="w-12 h-12 rounded-full bg-red-500/8 flex items-center justify-center">
-                <svg width="18" height="18" viewBox="0 0 18 18" className="text-red-400">
-                  <circle cx="9" cy="9" r="7" stroke="currentColor" strokeWidth="1.3" fill="none" />
-                  <line x1="9" y1="5.5" x2="9" y2="9.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-                  <circle cx="9" cy="12" r="0.7" fill="currentColor" />
-                </svg>
-              </div>
-              <p className="text-sm font-bold text-red-400">Scan Failed</p>
-              <p className="text-xs text-white/25 text-center max-w-xs">{scan.errorMessage}</p>
+            <div className="flex flex-col items-center gap-3 py-10 animate-fade-up">
+              <p className="text-lg font-bold text-red-400">Scan Failed</p>
+              <p className="text-sm text-white/30 text-center max-w-xs">{scan.errorMessage}</p>
               <div className="flex gap-2">
                 <Button variant="secondary" onClick={() => scan.reset()} size="sm">Retry</Button>
                 <Button variant="ghost" onClick={() => { bt.disconnect(); scan.reset(); }} size="sm">Disconnect</Button>
@@ -897,9 +849,9 @@ export default function DiagPage() {
                 <div className="relative flex flex-col sm:flex-row items-center gap-5 sm:gap-8">
                   <ScoreRing score={scan.result.overallScore} size={140} strokeWidth={5} />
                   <div className="text-center sm:text-left flex-1">
-                    <h3 className="text-xl sm:text-2xl font-bold tracking-tight">Vehicle Health</h3>
-                    <p className={`text-xs font-bold mt-1 ${riskColor(scan.result.overallRiskTier)}`}>{scan.result.overallRiskTier}</p>
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-3 text-[10px] font-mono text-white/15 tabular-nums">
+                    <h3 className="text-2xl sm:text-3xl font-bold tracking-tight">Vehicle Health</h3>
+                    <p className={`text-sm font-bold mt-1.5 ${riskColor(scan.result.overallRiskTier)}`}>{scan.result.overallRiskTier}</p>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-3 text-xs font-mono text-white/20 tabular-nums">
                       <span>{scan.result.supportedPidCount} PIDs</span>
                       <span>{scan.result.scanCycles} cycles</span>
                       <span>{(scan.result.scanDurationMs / 1000).toFixed(1)}s</span>
@@ -911,16 +863,16 @@ export default function DiagPage() {
                         const issues = r.systems.reduce((n, s) => n + s.evaluatedRules.length, 0);
                         return (
                           <>
-                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-emerald-500/8 text-emerald-400/70 border border-emerald-500/10">
+                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-semibold bg-emerald-500/8 text-emerald-400/70 border border-emerald-500/10">
                               {healthy}/{r.systems.length} healthy
                             </span>
                             {issues > 0 && (
-                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-orange-500/8 text-orange-400/70 border border-orange-500/10">
+                              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-semibold bg-orange-500/8 text-orange-400/70 border border-orange-500/10">
                                 {issues} rules triggered
                               </span>
                             )}
                             {r.diagnosticMatches.length > 0 && (
-                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-red-500/8 text-red-400/70 border border-red-500/10">
+                              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-semibold bg-red-500/8 text-red-400/70 border border-red-500/10">
                                 {r.diagnosticMatches.length} diagnostics
                               </span>
                             )}
@@ -935,8 +887,8 @@ export default function DiagPage() {
               {/* System analysis */}
               <div>
                 <div className="flex items-center justify-between mb-2.5">
-                  <h3 className="text-[10px] font-mono text-white/15 uppercase tracking-wider">System Analysis</h3>
-                  <span className="text-[9px] font-mono text-white/8">{scan.result.systems.length} systems</span>
+                  <h3 className="text-xs font-mono text-white/20 uppercase tracking-wider">System Analysis</h3>
+                  <span className="text-[11px] font-mono text-white/12">{scan.result.systems.length} systems</span>
                 </div>
                 <div className="space-y-2">
                   {scan.result.systems.sort((a, b) => a.score - b.score).map(sys => (
@@ -949,7 +901,7 @@ export default function DiagPage() {
               {scan.result.diagnosticMatches.length > 0 && (
                 <div>
                   <div className="flex items-center gap-2 mb-2.5">
-                    <h3 className="text-[10px] font-mono text-white/15 uppercase tracking-wider">Diagnostics</h3>
+                    <h3 className="text-xs font-mono text-white/20 uppercase tracking-wider">Diagnostics</h3>
                     <Badge color="red">{scan.result.diagnosticMatches.length}</Badge>
                   </div>
                   <div className="space-y-1.5">
@@ -957,11 +909,11 @@ export default function DiagPage() {
                       <div key={i} className="rounded-xl border border-white/[0.04] bg-white/[0.02] p-3 space-y-1.5">
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <Badge className={severityColor(d.severity)}>{d.severity}</Badge>
-                          <span className="text-[10px] text-white/15">{d.category}</span>
-                          {d.confidence < 1 && <span className="text-[9px] font-mono text-white/10 ml-auto tabular-nums">{Math.round(d.confidence * 100)}%</span>}
+                          <span className="text-xs text-white/20">{d.category}</span>
+                          {d.confidence < 1 && <span className="text-[11px] font-mono text-white/15 ml-auto tabular-nums">{Math.round(d.confidence * 100)}%</span>}
                         </div>
-                        <p className="text-xs text-white/60">{d.description}</p>
-                        {d.recommendation && <p className="text-[11px] text-white/25">{d.recommendation}</p>}
+                        <p className="text-sm text-white/60">{d.description}</p>
+                        {d.recommendation && <p className="text-xs text-white/30 leading-relaxed">{d.recommendation}</p>}
                       </div>
                     ))}
                   </div>
@@ -971,15 +923,15 @@ export default function DiagPage() {
               {/* Correlations */}
               {scan.result.correlationResults && scan.result.correlationResults.length > 0 && (
                 <div>
-                  <h3 className="text-[10px] font-mono text-white/15 uppercase tracking-wider mb-2.5">Correlations</h3>
+                  <h3 className="text-xs font-mono text-white/20 uppercase tracking-wider mb-3">Correlations</h3>
                   <div className="grid gap-1.5 sm:grid-cols-2">
                     {scan.result.correlationResults.map((c, i) => (
                       <div key={i} className="rounded-xl border border-white/[0.04] bg-white/[0.02] p-2.5 space-y-1">
                         <div className="flex items-center justify-between">
-                          <span className="text-[11px] font-medium text-white/45">{c.name}</span>
-                          <span className={`text-[9px] font-mono font-bold ${c.status === 'normal' ? 'text-emerald-400/50' : 'text-yellow-400/60'}`}>{c.status}</span>
+                          <span className="text-xs font-medium text-white/50">{c.name}</span>
+                          <span className={`text-[11px] font-mono font-bold ${c.status === 'normal' ? 'text-emerald-400/50' : 'text-yellow-400/60'}`}>{c.status}</span>
                         </div>
-                        <p className="text-[10px] text-white/20">{c.consumerMessage}</p>
+                        <p className="text-[11px] text-white/25 leading-relaxed">{c.consumerMessage}</p>
                       </div>
                     ))}
                   </div>
@@ -989,7 +941,7 @@ export default function DiagPage() {
               {/* Scan log */}
               {scan.feedCards.length > 0 && (
                 <details className="group">
-                  <summary className="text-[10px] font-mono text-white/10 cursor-pointer hover:text-white/20 transition-colors select-none">
+                  <summary className="text-[11px] font-mono text-white/15 cursor-pointer hover:text-white/25 transition-colors select-none">
                     Scan Log ({scan.feedCards.length})
                   </summary>
                   <div className="mt-1.5 glass rounded-xl p-2.5 max-h-40 overflow-y-auto border border-white/[0.04]">
@@ -1001,13 +953,13 @@ export default function DiagPage() {
           )}
         </section>
 
-        <FlowGuide text={scanToDtcGuide} />
+        <SectionDivider text={scanToDtcGuide} />
 
         {/* ═══════════════════════════════════════════════════════
             SECTION 3: FAULT CODES
             ═══════════════════════════════════════════════════════ */}
         <section id="dtc" className="scroll-mt-14 md:scroll-mt-[70px] py-4">
-          <h2 className="text-sm font-semibold text-white/50 mb-4">Fault Codes</h2>
+          <h2 className="text-base font-semibold text-white/60 mb-4">Fault Codes</h2>
 
           {/* Controls */}
           <div className="flex items-center gap-2.5 mb-4">
@@ -1021,7 +973,7 @@ export default function DiagPage() {
                 </Button>
               ) : (
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] text-red-400">Sure?</span>
+                  <span className="text-xs text-red-400">Sure?</span>
                   <Button variant="danger" size="sm" onClick={() => { dtcStore.clearDtcs(); setConfirmClear(false); }}>Yes</Button>
                   <Button variant="ghost" size="sm" onClick={() => setConfirmClear(false)}>No</Button>
                 </div>
@@ -1043,17 +995,13 @@ export default function DiagPage() {
 
           {/* Search */}
           {dtcStore.totalCount > 0 && (
-            <div className="relative mb-3">
-              <svg width="12" height="12" viewBox="0 0 12 12" className="absolute left-3 top-1/2 -translate-y-1/2 text-white/12">
-                <circle cx="5" cy="5" r="3.5" stroke="currentColor" strokeWidth="1.2" fill="none" />
-                <line x1="7.5" y1="7.5" x2="10.5" y2="10.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-              </svg>
+            <div className="mb-4">
               <input
                 type="text"
                 placeholder="Search codes…"
                 value={dtcSearch}
                 onChange={e => setDtcSearch(e.target.value)}
-                className="w-full pl-8 pr-3 py-2 glass rounded-xl text-xs text-white placeholder-white/12 focus:outline-none focus:ring-1 focus:ring-[var(--accent)]/30"
+                className="w-full px-4 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06] text-sm text-white placeholder-white/15 focus:outline-none focus:border-[var(--accent)]/30 transition-colors"
               />
             </div>
           )}
@@ -1078,22 +1026,16 @@ export default function DiagPage() {
 
             {/* Empty: no DTCs found */}
             {dtcStore.state === 'complete' && dtcStore.totalCount === 0 && (
-              <div className="flex flex-col items-center py-10 text-center animate-fade-up">
-                <div className="w-12 h-12 rounded-full bg-emerald-500/8 flex items-center justify-center mb-3">
-                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="text-emerald-400">
-                    <circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="1.3" />
-                    <polyline points="6,10 9,13 14,7" stroke="currentColor" strokeWidth="1.3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </div>
-                <p className="text-sm font-bold text-emerald-400">No Trouble Codes</p>
-                <p className="text-xs text-white/25 mt-0.5">Your vehicle has no stored DTCs</p>
+              <div className="flex flex-col items-center py-12 text-center animate-fade-up">
+                <p className="text-lg font-bold text-emerald-400">No Trouble Codes</p>
+                <p className="text-sm text-white/30 mt-1">Your vehicle has no stored DTCs</p>
               </div>
             )}
 
             {/* Empty: haven't scanned yet */}
             {dtcStore.state === 'idle' && dtcStore.totalCount === 0 && (
-              <div className="flex flex-col items-center py-10 text-center">
-                <p className="text-xs text-white/15">Press &quot;Read DTCs&quot; to scan for fault codes</p>
+              <div className="flex flex-col items-center py-12 text-center">
+                <p className="text-sm text-white/20">Press &quot;Read DTCs&quot; to scan for fault codes</p>
               </div>
             )}
           </div>

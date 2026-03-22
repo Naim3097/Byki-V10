@@ -62,7 +62,7 @@ export default function HomePage() {
           <h1 className="text-5xl sm:text-6xl font-bold tracking-tight">
             <span className="text-[var(--accent)]" style={{ textShadow: '0 0 40px var(--accent-glow)' }}>BYKI</span>
           </h1>
-          <p className="text-white/35 text-sm font-mono tracking-widest uppercase mt-2">Vehicle diagnostics — reimagined</p>
+          <p className="text-white/35 text-sm font-mono tracking-widest uppercase mt-3">Vehicle diagnostics — reimagined</p>
         </div>
 
         {/* Connection quick-status */}
@@ -85,9 +85,6 @@ export default function HomePage() {
           <Link href="/diag">
             <Button size="lg" className="text-base">
               Start Diagnostics
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <path d="M3 7h8m0 0L8 4m3 3L8 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
             </Button>
           </Link>
         </div>
@@ -112,7 +109,7 @@ export default function HomePage() {
 
       {/* ── How it works ──────────────────────────── */}
       <section className="relative max-w-3xl mx-auto px-6 pb-24">
-        <h2 className="text-xs font-mono text-white/20 tracking-widest uppercase text-center mb-8">How it works</h2>
+        <h2 className="text-xs font-mono text-white/25 tracking-widest uppercase text-center mb-8">How it works</h2>
         <div className="grid gap-6 sm:grid-cols-3">
           {STEPS.map(s => (
             <div key={s.num} className="flex flex-col items-center text-center gap-2">
