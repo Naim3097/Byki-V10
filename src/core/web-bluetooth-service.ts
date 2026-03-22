@@ -55,6 +55,16 @@ export class WebBluetoothService {
   /**
    * Request and connect to an OBD2 adapter via browser device picker.
    * Chrome shows a native Bluetooth dialog — the user selects the adapter.
+   *
+   * Strategy: first try name-prefix filters so the picker shows likely OBD
+   * adapters at the top. If the user cancels (no match), fall back to
+   * acceptAllDevices so any BLE device can be selected manually.
+   *
+   * After connecting, discover TX/RX characteristics by:
+   *   1. Trying known service + characteristic UUIDs
+   *   2. Iterating all characteristics on known services
+   *   3. Falling back to getPrimaryServices() (all services) and scanning
+   *      every characteristic — handles adapters with non-standard UUIDs.
    */
   async requestAndConnect(): Promise<AdapterInfo> {
     if (!WebBluetoothService.isAvailable()) {
@@ -63,77 +73,47 @@ export class WebBluetoothService {
 
     this.emitState('connecting');
 
-    const filters: BluetoothLEScanFilter[] = ADAPTER_NAME_PREFIXES.map(prefix => ({
-      namePrefix: prefix,
-    }));
-
     const optionalServices = KNOWN_SERVICE_UUIDS.map(uuid =>
       typeof uuid === 'number'
         ? BluetoothUUID.getService(uuid)
         : uuid
     );
 
+    const filters: BluetoothLEScanFilter[] = ADAPTER_NAME_PREFIXES.map(prefix => ({
+      namePrefix: prefix,
+    }));
+
     try {
-      this.device = await navigator.bluetooth.requestDevice({
-        filters,
-        optionalServices,
-      });
+      // Try filtered picker first, then acceptAllDevices if user can't see their adapter
+      try {
+        this.device = await navigator.bluetooth.requestDevice({
+          filters,
+          optionalServices,
+        });
+      } catch (filterErr: unknown) {
+        // User cancelled the filtered picker — retry with all devices visible
+        if (filterErr instanceof DOMException && filterErr.name === 'NotFoundError') {
+          this.device = await navigator.bluetooth.requestDevice({
+            acceptAllDevices: true,
+            optionalServices,
+          });
+        } else {
+          throw filterErr;
+        }
+      }
 
       const server = await this.device.gatt!.connect();
 
       // Discover OBD service and characteristics
-      let foundTx = false;
-      let foundRx = false;
+      const { tx, rx } = await this.discoverCharacteristics(server);
 
-      for (const serviceUuid of KNOWN_SERVICE_UUIDS) {
-        try {
-          const resolvedUuid = typeof serviceUuid === 'number'
-            ? BluetoothUUID.getService(serviceUuid)
-            : serviceUuid;
-          const service = await server.getPrimaryService(resolvedUuid);
-
-          // Try known characteristic UUIDs first
-          for (const charUuid of KNOWN_CHAR_UUIDS) {
-            try {
-              const resolvedChar = BluetoothUUID.getCharacteristic(charUuid);
-              const char = await service.getCharacteristic(resolvedChar);
-              if (!foundTx && (char.properties.write || char.properties.writeWithoutResponse)) {
-                this.txChar = char;
-                foundTx = true;
-              }
-              if (!foundRx && char.properties.notify) {
-                this.rxChar = char;
-                foundRx = true;
-              }
-              if (foundTx && foundRx) break;
-            } catch { /* try next UUID */ }
-          }
-
-          if (foundTx && foundRx) break;
-
-          // Fallback: iterate all characteristics on this service
-          if (!foundTx || !foundRx) {
-            const chars = await service.getCharacteristics();
-            for (const char of chars) {
-              if (!foundTx && (char.properties.write || char.properties.writeWithoutResponse)) {
-                this.txChar = char;
-                foundTx = true;
-              }
-              if (!foundRx && char.properties.notify) {
-                this.rxChar = char;
-                foundRx = true;
-              }
-            }
-          }
-
-          if (foundTx && foundRx) break;
-        } catch { /* try next service UUID */ }
-      }
-
-      if (!this.txChar || !this.rxChar) {
+      if (!tx || !rx) {
         await this.disconnect();
         throw new Error('OBD characteristics not found on this device');
       }
+
+      this.txChar = tx;
+      this.rxChar = rx;
 
       // Subscribe to RX notifications
       await this.rxChar.startNotifications();
@@ -156,6 +136,78 @@ export class WebBluetoothService {
       }
       throw e;
     }
+  }
+
+  /**
+   * Discover TX (write) and RX (notify) characteristics on a GATT server.
+   *
+   * Pass 1: iterate known service UUIDs → known char UUIDs → all chars on match.
+   * Pass 2: getPrimaryServices() (all) and scan every characteristic.
+   */
+  private async discoverCharacteristics(
+    server: BluetoothRemoteGATTServer,
+  ): Promise<{ tx: BluetoothRemoteGATTCharacteristic | null; rx: BluetoothRemoteGATTCharacteristic | null }> {
+    let tx: BluetoothRemoteGATTCharacteristic | null = null;
+    let rx: BluetoothRemoteGATTCharacteristic | null = null;
+
+    // Pass 1: known service UUIDs
+    for (const serviceUuid of KNOWN_SERVICE_UUIDS) {
+      try {
+        const resolvedUuid = typeof serviceUuid === 'number'
+          ? BluetoothUUID.getService(serviceUuid)
+          : serviceUuid;
+        const service = await server.getPrimaryService(resolvedUuid);
+        ({ tx, rx } = await this.scanServiceCharacteristics(service, tx, rx));
+        if (tx && rx) return { tx, rx };
+      } catch { /* service not present — try next */ }
+    }
+
+    // Pass 2: discover ALL services (handles non-standard UUIDs)
+    try {
+      const allServices = await server.getPrimaryServices();
+      for (const service of allServices) {
+        ({ tx, rx } = await this.scanServiceCharacteristics(service, tx, rx));
+        if (tx && rx) return { tx, rx };
+      }
+    } catch { /* getPrimaryServices may not be supported — already tried known UUIDs */ }
+
+    return { tx, rx };
+  }
+
+  /**
+   * Scan a single GATT service for writable (TX) and notifiable (RX) characteristics.
+   * First checks known char UUIDs, then falls back to iterating all chars.
+   */
+  private async scanServiceCharacteristics(
+    service: BluetoothRemoteGATTService,
+    existingTx: BluetoothRemoteGATTCharacteristic | null,
+    existingRx: BluetoothRemoteGATTCharacteristic | null,
+  ): Promise<{ tx: BluetoothRemoteGATTCharacteristic | null; rx: BluetoothRemoteGATTCharacteristic | null }> {
+    let tx = existingTx;
+    let rx = existingRx;
+
+    // Try known characteristic UUIDs
+    for (const charUuid of KNOWN_CHAR_UUIDS) {
+      try {
+        const resolvedChar = BluetoothUUID.getCharacteristic(charUuid);
+        const char = await service.getCharacteristic(resolvedChar);
+        if (!tx && (char.properties.write || char.properties.writeWithoutResponse)) tx = char;
+        if (!rx && char.properties.notify) rx = char;
+        if (tx && rx) return { tx, rx };
+      } catch { /* char not available */ }
+    }
+
+    // Fallback: iterate all characteristics on this service
+    try {
+      const chars = await service.getCharacteristics();
+      for (const char of chars) {
+        if (!tx && (char.properties.write || char.properties.writeWithoutResponse)) tx = char;
+        if (!rx && char.properties.notify) rx = char;
+        if (tx && rx) return { tx, rx };
+      }
+    } catch { /* couldn't enumerate */ }
+
+    return { tx, rx };
   }
 
   private handleNotification = (event: Event): void => {
