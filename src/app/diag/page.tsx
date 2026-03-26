@@ -8,9 +8,11 @@ import { useDtcStore } from '@/stores/dtc-store';
 import type { ScanFeedCard } from '@/stores/scan-store';
 import type { PidSnapshot } from '@/models';
 import { PID_SNAPSHOT_KEYS } from '@/models';
-import type { SystemHealthReport, EvaluatedRule, ComponentRisk, DtcCode } from '@/models';
+import type { SystemHealthReport, EvaluatedRule, ComponentRisk, DtcCode, FullAnalysisResult } from '@/models';
 import { DtcSource } from '@/models';
 import { ScoreRing, Button, Card, Badge, scoreColor, riskColor, severityColor } from '@/components/ui';
+
+const WHATSAPP_NUMBER = '601133095095';
 
 // ═══════════════════════════════════════════════════════════════════
 // BYKI — Unified Diagnostics
@@ -472,6 +474,166 @@ function SectionDivider({ text }: { text: string }) {
 }
 
 // ═══════════════════════════════════════════════════════════════════
+// ── WHATSAPP REPORT BUILDER ─────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════
+
+function buildWhatsAppReport(
+  scanResult: FullAnalysisResult | null,
+  dtcs: { stored: DtcCode[]; pending: DtcCode[]; permanent: DtcCode[] },
+): string {
+  const lines: string[] = [];
+  const now = new Date();
+
+  lines.push('🔧 *BYKI Vehicle Health Report*');
+  lines.push(`📅 ${now.toLocaleDateString('en-MY', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`);
+  lines.push('');
+
+  if (scanResult) {
+    lines.push(`🏥 *Overall Health: ${Math.round(scanResult.overallScore)}/100 (${scanResult.overallRiskTier})*`);
+    lines.push('');
+
+    // System summary
+    lines.push('📊 *Systems:*');
+    for (const sys of scanResult.systems.sort((a, b) => a.score - b.score)) {
+      const emoji = sys.score >= 85 ? '✅' : sys.score >= 70 ? '⚠️' : sys.score >= 50 ? '🟠' : '🔴';
+      lines.push(`${emoji} ${sys.consumerName}: ${Math.round(sys.score)}/100 (${sys.riskTier})`);
+      if (sys.findings.length > 0 && sys.findings[0] !== 'System operating normally' && sys.findings[0] !== 'Insufficient sensor data for this system') {
+        for (const f of sys.findings.slice(0, 2)) {
+          lines.push(`   → ${f}`);
+        }
+      }
+    }
+    lines.push('');
+
+    // Diagnostics
+    if (scanResult.diagnosticMatches.length > 0) {
+      lines.push('⚙️ *Issues Detected:*');
+      for (const d of scanResult.diagnosticMatches.slice(0, 5)) {
+        lines.push(`• [${d.severity}] ${d.description}`);
+        if (d.recommendation) lines.push(`  💡 ${d.recommendation}`);
+      }
+      lines.push('');
+    }
+  }
+
+  // DTCs
+  const allDtcs = [...dtcs.stored, ...dtcs.pending, ...dtcs.permanent];
+  if (allDtcs.length > 0) {
+    lines.push('🚨 *Fault Codes:*');
+    for (const dtc of allDtcs.slice(0, 8)) {
+      lines.push(`• ${dtc.code} — ${dtc.description || 'Unknown'} (${dtc.source})`);
+    }
+    if (allDtcs.length > 8) lines.push(`  ...and ${allDtcs.length - 8} more`);
+    lines.push('');
+  }
+
+  lines.push('---');
+  lines.push('Hi, I just ran a BYKI scan on my vehicle. Could you help me understand the results and book a check-up? 🙏');
+
+  return lines.join('\n');
+}
+
+function openWhatsApp(message: string) {
+  const encoded = encodeURIComponent(message);
+  window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encoded}`, '_blank', 'noopener,noreferrer');
+}
+
+/* ── WhatsApp CTA Card ─────────────────────────────────────────── */
+
+function WhatsAppBookingCTA({
+  scanResult,
+  dtcs,
+  variant = 'full',
+}: {
+  scanResult: FullAnalysisResult | null;
+  dtcs: { stored: DtcCode[]; pending: DtcCode[]; permanent: DtcCode[] };
+  variant?: 'full' | 'compact' | 'inline';
+}) {
+  const hasIssues = (scanResult && (scanResult.overallScore < 85 || scanResult.diagnosticMatches.length > 0))
+    || dtcs.stored.length > 0 || dtcs.pending.length > 0 || dtcs.permanent.length > 0;
+
+  const handleClick = useCallback(() => {
+    const msg = buildWhatsAppReport(scanResult, dtcs);
+    openWhatsApp(msg);
+  }, [scanResult, dtcs]);
+
+  if (variant === 'inline') {
+    return (
+      <button
+        onClick={handleClick}
+        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#25D366]/10 border border-[#25D366]/20 text-[#25D366] text-sm font-medium hover:bg-[#25D366]/15 transition-all active:scale-[0.97]"
+      >
+        <WhatsAppIcon size={16} />
+        Send Report via WhatsApp
+      </button>
+    );
+  }
+
+  if (variant === 'compact') {
+    return (
+      <div className="rounded-2xl border border-[#25D366]/15 bg-[#25D366]/[0.03] p-4 flex items-center gap-4">
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-white/70">
+            {hasIssues ? 'Need help with these results?' : 'Want a professional opinion?'}
+          </p>
+          <p className="text-xs text-white/30 mt-0.5">
+            {hasIssues ? 'Send your report to our team — we\'ll advise you' : 'Share your clean scan for peace of mind'}
+          </p>
+        </div>
+        <button
+          onClick={handleClick}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#25D366] text-white text-sm font-semibold hover:brightness-110 transition-all active:scale-[0.97] flex-shrink-0 shadow-[0_0_15px_rgba(37,211,102,0.2)]"
+        >
+          <WhatsAppIcon size={18} />
+          <span className="hidden sm:inline">WhatsApp Us</span>
+          <span className="sm:hidden">Chat</span>
+        </button>
+      </div>
+    );
+  }
+
+  // Full variant — end of flow
+  return (
+    <div className="relative overflow-hidden rounded-2xl border border-[#25D366]/15 bg-gradient-to-br from-[#25D366]/[0.05] to-transparent p-6 sm:p-8 text-center">
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 rounded-full opacity-10 blur-[80px] pointer-events-none bg-[#25D366]" />
+      <div className="relative space-y-4">
+        <div className="flex justify-center">
+          <div className="w-14 h-14 rounded-full bg-[#25D366]/10 flex items-center justify-center">
+            <WhatsAppIcon size={28} />
+          </div>
+        </div>
+        <div>
+          <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-white/90">
+            {hasIssues ? 'Let us help you fix this' : 'Everything looks good!'}
+          </h3>
+          <p className="text-sm text-white/35 mt-2 max-w-sm mx-auto leading-relaxed">
+            {hasIssues
+              ? 'Your scan found some things that need attention. Tap below to send your full report to our team — we\'ll review it and guide you on next steps.'
+              : 'Your vehicle is in good shape. Want a professional to confirm? Send your scan report and we\'ll give you a quick review.'}
+          </p>
+        </div>
+        <button
+          onClick={handleClick}
+          className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-2xl bg-[#25D366] text-white text-base font-semibold hover:brightness-110 transition-all active:scale-[0.97] shadow-[0_0_25px_rgba(37,211,102,0.25)]"
+        >
+          <WhatsAppIcon size={20} />
+          Send Report &amp; Book Service
+        </button>
+        <p className="text-xs text-white/15">Your scan data is included automatically · Free consultation</p>
+      </div>
+    </div>
+  );
+}
+
+function WhatsAppIcon({ size = 20 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className="text-[#25D366]">
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+    </svg>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════
 // ── MAIN PAGE COMPONENT ─────────────────────────────────────────
 // ═══════════════════════════════════════════════════════════════════
 
@@ -586,6 +748,15 @@ export default function DiagPage() {
     return 'Read and clear diagnostic trouble codes';
   }, [isScanComplete, scan.result]);
 
+  // ── WhatsApp report data ─────────────────────────────────────
+  const dtcsForReport = useMemo(() => ({
+    stored: dtcStore.storedDtcs,
+    pending: dtcStore.pendingDtcs,
+    permanent: dtcStore.permanentDtcs,
+  }), [dtcStore.storedDtcs, dtcStore.pendingDtcs, dtcStore.permanentDtcs]);
+
+  const showEndOfFlowCTA = isScanComplete || dtcStore.state === 'complete';
+
   // ── Handlers ─────────────────────────────────────────────────
   const handleStartScan = useCallback(() => {
     // Auto-pause live data so scan can use the OBD connection
@@ -605,7 +776,7 @@ export default function DiagPage() {
             <p className="text-[11px] font-mono text-white/20 tracking-widest uppercase mb-3">Diagnostics</p>
             <h2 className="text-2xl font-bold tracking-tight">Connect Your Adapter</h2>
             <p className="text-sm text-white/35 mt-3 leading-relaxed">
-              Pair your ELM327 Bluetooth adapter to begin live monitoring and vehicle diagnostics.
+              Plug the ELM327 adapter into your car&apos;s OBD2 port (usually under the dashboard, near the steering column), then tap below to pair.
             </p>
           </div>
 
@@ -626,9 +797,14 @@ export default function DiagPage() {
             )}
           </Button>
 
-          <p className="text-xs text-white/15 leading-relaxed">
-            Uses Web Bluetooth — your browser will show a device picker
-          </p>
+          <div className="space-y-2">
+            <p className="text-xs text-white/15 leading-relaxed">
+              Your browser will show a device picker — select your ELM327 adapter
+            </p>
+            <p className="text-xs text-white/10 leading-relaxed">
+              Don&apos;t have an adapter? You can get one online for around $15
+            </p>
+          </div>
         </div>
       </div>
     );
@@ -660,11 +836,12 @@ export default function DiagPage() {
             <div className="flex flex-col items-center py-16 text-center animate-fade-up">
               <h3 className="text-lg font-semibold text-white/60">Live Monitoring</h3>
               <p className="text-sm text-white/25 mt-2 max-w-xs leading-relaxed">
-                Stream real-time sensor data from your vehicle&apos;s ECU
+                Watch your engine&apos;s vital signs in real-time — RPM, temperature, speed, and more
               </p>
               <Button onClick={() => live.startStream()} className="mt-6">
                 Start Stream
               </Button>
+              <p className="text-xs text-white/15 mt-4 font-mono">updates every second · visual gauges</p>
             </div>
           )}
 
@@ -777,7 +954,11 @@ export default function DiagPage() {
           {/* Idle */}
           {scan.state === 'idle' && (
             <div className="flex flex-col items-center py-12 text-center animate-fade-up">
-              <Button onClick={handleStartScan} size="lg" className="rounded-2xl !px-8">
+              <h3 className="text-lg font-semibold text-white/60">Health Scan</h3>
+              <p className="text-sm text-white/25 mt-2 max-w-xs leading-relaxed">
+                Run a full check-up across 6 systems — engine, fuel, emissions, and more
+              </p>
+              <Button onClick={handleStartScan} size="lg" className="rounded-2xl !px-8 mt-6">
                 Scan Vehicle
               </Button>
               <p className="text-xs text-white/15 mt-4 font-mono">10 cycles · 6 systems · ~30 seconds</p>
@@ -949,6 +1130,9 @@ export default function DiagPage() {
                   </div>
                 </details>
               )}
+
+              {/* WhatsApp CTA — after scan results */}
+              <WhatsAppBookingCTA scanResult={scan.result} dtcs={dtcsForReport} variant="compact" />
             </div>
           )}
         </section>
@@ -959,31 +1143,15 @@ export default function DiagPage() {
             SECTION 3: FAULT CODES
             ═══════════════════════════════════════════════════════ */}
         <section id="dtc" className="scroll-mt-14 md:scroll-mt-[70px] py-4">
-          <h2 className="text-base font-semibold text-white/60 mb-4">Fault Codes</h2>
-
-          {/* Controls */}
-          <div className="flex items-center gap-2.5 mb-4">
-            <Button onClick={() => dtcStore.readDtcs()} disabled={dtcStore.state === 'reading'} size="sm">
-              {dtcStore.state === 'reading' ? 'Reading…' : 'Read DTCs'}
-            </Button>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-base font-semibold text-white/60">Fault Codes</h2>
             {dtcStore.totalCount > 0 && (
-              !confirmClear ? (
-                <Button variant="danger" size="sm" onClick={() => setConfirmClear(true)} disabled={dtcStore.state === 'clearing'}>
-                  Clear
-                </Button>
-              ) : (
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xs text-red-400">Sure?</span>
-                  <Button variant="danger" size="sm" onClick={() => { dtcStore.clearDtcs(); setConfirmClear(false); }}>Yes</Button>
-                  <Button variant="ghost" size="sm" onClick={() => setConfirmClear(false)}>No</Button>
-                </div>
-              )
+              <div className="flex items-center gap-1.5">
+                {dtcStore.storedDtcs.length > 0 && <Badge color="red">{dtcStore.storedDtcs.length} stored</Badge>}
+                {dtcStore.pendingDtcs.length > 0 && <Badge color="yellow">{dtcStore.pendingDtcs.length} pending</Badge>}
+                {dtcStore.permanentDtcs.length > 0 && <Badge color="orange">{dtcStore.permanentDtcs.length} perm</Badge>}
+              </div>
             )}
-            <div className="ml-auto flex items-center gap-1.5">
-              {dtcStore.storedDtcs.length > 0 && <Badge color="red">{dtcStore.storedDtcs.length} stored</Badge>}
-              {dtcStore.pendingDtcs.length > 0 && <Badge color="yellow">{dtcStore.pendingDtcs.length} pending</Badge>}
-              {dtcStore.permanentDtcs.length > 0 && <Badge color="orange">{dtcStore.permanentDtcs.length} perm</Badge>}
-            </div>
           </div>
 
           {/* Error */}
@@ -993,9 +1161,74 @@ export default function DiagPage() {
             </Card>
           )}
 
-          {/* Search */}
-          {dtcStore.totalCount > 0 && (
-            <div className="mb-4">
+          {/* Idle — haven't scanned yet */}
+          {dtcStore.state === 'idle' && dtcStore.totalCount === 0 && (
+            <div className="flex flex-col items-center py-12 text-center animate-fade-up">
+              <h3 className="text-lg font-semibold text-white/60">Fault Code Check</h3>
+              <p className="text-sm text-white/25 mt-2 max-w-xs leading-relaxed">
+                Read diagnostic trouble codes stored in your vehicle&apos;s computer
+              </p>
+              <Button onClick={() => dtcStore.readDtcs()} className="mt-6">
+                Read Fault Codes
+              </Button>
+              <p className="text-xs text-white/15 mt-4 font-mono">stored · pending · permanent codes</p>
+            </div>
+          )}
+
+          {/* Reading */}
+          {dtcStore.state === 'reading' && (
+            <div className="flex flex-col items-center py-12 text-center animate-fade-up">
+              <div className="w-10 h-10 border-2 border-[var(--accent)]/20 border-t-[var(--accent)] rounded-full animate-spin mb-4" />
+              <p className="text-sm text-white/30">Reading fault codes…</p>
+            </div>
+          )}
+
+          {/* Clearing */}
+          {dtcStore.state === 'clearing' && (
+            <div className="flex flex-col items-center py-12 text-center animate-fade-up">
+              <div className="w-10 h-10 border-2 border-red-400/20 border-t-red-400 rounded-full animate-spin mb-4" />
+              <p className="text-sm text-white/30">Clearing fault codes…</p>
+            </div>
+          )}
+
+          {/* Results: no DTCs found */}
+          {dtcStore.state === 'complete' && dtcStore.totalCount === 0 && (
+            <div className="flex flex-col items-center py-12 text-center animate-fade-up">
+              <div className="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center mb-3">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-emerald-400">
+                  <path d="M20 6L9 17l-5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+              <p className="text-lg font-bold text-emerald-400">No Trouble Codes</p>
+              <p className="text-sm text-white/30 mt-1">Your vehicle has no stored fault codes</p>
+              <Button onClick={() => dtcStore.readDtcs()} variant="secondary" size="sm" className="mt-4">
+                Scan Again
+              </Button>
+            </div>
+          )}
+
+          {/* Results: has DTCs */}
+          {dtcStore.totalCount > 0 && dtcStore.state !== 'reading' && dtcStore.state !== 'clearing' && (
+            <div className="space-y-4 animate-fade-up">
+              {/* Controls bar */}
+              <div className="flex items-center gap-2.5">
+                <Button onClick={() => dtcStore.readDtcs()} size="sm" variant="secondary">
+                  Re-scan
+                </Button>
+                {!confirmClear ? (
+                  <Button variant="danger" size="sm" onClick={() => setConfirmClear(true)}>
+                    Clear Codes
+                  </Button>
+                ) : (
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs text-red-400">Sure?</span>
+                    <Button variant="danger" size="sm" onClick={() => { dtcStore.clearDtcs(); setConfirmClear(false); }}>Yes</Button>
+                    <Button variant="ghost" size="sm" onClick={() => setConfirmClear(false)}>No</Button>
+                  </div>
+                )}
+              </div>
+
+              {/* Search */}
               <input
                 type="text"
                 placeholder="Search codes…"
@@ -1003,43 +1236,40 @@ export default function DiagPage() {
                 onChange={e => setDtcSearch(e.target.value)}
                 className="w-full px-4 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06] text-sm text-white placeholder-white/15 focus:outline-none focus:border-[var(--accent)]/30 transition-colors"
               />
+
+              {/* DTC lists */}
+              <div className="space-y-3">
+                {filteredDtcs.stored.length > 0 && (
+                  <DtcGroup label="Confirmed" color="red" count={filteredDtcs.stored.length}>
+                    {filteredDtcs.stored.map(dtc => <DtcCard key={`s-${dtc.code}`} dtc={dtc} />)}
+                  </DtcGroup>
+                )}
+                {filteredDtcs.pending.length > 0 && (
+                  <DtcGroup label="Pending" color="yellow" count={filteredDtcs.pending.length}>
+                    {filteredDtcs.pending.map(dtc => <DtcCard key={`p-${dtc.code}`} dtc={dtc} />)}
+                  </DtcGroup>
+                )}
+                {filteredDtcs.permanent.length > 0 && (
+                  <DtcGroup label="Permanent" color="orange" count={filteredDtcs.permanent.length}>
+                    {filteredDtcs.permanent.map(dtc => <DtcCard key={`pm-${dtc.code}`} dtc={dtc} />)}
+                  </DtcGroup>
+                )}
+              </div>
+
+              {/* WhatsApp CTA — after DTC results */}
+              <WhatsAppBookingCTA scanResult={scan.result ?? null} dtcs={dtcsForReport} variant="compact" />
             </div>
           )}
-
-          {/* DTC lists */}
-          <div className="space-y-3">
-            {filteredDtcs.stored.length > 0 && (
-              <DtcGroup label="Confirmed" color="red" count={filteredDtcs.stored.length}>
-                {filteredDtcs.stored.map(dtc => <DtcCard key={`s-${dtc.code}`} dtc={dtc} />)}
-              </DtcGroup>
-            )}
-            {filteredDtcs.pending.length > 0 && (
-              <DtcGroup label="Pending" color="yellow" count={filteredDtcs.pending.length}>
-                {filteredDtcs.pending.map(dtc => <DtcCard key={`p-${dtc.code}`} dtc={dtc} />)}
-              </DtcGroup>
-            )}
-            {filteredDtcs.permanent.length > 0 && (
-              <DtcGroup label="Permanent" color="orange" count={filteredDtcs.permanent.length}>
-                {filteredDtcs.permanent.map(dtc => <DtcCard key={`pm-${dtc.code}`} dtc={dtc} />)}
-              </DtcGroup>
-            )}
-
-            {/* Empty: no DTCs found */}
-            {dtcStore.state === 'complete' && dtcStore.totalCount === 0 && (
-              <div className="flex flex-col items-center py-12 text-center animate-fade-up">
-                <p className="text-lg font-bold text-emerald-400">No Trouble Codes</p>
-                <p className="text-sm text-white/30 mt-1">Your vehicle has no stored DTCs</p>
-              </div>
-            )}
-
-            {/* Empty: haven't scanned yet */}
-            {dtcStore.state === 'idle' && dtcStore.totalCount === 0 && (
-              <div className="flex flex-col items-center py-12 text-center">
-                <p className="text-sm text-white/20">Press &quot;Read DTCs&quot; to scan for fault codes</p>
-              </div>
-            )}
-          </div>
         </section>
+
+        {/* ═══════════════════════════════════════════════════════
+            END OF FLOW — BOOKING CTA
+            ═══════════════════════════════════════════════════════ */}
+        {showEndOfFlowCTA && (
+          <section className="py-6 animate-fade-up">
+            <WhatsAppBookingCTA scanResult={scan.result ?? null} dtcs={dtcsForReport} variant="full" />
+          </section>
+        )}
 
         {/* Bottom spacer for mobile nav */}
         <div className="h-6" />

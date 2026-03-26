@@ -314,7 +314,7 @@ export class WebBluetoothService {
     };
   }
 
-  /** Initialize ELM327 protocol — same AT sequence as V8. */
+  /** Initialize ELM327 protocol — same AT sequence as V9. */
   async initializeAdapter(): Promise<string> {
     await this.sendCommand('AT Z', 4000);
     await delay(1500);
@@ -350,7 +350,7 @@ export class WebBluetoothService {
   }
 }
 
-/** BLE response buffer — ports V8's BleResponseBuffer exactly. */
+/** BLE response buffer — ports V9's BleResponseBuffer exactly. */
 class BleResponseBuffer {
   private buffer = '';
 

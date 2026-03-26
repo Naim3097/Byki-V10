@@ -119,7 +119,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="flex items-center gap-6">
           <Link href="/" className="flex items-center gap-2">
             <span className="text-lg font-bold tracking-tight text-[var(--accent)]">BYKI</span>
-            <span className="text-[10px] font-mono text-white/25 tracking-widest uppercase">v8 web</span>
+            <span className="text-[10px] font-mono text-white/25 tracking-widest uppercase">v9 web</span>
           </Link>
           <nav className="flex items-center gap-1">
             {NAV_ITEMS.map(item => {
