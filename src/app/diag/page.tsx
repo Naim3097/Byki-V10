@@ -397,6 +397,45 @@ function DtcGroup({ label, color, count, children }: { label: string; color: str
   );
 }
 
+/* ── All PIDs Panel (prominent toggle) ─────────────────────────── */
+
+function AllPidsPanel({ activeKeys, latest }: { activeKeys: string[]; latest: PidSnapshot }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="glass rounded-xl overflow-hidden">
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-white/60 hover:text-white/90 transition-colors cursor-pointer"
+      >
+        <span className="flex items-center gap-2">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-400/70">
+            <line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="21" y2="18" /><line x1="3" y1="6" x2="3.01" y2="6" /><line x1="3" y1="12" x2="3.01" y2="12" /><line x1="3" y1="18" x2="3.01" y2="18" />
+          </svg>
+          View All {activeKeys.length} PIDs
+        </span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform ${open ? 'rotate-180' : ''}`}>
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </button>
+      {open && (
+        <div className="px-4 pb-3.5 border-t border-white/[0.04]">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1 text-[11px] font-mono pt-3">
+            {activeKeys.map(k => {
+              const val = latest[k as keyof PidSnapshot];
+              return (
+                <div key={k} className="flex justify-between py-1 border-b border-white/[0.03]">
+                  <span className="text-white/30">{k}</span>
+                  <span className="text-white/55 tabular-nums">{typeof val === 'number' ? val.toFixed(2) : String(val)}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ── Section Navigation (sticky scroll-spy) ────────────────────── */
 
 function SectionNav({
@@ -682,9 +721,15 @@ export default function DiagPage() {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, []);
 
-  // ── Auto-scroll scan feed ────────────────────────────────────
+  // ── Auto-scroll scan feed (within container, not page) ─────
   useEffect(() => {
-    feedEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const el = feedEndRef.current;
+    if (el) {
+      const container = el.parentElement;
+      if (container) {
+        container.scrollTop = container.scrollHeight;
+      }
+    }
   }, [scan.feedCards.length]);
 
   // ── Reset live data if disconnected ──────────────────────────
@@ -911,26 +956,9 @@ export default function DiagPage() {
                 ))}
               </div>
 
-              {/* All PIDs expandable */}
+              {/* All PIDs — visible card toggle */}
               {activeKeys.length > 0 && (
-                <details className="group">
-                  <summary className="text-[11px] font-mono text-white/15 cursor-pointer hover:text-white/30 transition-colors select-none">
-                    All Active PIDs ({activeKeys.length})
-                  </summary>
-                  <div className="mt-2 glass rounded-xl p-3.5">
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1 text-[11px] font-mono">
-                      {activeKeys.map(k => {
-                        const val = latest![k as keyof PidSnapshot];
-                        return (
-                          <div key={k} className="flex justify-between py-1 border-b border-white/[0.03]">
-                            <span className="text-white/30">{k}</span>
-                            <span className="text-white/55 tabular-nums">{typeof val === 'number' ? val.toFixed(2) : String(val)}</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </details>
+                <AllPidsPanel activeKeys={activeKeys} latest={latest!} />
               )}
             </div>
           )}
@@ -1168,7 +1196,7 @@ export default function DiagPage() {
               <p className="text-sm text-white/25 mt-2 max-w-xs leading-relaxed">
                 Read diagnostic trouble codes stored in your vehicle&apos;s computer
               </p>
-              <Button onClick={() => dtcStore.readDtcs()} className="mt-6">
+              <Button onClick={() => dtcStore.readDtcs()} size="lg" className="rounded-2xl !px-8 mt-6">
                 Read Fault Codes
               </Button>
               <p className="text-xs text-white/15 mt-4 font-mono">stored · pending · permanent codes</p>
