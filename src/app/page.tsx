@@ -109,17 +109,17 @@ export default function HomePage() {
       <div className="absolute inset-0 bg-grid opacity-30 pointer-events-none" />
 
       {/* ── Hero ──────────────────────────────────── */}
-      <section className="relative flex flex-col items-center justify-center min-h-[70vh] px-6 pt-12 pb-16 text-center overflow-hidden">
+      <section className="relative flex flex-col items-center justify-center min-h-[70vh] px-6 pt-8 pb-12 text-center overflow-hidden">
         <div className="animate-fade-up">
           <Image
             src="/brand/byki-logo.png"
             alt="BYKI"
-            width={180}
-            height={50}
+            width={135}
+            height={38}
             className="mx-auto drop-shadow-[0_0_30px_var(--accent-glow)]"
             priority
           />
-          <p className="text-white/50 text-base sm:text-lg mt-6 max-w-md mx-auto leading-relaxed">
+          <p className="text-white/50 text-base sm:text-lg mt-4 max-w-md mx-auto leading-relaxed">
             Understand your car&apos;s health — no mechanic degree required
           </p>
           <p className="text-white/25 text-sm mt-2 max-w-sm mx-auto leading-relaxed">
