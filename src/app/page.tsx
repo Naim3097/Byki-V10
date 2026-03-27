@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useBluetoothStore } from '@/stores/bluetooth-store';
 import { Card, Button } from '@/components/ui';
+import NeonGrid from '@/components/neon-grid';
 
 const FEATURES = [
   {
@@ -105,8 +106,10 @@ export default function HomePage() {
 
   return (
     <div className="relative">
-      {/* Background grid */}
+      {/* Background grid + green gradient + neon lines */}
       <div className="absolute inset-0 bg-grid opacity-30 pointer-events-none" />
+      <div className="absolute inset-0 bg-green-gradient pointer-events-none" />
+      <NeonGrid />
 
       {/* ── Hero ──────────────────────────────────── */}
       <section className="relative flex flex-col items-center justify-center min-h-[70vh] px-6 pt-8 pb-12 text-center overflow-hidden">
@@ -119,10 +122,10 @@ export default function HomePage() {
             className="mx-auto drop-shadow-[0_0_30px_var(--accent-glow)]"
             priority
           />
-          <p className="text-white/50 text-base sm:text-lg mt-4 max-w-md mx-auto leading-relaxed">
+          <p className="text-white/80 text-base sm:text-lg mt-4 max-w-md mx-auto leading-relaxed">
             Understand your car&apos;s health — no mechanic degree required
           </p>
-          <p className="text-white/25 text-sm mt-2 max-w-sm mx-auto leading-relaxed">
+          <p className="text-white/60 text-sm mt-2 max-w-sm mx-auto leading-relaxed">
             A simple scan that reads your car&apos;s sensors and tells you what&apos;s good, what to watch, and what needs fixing.
           </p>
         </div>
@@ -130,7 +133,7 @@ export default function HomePage() {
         {/* Hero car visual */}
         <div className="relative mt-8 animate-fade-up w-full max-w-md mx-auto" style={{ animationDelay: '0.05s' }}>
           <Image
-            src="/brand/hero-car.png"
+            src="/brand/hero-car-v10.png"
             alt="Vehicle diagnostics"
             width={800}
             height={500}
@@ -149,7 +152,7 @@ export default function HomePage() {
           ) : (
             <Card className="flex items-center gap-3 !px-5 !py-3">
               <span className="w-2 h-2 rounded-full bg-white/15" />
-              <span className="text-sm text-white/35">No adapter connected</span>
+              <span className="text-sm text-white/60">No adapter connected</span>
             </Card>
           )}
         </div>
@@ -161,17 +164,17 @@ export default function HomePage() {
               Start Diagnostics
             </Button>
           </Link>
-          <span className="text-xs text-white/20">Free · No account needed · Works in your browser</span>
+          <span className="text-xs text-white/60">Free · No account needed · Works in your browser</span>
         </div>
       </section>
 
       {/* ── What is BYKI? ─────────────────────────── */}
       <section className="relative max-w-3xl mx-auto px-6 pb-16">
         <div className="text-center mb-10">
-          <h2 className="text-xs font-mono text-white/25 tracking-widest uppercase mb-4">What is BYKI?</h2>
-          <p className="text-white/50 text-sm sm:text-base leading-relaxed max-w-xl mx-auto">
+          <h2 className="text-xs font-mono text-white/60 tracking-widest uppercase mb-4">What is BYKI?</h2>
+          <p className="text-white/80 text-sm sm:text-base leading-relaxed max-w-xl mx-auto">
             Every car made after 1996 has a hidden computer that tracks how your engine, fuel system, 
-            and emissions are doing. <strong className="text-white/70">BYKI connects to it through your phone&apos;s browser</strong> and 
+            and emissions are doing. <strong className="text-[var(--accent)]">BYKI connects to it through your phone&apos;s browser</strong> and 
             turns that raw data into a simple health report anyone can understand.
           </p>
         </div>
@@ -179,14 +182,14 @@ export default function HomePage() {
 
       {/* ── How it helps you ──────────────────────── */}
       <section className="relative max-w-4xl mx-auto px-6 pb-16">
-        <h2 className="text-xs font-mono text-white/25 tracking-widest uppercase text-center mb-8">How BYKI helps you</h2>
+        <h2 className="text-xs font-mono text-white/60 tracking-widest uppercase text-center mb-8">How BYKI helps you</h2>
         <div className="grid gap-4 sm:grid-cols-2">
           {BENEFITS.map((b) => (
-            <Card key={b.title} className="flex gap-4 items-start">
+            <Card key={b.title} className="card-green-hover flex gap-4 items-start transition-all cursor-pointer">
               <div className="text-[var(--accent)]/60 flex-shrink-0 mt-0.5">{b.icon}</div>
               <div>
-                <h3 className="text-sm font-semibold text-white/80 mb-1">{b.title}</h3>
-                <p className="text-xs text-white/35 leading-relaxed">{b.desc}</p>
+                <h3 className="text-sm font-semibold text-white/90 mb-1">{b.title}</h3>
+                <p className="text-xs text-white/70 leading-relaxed">{b.desc}</p>
               </div>
             </Card>
           ))}
@@ -196,8 +199,8 @@ export default function HomePage() {
       {/* ── What sensors mean ─────────────────────── */}
       <section className="relative max-w-3xl mx-auto px-6 pb-16">
         <div className="text-center mb-8">
-          <h2 className="text-xs font-mono text-white/25 tracking-widest uppercase mb-3">What your car is telling you</h2>
-          <p className="text-white/30 text-sm max-w-md mx-auto leading-relaxed">
+          <h2 className="text-xs font-mono text-white/60 tracking-widest uppercase mb-3">What your car is telling you</h2>
+          <p className="text-white/70 text-sm max-w-md mx-auto leading-relaxed">
             Your car has sensors that monitor everything. Here&apos;s what they mean in everyday terms:
           </p>
         </div>
@@ -205,7 +208,7 @@ export default function HomePage() {
           {PLAIN_LANGUAGE.map((item) => (
             <Card key={item.sensor} className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-4">
               <span className="text-sm font-semibold text-[var(--accent)]/70 sm:w-40 flex-shrink-0">{item.sensor}</span>
-              <p className="text-xs text-white/40 leading-relaxed">{item.meaning}</p>
+              <p className="text-xs text-white/70 leading-relaxed">{item.meaning}</p>
             </Card>
           ))}
         </div>
@@ -213,7 +216,7 @@ export default function HomePage() {
 
       {/* ── Feature cards ─────────────────────────── */}
       <section className="relative max-w-4xl mx-auto px-6 pb-16">
-        <h2 className="text-xs font-mono text-white/25 tracking-widest uppercase text-center mb-8">What you can do</h2>
+        <h2 className="text-xs font-mono text-white/60 tracking-widest uppercase text-center mb-8">What you can do</h2>
         <div className="grid gap-4 sm:grid-cols-3">
           {FEATURES.map((f) => (
             <Link key={f.title} href={f.href} className="group">
@@ -221,8 +224,8 @@ export default function HomePage() {
                 <div className={`${f.primary ? 'text-[var(--accent)]' : 'text-white/30 group-hover:text-white/60'} transition-colors`}>
                   {f.icon}
                 </div>
-                <h3 className="text-sm font-semibold text-white/90">{f.title}</h3>
-                <p className="text-xs text-white/35 leading-relaxed">{f.desc}</p>
+                <h3 className="text-sm font-semibold text-white">{f.title}</h3>
+                <p className="text-xs text-white/70 leading-relaxed">{f.desc}</p>
               </Card>
             </Link>
           ))}
@@ -231,13 +234,13 @@ export default function HomePage() {
 
       {/* ── How it works ──────────────────────────── */}
       <section className="relative max-w-3xl mx-auto px-6 pb-16">
-        <h2 className="text-xs font-mono text-white/25 tracking-widest uppercase text-center mb-8">How it works</h2>
+        <h2 className="text-xs font-mono text-white/60 tracking-widest uppercase text-center mb-8">How it works</h2>
         <div className="grid gap-6 sm:grid-cols-4">
           {STEPS.map(s => (
             <div key={s.num} className="flex flex-col items-center text-center gap-2">
               <span className="text-2xl font-bold text-[var(--accent)]/30 font-mono">{s.num}</span>
-              <span className="text-sm font-semibold text-white/80">{s.title}</span>
-              <span className="text-xs text-white/30 leading-relaxed">{s.desc}</span>
+              <span className="text-sm font-semibold text-white/90">{s.title}</span>
+              <span className="text-xs text-white/70 leading-relaxed">{s.desc}</span>
             </div>
           ))}
         </div>
@@ -246,7 +249,7 @@ export default function HomePage() {
       {/* ── What you'll need ─────────────────────── */}
       <section className="relative max-w-3xl mx-auto px-6 pb-16">
         <div className="text-center mb-8">
-          <h2 className="text-xs font-mono text-white/25 tracking-widest uppercase mb-3">What you&apos;ll need</h2>
+          <h2 className="text-xs font-mono text-white/60 tracking-widest uppercase mb-3">What you&apos;ll need</h2>
         </div>
         <div className="grid gap-4 sm:grid-cols-3">
           <Card className="text-center">
@@ -256,8 +259,8 @@ export default function HomePage() {
                 <line x1="12" y1="22" x2="16" y2="22" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
               </svg>
             </div>
-            <h3 className="text-sm font-semibold text-white/70 mb-1">Your Phone</h3>
-            <p className="text-xs text-white/30 leading-relaxed">Any phone with Chrome or Edge browser (Bluetooth-enabled)</p>
+            <h3 className="text-sm font-semibold text-white/90 mb-1">Your Phone</h3>
+            <p className="text-xs text-white/70 leading-relaxed">Any phone with Chrome or Edge browser (Bluetooth-enabled)</p>
           </Card>
           <Card className="text-center">
             <div className="text-[var(--accent)]/40 flex justify-center mb-2">
@@ -267,8 +270,8 @@ export default function HomePage() {
                 <circle cx="19" cy="14" r="2" stroke="currentColor" strokeWidth="1.5" />
               </svg>
             </div>
-            <h3 className="text-sm font-semibold text-white/70 mb-1">ELM327 Adapter</h3>
-            <p className="text-xs text-white/30 leading-relaxed">A small Bluetooth OBD2 adapter (available for ~$15 online)</p>
+            <h3 className="text-sm font-semibold text-white/90 mb-1">ELM327 Adapter</h3>
+            <p className="text-xs text-white/70 leading-relaxed">A small Bluetooth OBD2 adapter (available for ~$15 online)</p>
           </Card>
           <Card className="text-center">
             <div className="text-[var(--accent)]/40 flex justify-center mb-2">
@@ -278,8 +281,8 @@ export default function HomePage() {
                 <path d="M14 4c2.5 2.5 4 6 4 10s-1.5 7.5-4 10c-2.5-2.5-4-6-4-10s1.5-7.5 4-10z" stroke="currentColor" strokeWidth="1.5" />
               </svg>
             </div>
-            <h3 className="text-sm font-semibold text-white/70 mb-1">Any Car (1996+)</h3>
-            <p className="text-xs text-white/30 leading-relaxed">Works with all OBD2-compatible vehicles — that&apos;s nearly every car on the road</p>
+            <h3 className="text-sm font-semibold text-white/90 mb-1">Any Car (1996+)</h3>
+            <p className="text-xs text-white/70 leading-relaxed">Works with all OBD2-compatible vehicles — that&apos;s nearly every car on the road</p>
           </Card>
         </div>
       </section>
@@ -288,7 +291,7 @@ export default function HomePage() {
       <section className="relative max-w-3xl mx-auto px-6 pb-16 text-center">
         <Card className="!p-8 sm:!p-10 border-[var(--accent)]/10">
           <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white/90 mb-2">Ready to check your car?</h2>
-          <p className="text-sm text-white/35 mb-6 max-w-sm mx-auto leading-relaxed">
+          <p className="text-sm text-white/70 mb-6 max-w-sm mx-auto leading-relaxed">
             It takes about 30 seconds. No sign-up, no downloads — just connect and scan.
           </p>
           <Link href="/diag">
@@ -312,8 +315,8 @@ export default function HomePage() {
               </div>
             </div>
             <div>
-              <h3 className="text-lg font-bold tracking-tight text-white/80">Have questions? We&apos;re here to help</h3>
-              <p className="text-sm text-white/30 mt-1.5 max-w-sm mx-auto leading-relaxed">
+              <h3 className="text-lg font-bold tracking-tight text-white/90">Have questions? We&apos;re here to help</h3>
+              <p className="text-sm text-white/70 mt-1.5 max-w-sm mx-auto leading-relaxed">
                 After your scan, you can send your results directly to us on WhatsApp. We&apos;ll review your report and advise you — for free.
               </p>
             </div>

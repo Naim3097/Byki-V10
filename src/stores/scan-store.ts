@@ -104,7 +104,7 @@ export const useScanStore = create<ScanStoreState>((set, get) => ({
       progressMessage: 'Initializing adapter...',
       errorMessage: '',
       completedPhases: [],
-      scanLog: [{ text: 'BYKI Health Scan v9.0 Web', phase: 'init', timestamp: Date.now() }],
+      scanLog: [{ text: 'BYKI Health Scan v10.0 Web', phase: 'init', timestamp: Date.now() }],
       feedCards: [],
       _lastFeedPhase: '',
       latestPidData: {},

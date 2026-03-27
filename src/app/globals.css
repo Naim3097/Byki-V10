@@ -46,6 +46,49 @@ body {
   border-color: rgba(255, 255, 255, 0.1);
 }
 
+/* ── Green gradient hover card ────────────────── */
+.card-green-hover {
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.4s ease, box-shadow 0.4s ease;
+}
+.card-green-hover::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  background:
+    linear-gradient(160deg, rgba(0,255,136,0.18) 0%, rgba(0,255,136,0.06) 40%, rgba(0,200,100,0.02) 70%, transparent 100%);
+  z-index: 0;
+}
+.card-green-hover::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+  z-index: 0;
+}
+.card-green-hover:hover::before {
+  opacity: 1;
+}
+.card-green-hover:hover::after {
+  opacity: 1;
+}
+.card-green-hover:hover {
+  border-color: rgba(0,255,136,0.2);
+  box-shadow: 0 0 30px rgba(0,255,136,0.06), inset 0 1px 0 rgba(0,255,136,0.1);
+}
+.card-green-hover > * {
+  position: relative;
+  z-index: 1;
+}
+
 /* ── Score ring animation ─────────────────────── */
 @keyframes score-fill {
   from { stroke-dashoffset: var(--circumference); }
@@ -73,6 +116,8 @@ body {
   animation: fade-up 0.4s ease-out;
 }
 
+
+
 /* ── Count up number animation ────────────────── */
 @keyframes count-appear {
   from { opacity: 0; transform: scale(0.8); }
@@ -88,6 +133,14 @@ body {
     linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
   background-size: 48px 48px;
+}
+
+/* ── Light green accent gradient overlay ──────── */
+.bg-green-gradient {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(0,255,136,0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 30% 30%, rgba(0,255,136,0.04) 0%, transparent 50%),
+    radial-gradient(ellipse 60% 40% at 70% 60%, rgba(0,255,136,0.03) 0%, transparent 50%);
 }
 
 /* ── Shimmer loading ──────────────────────────── */
