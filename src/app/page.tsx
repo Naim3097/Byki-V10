@@ -196,6 +196,19 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ── OBDII visual ────────────────────────── */}
+      <section className="relative max-w-md mx-auto px-6 pb-16">
+        <div className="animate-fade-up">
+          <Image
+            src="/brand/obdii.png"
+            alt="OBD2 adapter"
+            width={800}
+            height={500}
+            className="w-full h-auto"
+          />
+        </div>
+      </section>
+
       {/* ── What sensors mean ─────────────────────── */}
       <section className="relative max-w-3xl mx-auto px-6 pb-16">
         <div className="text-center mb-8">
