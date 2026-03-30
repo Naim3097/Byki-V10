@@ -914,8 +914,8 @@ export default function DiagPage() {
           {/* Idle — not streaming, not scanning */}
           {live.state === 'idle' && !isScanning && (
             <div className="flex flex-col items-center text-center animate-fade-up">
-              <h3 className="text-2xl font-bold text-white/90 tracking-tight">Live Monitoring</h3>
-              <p className="text-sm text-white/40 mt-2 max-w-xs leading-relaxed">
+              <h3 className="text-2xl font-bold text-black/85 tracking-tight">Live Monitoring</h3>
+              <p className="text-sm text-black/50 mt-2 max-w-xs leading-relaxed">
                 Watch your engine&apos;s vital signs in real-time — RPM, temperature, speed, and more
               </p>
               <div className="relative w-full max-w-[260px] aspect-[4/3] mt-6">
@@ -924,7 +924,7 @@ export default function DiagPage() {
               <Button onClick={() => live.startStream()} size="lg" className="rounded-2xl !px-10 mt-6">
                 Start Stream
               </Button>
-              <p className="text-xs text-white/25 mt-4 font-mono">updates every second · visual gauges</p>
+              <p className="text-xs text-black/35 mt-4 font-mono">updates every second · visual gauges</p>
             </div>
           )}
 
@@ -1005,7 +1005,7 @@ export default function DiagPage() {
         {/* ═══════════════════════════════════════════════════════
             SECTION 2: HEALTH SCAN
             ═══════════════════════════════════════════════════════ */}
-        <section id="scan" className="scroll-mt-14 md:scroll-mt-[70px] segment-card">
+        <section id="scan" className="scroll-mt-14 md:scroll-mt-[70px] segment-card-dark">
           {scan.state !== 'idle' && (
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-base font-semibold text-white/60">Health Scan</h2>
@@ -1212,7 +1212,7 @@ export default function DiagPage() {
         <section id="dtc" className="scroll-mt-14 md:scroll-mt-[70px] segment-card">
           {!(dtcStore.state === 'idle' && dtcStore.totalCount === 0) && (
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-semibold text-white/60">Fault Codes</h2>
+              <h2 className="text-base font-semibold text-black/60">Fault Codes</h2>
               {dtcStore.totalCount > 0 && (
                 <div className="flex items-center gap-1.5">
                   {dtcStore.storedDtcs.length > 0 && <Badge color="red">{dtcStore.storedDtcs.length} stored</Badge>}
@@ -1233,8 +1233,8 @@ export default function DiagPage() {
           {/* Idle — haven't scanned yet */}
           {dtcStore.state === 'idle' && dtcStore.totalCount === 0 && (
             <div className="flex flex-col items-center text-center animate-fade-up">
-              <h3 className="text-2xl font-bold text-white/90 tracking-tight">Fault Code Check</h3>
-              <p className="text-sm text-white/40 mt-2 max-w-xs leading-relaxed">
+              <h3 className="text-2xl font-bold text-black/85 tracking-tight">Fault Code Check</h3>
+              <p className="text-sm text-black/50 mt-2 max-w-xs leading-relaxed">
                 Read diagnostic trouble codes stored in your vehicle&apos;s computer
               </p>
               <div className="relative w-full max-w-[260px] aspect-[4/3] mt-6">
@@ -1243,7 +1243,7 @@ export default function DiagPage() {
               <Button onClick={() => dtcStore.readDtcs()} size="lg" className="rounded-2xl !px-10 mt-6">
                 Read Fault Codes
               </Button>
-              <p className="text-xs text-white/25 mt-4 font-mono">stored · pending · permanent codes</p>
+              <p className="text-xs text-black/35 mt-4 font-mono">stored · pending · permanent codes</p>
             </div>
           )}
 
