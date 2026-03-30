@@ -436,7 +436,7 @@ function AllPidsPanel({ activeKeys, latest }: { activeKeys: string[]; latest: Pi
   );
 }
 
-/* ── Section Navigation (sticky scroll-spy) ────────────────────── */
+/* ── Section Navigation (sticky vertical right panel) ───────────── */
 
 function SectionNav({
   activeSection,
@@ -455,45 +455,91 @@ function SectionNav({
     {
       id: 'live',
       label: 'Live Data',
+      shortLabel: 'Live',
+      icon: (
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="1,8 4,4 7,10 10,6 13,9 15,5" />
+        </svg>
+      ),
       badge: isStreaming ? <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 status-dot" /> : null,
     },
     {
       id: 'scan',
       label: 'Health Scan',
+      shortLabel: 'Scan',
+      icon: (
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3">
+          <circle cx="8" cy="8" r="5.5" /><circle cx="8" cy="8" r="2" fill="currentColor" stroke="none" />
+        </svg>
+      ),
       badge: scanScore != null ? (
-        <span className="text-[11px] font-mono font-bold tabular-nums" style={{ color: scoreColor(scanScore) }}>{Math.round(scanScore)}</span>
+        <span className="text-[10px] font-mono font-bold tabular-nums" style={{ color: scoreColor(scanScore) }}>{Math.round(scanScore)}</span>
       ) : null,
     },
     {
       id: 'dtc',
       label: 'Fault Codes',
+      shortLabel: 'DTC',
+      icon: (
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round">
+          <path d="M8 2L14 13H2L8 2z" /><line x1="8" y1="6" x2="8" y2="9" strokeLinecap="round" /><circle cx="8" cy="11" r="0.6" fill="currentColor" stroke="none" />
+        </svg>
+      ),
       badge: dtcCount > 0 ? (
-        <span className="min-w-[18px] h-[18px] rounded-full bg-red-500/15 text-red-400 text-[11px] font-bold flex items-center justify-center px-1">{dtcCount}</span>
+        <span className="min-w-[16px] h-[16px] rounded-full bg-red-500/15 text-red-400 text-[10px] font-bold flex items-center justify-center px-0.5">{dtcCount}</span>
       ) : null,
     },
   ];
 
   return (
-    <div className="sticky top-0 md:top-[53px] z-40 bg-black/90 backdrop-blur-xl border-b border-white/[0.06]">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6">
-        <div className="flex items-center justify-center py-2.5 gap-1">
+    <>
+      {/* ── Desktop: vertical right-side sticky panel ────── */}
+      <div className="hidden md:flex fixed right-4 top-1/2 -translate-y-1/2 z-40 flex-col gap-1.5">
+        <div className="bg-black/80 backdrop-blur-xl border border-white/[0.06] rounded-2xl p-1.5 flex flex-col gap-1">
           {items.map((item) => (
             <button
               key={item.id}
               onClick={() => onNavigate(item.id)}
-              className={`relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              className={`group relative flex items-center gap-2.5 pl-3 pr-4 py-2.5 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
+                activeSection === item.id
+                  ? 'text-[var(--accent)] bg-[var(--accent)]/8'
+                  : 'text-white/35 hover:text-white/60 hover:bg-white/[0.04]'
+              }`}
+            >
+              <span className={`flex-shrink-0 transition-colors ${activeSection === item.id ? 'text-[var(--accent)]' : 'text-white/25 group-hover:text-white/50'}`}>
+                {item.icon}
+              </span>
+              <span>{item.label}</span>
+              {item.badge && <span className="ml-auto">{item.badge}</span>}
+              {/* Active indicator bar */}
+              {activeSection === item.id && (
+                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-full bg-[var(--accent)]" />
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Mobile: compact sticky top bar ────────────────── */}
+      <div className="md:hidden sticky top-0 z-40 bg-black/90 backdrop-blur-xl border-b border-white/[0.06]">
+        <div className="flex items-center justify-center py-2 gap-1 px-4">
+          {items.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => onNavigate(item.id)}
+              className={`relative flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
                 activeSection === item.id
                   ? 'text-[var(--accent)] bg-[var(--accent)]/8'
                   : 'text-white/35 hover:text-white/55 hover:bg-white/[0.03]'
               }`}
             >
-              {item.label}
+              {item.shortLabel}
               {item.badge}
             </button>
           ))}
         </div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -869,12 +915,12 @@ export default function DiagPage() {
         dtcCount={dtcStore.totalCount}
       />
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-3 pb-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 md:pr-48 pt-3 pb-8">
 
         {/* ═══════════════════════════════════════════════════════
             SECTION 1: LIVE DATA
             ═══════════════════════════════════════════════════════ */}
-        <section id="live" className="scroll-mt-14 md:scroll-mt-[70px] py-4">
+        <section id="live" className="scroll-mt-14 md:scroll-mt-6 py-4">
 
           {/* Idle — not streaming, not scanning */}
           {live.state === 'idle' && !isScanning && (
@@ -969,7 +1015,7 @@ export default function DiagPage() {
         {/* ═══════════════════════════════════════════════════════
             SECTION 2: HEALTH SCAN
             ═══════════════════════════════════════════════════════ */}
-        <section id="scan" className="scroll-mt-14 md:scroll-mt-[70px] py-4">
+        <section id="scan" className="scroll-mt-14 md:scroll-mt-6 py-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-base font-semibold text-white/60">Health Scan</h2>
             {isScanComplete && (
@@ -1170,7 +1216,7 @@ export default function DiagPage() {
         {/* ═══════════════════════════════════════════════════════
             SECTION 3: FAULT CODES
             ═══════════════════════════════════════════════════════ */}
-        <section id="dtc" className="scroll-mt-14 md:scroll-mt-[70px] py-4">
+        <section id="dtc" className="scroll-mt-14 md:scroll-mt-6 py-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-base font-semibold text-white/60">Fault Codes</h2>
             {dtcStore.totalCount > 0 && (
