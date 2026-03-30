@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useBluetoothStore } from '../stores/bluetooth-store';
+import { useAuthStore } from '../stores/auth-store';
 
 // ── Score / Risk color helpers ──────────────────────────────────────
 
@@ -141,7 +142,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             })}
           </nav>
         </div>
-        <ConnectionPill />
+        <div className="flex items-center gap-3">
+          <ConnectionPill />
+          <LogoutButton />
+        </div>
       </header>
 
       {/* ── Main content ──────────────────────────── */}
@@ -166,6 +170,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </Link>
           );
         })}
+        <LogoutButton mobile />
       </nav>
 
       {/* bottom spacer for mobile nav */}
@@ -191,6 +196,38 @@ function ConnectionPill() {
       <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 status-dot" />
       {bt.connectedAdapter?.deviceName ?? 'Connected'}
     </div>
+  );
+}
+
+// ── Logout button ───────────────────────────────────────────────────
+
+function LogoutButton({ mobile }: { mobile?: boolean }) {
+  const { logout } = useAuthStore();
+
+  if (mobile) {
+    return (
+      <button
+        onClick={() => logout()}
+        className="flex flex-col items-center gap-0.5 px-4 py-1 rounded-lg transition-all text-white/30 hover:text-red-400"
+      >
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M6 2H3a1 1 0 00-1 1v10a1 1 0 001 1h3M11 11l3-3-3-3M14 8H6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+        <span className="text-[10px] font-medium">Logout</span>
+      </button>
+    );
+  }
+
+  return (
+    <button
+      onClick={() => logout()}
+      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-white/40 hover:text-red-400 hover:bg-white/5 transition-all"
+    >
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+        <path d="M6 2H3a1 1 0 00-1 1v10a1 1 0 001 1h3M11 11l3-3-3-3M14 8H6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+      Logout
+    </button>
   );
 }
 

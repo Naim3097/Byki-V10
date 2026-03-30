@@ -164,7 +164,7 @@ export default function HomePage() {
               Start Diagnostics
             </Button>
           </Link>
-          <span className="text-xs text-white/60">Free · No account needed · Works in your browser</span>
+          <span className="text-xs text-white/60">Free · Works in your browser</span>
         </div>
       </section>
 
@@ -305,7 +305,7 @@ export default function HomePage() {
         <Card className="!p-8 sm:!p-10 border-[var(--accent)]/10">
           <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white/90 mb-2">Ready to check your car?</h2>
           <p className="text-sm text-white/70 mb-6 max-w-sm mx-auto leading-relaxed">
-            It takes about 30 seconds. No sign-up, no downloads — just connect and scan.
+            It takes about 30 seconds. No downloads — just connect and scan.
           </p>
           <Link href="/diag">
             <Button size="lg" className="text-base">
