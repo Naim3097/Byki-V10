@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
+import Image from 'next/image';
 import { useBluetoothStore } from '@/stores/bluetooth-store';
 import { useLiveDataStore } from '@/stores/live-data-store';
 import { useScanStore } from '@/stores/scan-store';
@@ -436,6 +437,40 @@ function AllPidsPanel({ activeKeys, latest }: { activeKeys: string[]; latest: Pi
   );
 }
 
+/* ── Scroll reveal hook ─────────────────────────────────────────── */
+
+function useScrollReveal() {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); observer.disconnect(); } },
+      { threshold: 0.15 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return { ref, visible };
+}
+
+/* ── Section Card (elevated card wrapper matching design) ──────── */
+
+function SectionCard({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+  const { ref, visible } = useScrollReveal();
+  return (
+    <div
+      ref={ref}
+      className={`rounded-3xl bg-gradient-to-b from-white/[0.06] to-white/[0.02] border border-white/[0.06] p-6 sm:p-8 ${visible ? 'scroll-reveal' : 'opacity-0'} ${className}`}
+    >
+      {children}
+    </div>
+  );
+}
+
 /* ── Section Navigation (sticky scroll-spy) ────────────────────── */
 
 function SectionNav({
@@ -475,16 +510,16 @@ function SectionNav({
 
   return (
     <div className="sticky top-0 md:top-[53px] z-40 bg-black/90 backdrop-blur-xl border-b border-white/[0.06]">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6">
-        <div className="flex items-center justify-center py-2.5 gap-1">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 flex justify-center py-2.5">
+        <div className="inline-flex items-center gap-0.5 p-1 rounded-full bg-white/[0.04] border border-white/[0.06]">
           {items.map((item) => (
             <button
               key={item.id}
               onClick={() => onNavigate(item.id)}
-              className={`relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              className={`relative flex items-center gap-2 px-5 py-2 rounded-full text-sm font-medium transition-all ${
                 activeSection === item.id
-                  ? 'text-[var(--accent)] bg-[var(--accent)]/8'
-                  : 'text-white/35 hover:text-white/55 hover:bg-white/[0.03]'
+                  ? 'text-black bg-[var(--accent)] shadow-[0_0_12px_var(--accent-glow)]'
+                  : 'text-white/50 hover:text-white/70'
               }`}
             >
               {item.label}
@@ -878,16 +913,21 @@ export default function DiagPage() {
 
           {/* Idle — not streaming, not scanning */}
           {live.state === 'idle' && !isScanning && (
-            <div className="flex flex-col items-center py-16 text-center animate-fade-up">
-              <h3 className="text-lg font-semibold text-white/60">Live Monitoring</h3>
-              <p className="text-sm text-white/25 mt-2 max-w-xs leading-relaxed">
-                Watch your engine&apos;s vital signs in real-time — RPM, temperature, speed, and more
-              </p>
-              <Button onClick={() => live.startStream()} className="mt-6">
-                Start Stream
-              </Button>
-              <p className="text-xs text-white/15 mt-4 font-mono">updates every second · visual gauges</p>
-            </div>
+            <SectionCard>
+              <div className="flex flex-col items-center text-center">
+                <h3 className="text-2xl font-bold text-white/90 tracking-tight">Live Monitoring</h3>
+                <p className="text-sm text-white/40 mt-2 max-w-xs leading-relaxed">
+                  Watch your engine&apos;s vital signs in real-time — RPM, temperature, speed, and more
+                </p>
+                <div className="relative w-full max-w-[260px] aspect-[4/3] mt-6">
+                  <Image src="/brand/diag-car.png" alt="Vehicle diagnostics" fill className="object-contain drop-shadow-[0_0_30px_rgba(0,255,136,0.15)]" priority />
+                </div>
+                <Button onClick={() => live.startStream()} size="lg" className="rounded-2xl !px-10 mt-6">
+                  Start Stream
+                </Button>
+                <p className="text-xs text-white/25 mt-4 font-mono">updates every second · visual gauges</p>
+              </div>
+            </SectionCard>
           )}
 
           {/* Starting */}
@@ -970,34 +1010,41 @@ export default function DiagPage() {
             SECTION 2: HEALTH SCAN
             ═══════════════════════════════════════════════════════ */}
         <section id="scan" className="scroll-mt-14 md:scroll-mt-[70px] py-4">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-base font-semibold text-white/60">Health Scan</h2>
-            {isScanComplete && (
-              <button onClick={() => scan.reset()} className="text-xs font-mono text-white/20 hover:text-white/45 transition-colors">
-                New Scan
-              </button>
-            )}
-          </div>
+          {scan.state !== 'idle' && (
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-base font-semibold text-white/60">Health Scan</h2>
+              {isScanComplete && (
+                <button onClick={() => scan.reset()} className="text-xs font-mono text-white/20 hover:text-white/45 transition-colors">
+                  New Scan
+                </button>
+              )}
+            </div>
+          )}
 
           {/* Idle */}
           {scan.state === 'idle' && (
-            <div className="flex flex-col items-center py-12 text-center animate-fade-up">
-              <h3 className="text-lg font-semibold text-white/60">Health Scan</h3>
-              <p className="text-sm text-white/25 mt-2 max-w-xs leading-relaxed">
-                Run a full check-up across 6 systems — engine, fuel, emissions, and more
-              </p>
-              <Button onClick={handleStartScan} size="lg" className="rounded-2xl !px-8 mt-6">
-                Scan Vehicle
-              </Button>
-              <p className="text-xs text-white/15 mt-4 font-mono">10 cycles · 6 systems · ~30 seconds</p>
-              <div className="flex flex-wrap justify-center gap-2 mt-3">
-                {SYSTEMS.map(s => (
-                  <span key={s.key} className="text-[11px] font-mono text-white/20 px-2 py-0.5 rounded bg-white/[0.03]">
-                    {s.tag}
-                  </span>
-                ))}
+            <SectionCard>
+              <div className="flex flex-col items-center text-center">
+                <h3 className="text-2xl font-bold text-white/90 tracking-tight">Health Scan</h3>
+                <p className="text-sm text-white/40 mt-2 max-w-xs leading-relaxed">
+                  Run a full check-up across 6 systems — engine, fuel, emissions, and more
+                </p>
+                <div className="relative w-full max-w-[260px] aspect-[4/3] mt-6">
+                  <Image src="/brand/diag-car.png" alt="Vehicle health scan" fill className="object-contain drop-shadow-[0_0_30px_rgba(0,255,136,0.15)]" />
+                </div>
+                <Button onClick={handleStartScan} size="lg" className="rounded-2xl !px-10 mt-6">
+                  Scan Vehicle
+                </Button>
+                <p className="text-xs text-white/25 mt-4 font-mono">10 cycles · 6 systems · ~30 seconds</p>
+                <div className="flex flex-wrap justify-center gap-2 mt-3">
+                  {SYSTEMS.map(s => (
+                    <span key={s.key} className="text-[11px] font-mono text-white/30 px-2.5 py-1 rounded-full bg-white/[0.05] border border-white/[0.06]">
+                      {s.tag}
+                    </span>
+                  ))}
+                </div>
               </div>
-            </div>
+            </SectionCard>
           )}
 
           {/* Scanning */}
@@ -1171,16 +1218,18 @@ export default function DiagPage() {
             SECTION 3: FAULT CODES
             ═══════════════════════════════════════════════════════ */}
         <section id="dtc" className="scroll-mt-14 md:scroll-mt-[70px] py-4">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-base font-semibold text-white/60">Fault Codes</h2>
-            {dtcStore.totalCount > 0 && (
-              <div className="flex items-center gap-1.5">
-                {dtcStore.storedDtcs.length > 0 && <Badge color="red">{dtcStore.storedDtcs.length} stored</Badge>}
-                {dtcStore.pendingDtcs.length > 0 && <Badge color="yellow">{dtcStore.pendingDtcs.length} pending</Badge>}
-                {dtcStore.permanentDtcs.length > 0 && <Badge color="orange">{dtcStore.permanentDtcs.length} perm</Badge>}
-              </div>
-            )}
-          </div>
+          {!(dtcStore.state === 'idle' && dtcStore.totalCount === 0) && (
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-base font-semibold text-white/60">Fault Codes</h2>
+              {dtcStore.totalCount > 0 && (
+                <div className="flex items-center gap-1.5">
+                  {dtcStore.storedDtcs.length > 0 && <Badge color="red">{dtcStore.storedDtcs.length} stored</Badge>}
+                  {dtcStore.pendingDtcs.length > 0 && <Badge color="yellow">{dtcStore.pendingDtcs.length} pending</Badge>}
+                  {dtcStore.permanentDtcs.length > 0 && <Badge color="orange">{dtcStore.permanentDtcs.length} perm</Badge>}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Error */}
           {dtcStore.errorMessage && (
@@ -1191,16 +1240,21 @@ export default function DiagPage() {
 
           {/* Idle — haven't scanned yet */}
           {dtcStore.state === 'idle' && dtcStore.totalCount === 0 && (
-            <div className="flex flex-col items-center py-12 text-center animate-fade-up">
-              <h3 className="text-lg font-semibold text-white/60">Fault Code Check</h3>
-              <p className="text-sm text-white/25 mt-2 max-w-xs leading-relaxed">
-                Read diagnostic trouble codes stored in your vehicle&apos;s computer
-              </p>
-              <Button onClick={() => dtcStore.readDtcs()} size="lg" className="rounded-2xl !px-8 mt-6">
-                Read Fault Codes
-              </Button>
-              <p className="text-xs text-white/15 mt-4 font-mono">stored · pending · permanent codes</p>
-            </div>
+            <SectionCard>
+              <div className="flex flex-col items-center text-center">
+                <h3 className="text-2xl font-bold text-white/90 tracking-tight">Fault Code Check</h3>
+                <p className="text-sm text-white/40 mt-2 max-w-xs leading-relaxed">
+                  Read diagnostic trouble codes stored in your vehicle&apos;s computer
+                </p>
+                <div className="relative w-full max-w-[260px] aspect-[4/3] mt-6">
+                  <Image src="/brand/diag-car.png" alt="Fault code check" fill className="object-contain drop-shadow-[0_0_30px_rgba(0,255,136,0.15)]" />
+                </div>
+                <Button onClick={() => dtcStore.readDtcs()} size="lg" className="rounded-2xl !px-10 mt-6">
+                  Read Fault Codes
+                </Button>
+                <p className="text-xs text-white/25 mt-4 font-mono">stored · pending · permanent codes</p>
+              </div>
+            </SectionCard>
           )}
 
           {/* Reading */}

@@ -89,6 +89,16 @@ body {
   z-index: 1;
 }
 
+/* ── Scroll reveal animation ─────────────────── */
+@keyframes reveal-up {
+  from { opacity: 0; transform: translateY(30px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.scroll-reveal {
+  opacity: 0;
+  animation: reveal-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 /* ── Score ring animation ─────────────────────── */
 @keyframes score-fill {
   from { stroke-dashoffset: var(--circumference); }
