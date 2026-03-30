@@ -4,6 +4,21 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useAuthStore } from '@/stores/auth-store';
 
+function passwordStrength(pw: string): { score: number; label: string; color: string } {
+  let score = 0;
+  if (pw.length >= 8) score++;
+  if (pw.length >= 12) score++;
+  if (/[a-z]/.test(pw) && /[A-Z]/.test(pw)) score++;
+  if (/\d/.test(pw)) score++;
+  if (/[^a-zA-Z0-9]/.test(pw)) score++;
+
+  if (score <= 1) return { score: 20, label: 'Weak', color: '#ef4444' };
+  if (score === 2) return { score: 40, label: 'Fair', color: '#f97316' };
+  if (score === 3) return { score: 60, label: 'Good', color: '#fbbf24' };
+  if (score === 4) return { score: 80, label: 'Strong', color: '#22c55e' };
+  return { score: 100, label: 'Very strong', color: '#00ff88' };
+}
+
 export default function RegisterPage() {
   const { registerWithEmail, loginWithGoogle, error, loading, clearError } = useAuthStore();
   const [email, setEmail] = useState('');
@@ -11,9 +26,16 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [localError, setLocalError] = useState<string | null>(null);
 
+  const strength = password.length > 0 ? passwordStrength(password) : null;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLocalError(null);
+
+    if (password.length < 8) {
+      setLocalError('Password must be at least 8 characters');
+      return;
+    }
 
     if (password !== confirmPassword) {
       setLocalError('Passwords do not match');
@@ -69,18 +91,34 @@ export default function RegisterPage() {
                 value={email}
                 onChange={e => { setEmail(e.target.value); clearError(); setLocalError(null); }}
                 required
+                autoComplete="email"
                 className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm text-white placeholder:text-white/30 outline-none focus:border-[var(--accent)]/50 focus:ring-1 focus:ring-[var(--accent)]/30 transition-all"
               />
             </div>
             <div>
               <input
                 type="password"
-                placeholder="Password"
+                placeholder="Password (min 8 characters)"
                 value={password}
                 onChange={e => { setPassword(e.target.value); clearError(); setLocalError(null); }}
                 required
+                minLength={8}
+                autoComplete="new-password"
                 className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm text-white placeholder:text-white/30 outline-none focus:border-[var(--accent)]/50 focus:ring-1 focus:ring-[var(--accent)]/30 transition-all"
               />
+              {strength && (
+                <div className="mt-2 flex items-center gap-2">
+                  <div className="flex-1 h-1 rounded-full bg-white/5 overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all duration-300"
+                      style={{ width: `${strength.score}%`, backgroundColor: strength.color }}
+                    />
+                  </div>
+                  <span className="text-[10px] font-medium" style={{ color: strength.color }}>
+                    {strength.label}
+                  </span>
+                </div>
+              )}
             </div>
             <div>
               <input
@@ -89,6 +127,7 @@ export default function RegisterPage() {
                 value={confirmPassword}
                 onChange={e => { setConfirmPassword(e.target.value); setLocalError(null); }}
                 required
+                autoComplete="new-password"
                 className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm text-white placeholder:text-white/30 outline-none focus:border-[var(--accent)]/50 focus:ring-1 focus:ring-[var(--accent)]/30 transition-all"
               />
             </div>

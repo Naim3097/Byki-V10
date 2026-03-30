@@ -34,9 +34,7 @@ function friendlyAuthError(code: string): string {
     case 'auth/user-disabled':
       return 'This account has been disabled';
     case 'auth/user-not-found':
-      return 'No account found with this email';
     case 'auth/wrong-password':
-      return 'Incorrect password';
     case 'auth/invalid-credential':
       return 'Invalid email or password';
     case 'auth/email-already-in-use':
@@ -98,7 +96,12 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   logout: async () => {
-    await signOut(auth);
+    try {
+      await signOut(auth);
+    } catch {
+      // Force local state clear even if remote signout fails
+    }
+    set({ user: null, isAuthenticated: false });
   },
 
   clearError: () => set({ error: null }),
