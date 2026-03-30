@@ -904,30 +904,28 @@ export default function DiagPage() {
         dtcCount={dtcStore.totalCount}
       />
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-3 pb-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-5 pb-8 flex flex-col gap-6">
 
         {/* ═══════════════════════════════════════════════════════
             SECTION 1: LIVE DATA
             ═══════════════════════════════════════════════════════ */}
-        <section id="live" className="scroll-mt-14 md:scroll-mt-[70px] py-4">
+        <section id="live" className="scroll-mt-14 md:scroll-mt-[70px] segment-card">
 
           {/* Idle — not streaming, not scanning */}
           {live.state === 'idle' && !isScanning && (
-            <SectionCard>
-              <div className="flex flex-col items-center text-center">
-                <h3 className="text-2xl font-bold text-white/90 tracking-tight">Live Monitoring</h3>
-                <p className="text-sm text-white/40 mt-2 max-w-xs leading-relaxed">
-                  Watch your engine&apos;s vital signs in real-time — RPM, temperature, speed, and more
-                </p>
-                <div className="relative w-full max-w-[260px] aspect-[4/3] mt-6">
-                  <Image src="/brand/diag-car.png" alt="Vehicle diagnostics" fill className="object-contain drop-shadow-[0_0_30px_rgba(0,255,136,0.15)]" priority />
-                </div>
-                <Button onClick={() => live.startStream()} size="lg" className="rounded-2xl !px-10 mt-6">
-                  Start Stream
-                </Button>
-                <p className="text-xs text-white/25 mt-4 font-mono">updates every second · visual gauges</p>
+            <div className="flex flex-col items-center text-center animate-fade-up">
+              <h3 className="text-2xl font-bold text-white/90 tracking-tight">Live Monitoring</h3>
+              <p className="text-sm text-white/40 mt-2 max-w-xs leading-relaxed">
+                Watch your engine&apos;s vital signs in real-time — RPM, temperature, speed, and more
+              </p>
+              <div className="relative w-full max-w-[260px] aspect-[4/3] mt-6">
+                <Image src="/brand/diag-car.png" alt="Vehicle diagnostics" fill className="object-contain drop-shadow-[0_0_30px_rgba(0,255,136,0.15)]" priority />
               </div>
-            </SectionCard>
+              <Button onClick={() => live.startStream()} size="lg" className="rounded-2xl !px-10 mt-6">
+                Start Stream
+              </Button>
+              <p className="text-xs text-white/25 mt-4 font-mono">updates every second · visual gauges</p>
+            </div>
           )}
 
           {/* Starting */}
@@ -1004,12 +1002,10 @@ export default function DiagPage() {
           )}
         </section>
 
-        <SectionDivider text={liveToScanGuide} />
-
         {/* ═══════════════════════════════════════════════════════
             SECTION 2: HEALTH SCAN
             ═══════════════════════════════════════════════════════ */}
-        <section id="scan" className="scroll-mt-14 md:scroll-mt-[70px] py-4">
+        <section id="scan" className="scroll-mt-14 md:scroll-mt-[70px] segment-card">
           {scan.state !== 'idle' && (
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-base font-semibold text-white/60">Health Scan</h2>
@@ -1023,28 +1019,26 @@ export default function DiagPage() {
 
           {/* Idle */}
           {scan.state === 'idle' && (
-            <SectionCard>
-              <div className="flex flex-col items-center text-center">
-                <h3 className="text-2xl font-bold text-white/90 tracking-tight">Health Scan</h3>
-                <p className="text-sm text-white/40 mt-2 max-w-xs leading-relaxed">
-                  Run a full check-up across 6 systems — engine, fuel, emissions, and more
-                </p>
-                <div className="relative w-full max-w-[260px] aspect-[4/3] mt-6">
-                  <Image src="/brand/diag-car.png" alt="Vehicle health scan" fill className="object-contain drop-shadow-[0_0_30px_rgba(0,255,136,0.15)]" />
-                </div>
-                <Button onClick={handleStartScan} size="lg" className="rounded-2xl !px-10 mt-6">
-                  Scan Vehicle
-                </Button>
-                <p className="text-xs text-white/25 mt-4 font-mono">10 cycles · 6 systems · ~30 seconds</p>
-                <div className="flex flex-wrap justify-center gap-2 mt-3">
-                  {SYSTEMS.map(s => (
-                    <span key={s.key} className="text-[11px] font-mono text-white/30 px-2.5 py-1 rounded-full bg-white/[0.05] border border-white/[0.06]">
-                      {s.tag}
-                    </span>
-                  ))}
-                </div>
+            <div className="flex flex-col items-center text-center animate-fade-up">
+              <h3 className="text-2xl font-bold text-white/90 tracking-tight">Health Scan</h3>
+              <p className="text-sm text-white/40 mt-2 max-w-xs leading-relaxed">
+                Run a full check-up across 6 systems — engine, fuel, emissions, and more
+              </p>
+              <div className="relative w-full max-w-[260px] aspect-[4/3] mt-6">
+                <Image src="/brand/diag-car.png" alt="Vehicle health scan" fill className="object-contain drop-shadow-[0_0_30px_rgba(0,255,136,0.15)]" />
               </div>
-            </SectionCard>
+              <Button onClick={handleStartScan} size="lg" className="rounded-2xl !px-10 mt-6">
+                Scan Vehicle
+              </Button>
+              <p className="text-xs text-white/25 mt-4 font-mono">10 cycles · 6 systems · ~30 seconds</p>
+              <div className="flex flex-wrap justify-center gap-2 mt-3">
+                {SYSTEMS.map(s => (
+                  <span key={s.key} className="text-[11px] font-mono text-white/30 px-2.5 py-1 rounded-full bg-white/[0.05] border border-white/[0.06]">
+                    {s.tag}
+                  </span>
+                ))}
+              </div>
+            </div>
           )}
 
           {/* Scanning */}
@@ -1212,12 +1206,10 @@ export default function DiagPage() {
           )}
         </section>
 
-        <SectionDivider text={scanToDtcGuide} />
-
         {/* ═══════════════════════════════════════════════════════
             SECTION 3: FAULT CODES
             ═══════════════════════════════════════════════════════ */}
-        <section id="dtc" className="scroll-mt-14 md:scroll-mt-[70px] py-4">
+        <section id="dtc" className="scroll-mt-14 md:scroll-mt-[70px] segment-card">
           {!(dtcStore.state === 'idle' && dtcStore.totalCount === 0) && (
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-base font-semibold text-white/60">Fault Codes</h2>
@@ -1240,21 +1232,19 @@ export default function DiagPage() {
 
           {/* Idle — haven't scanned yet */}
           {dtcStore.state === 'idle' && dtcStore.totalCount === 0 && (
-            <SectionCard>
-              <div className="flex flex-col items-center text-center">
-                <h3 className="text-2xl font-bold text-white/90 tracking-tight">Fault Code Check</h3>
-                <p className="text-sm text-white/40 mt-2 max-w-xs leading-relaxed">
-                  Read diagnostic trouble codes stored in your vehicle&apos;s computer
-                </p>
-                <div className="relative w-full max-w-[260px] aspect-[4/3] mt-6">
-                  <Image src="/brand/diag-car.png" alt="Fault code check" fill className="object-contain drop-shadow-[0_0_30px_rgba(0,255,136,0.15)]" />
-                </div>
-                <Button onClick={() => dtcStore.readDtcs()} size="lg" className="rounded-2xl !px-10 mt-6">
-                  Read Fault Codes
-                </Button>
-                <p className="text-xs text-white/25 mt-4 font-mono">stored · pending · permanent codes</p>
+            <div className="flex flex-col items-center text-center animate-fade-up">
+              <h3 className="text-2xl font-bold text-white/90 tracking-tight">Fault Code Check</h3>
+              <p className="text-sm text-white/40 mt-2 max-w-xs leading-relaxed">
+                Read diagnostic trouble codes stored in your vehicle&apos;s computer
+              </p>
+              <div className="relative w-full max-w-[260px] aspect-[4/3] mt-6">
+                <Image src="/brand/diag-car.png" alt="Fault code check" fill className="object-contain drop-shadow-[0_0_30px_rgba(0,255,136,0.15)]" />
               </div>
-            </SectionCard>
+              <Button onClick={() => dtcStore.readDtcs()} size="lg" className="rounded-2xl !px-10 mt-6">
+                Read Fault Codes
+              </Button>
+              <p className="text-xs text-white/25 mt-4 font-mono">stored · pending · permanent codes</p>
+            </div>
           )}
 
           {/* Reading */}
