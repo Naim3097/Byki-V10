@@ -90,8 +90,10 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       await signInWithPopup(auth, googleProvider);
     } catch (err: unknown) {
-      const code = (err as { code?: string }).code ?? '';
-      set({ error: friendlyAuthError(code), loading: false });
+      const firebaseErr = err as { code?: string; message?: string };
+      const code = firebaseErr.code ?? '';
+      console.error('[Google SSO Error]', code, firebaseErr.message);
+      set({ error: `${friendlyAuthError(code)} (${code})`, loading: false });
     }
   },
 
