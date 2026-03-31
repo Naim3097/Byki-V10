@@ -122,10 +122,10 @@ export default function HomePage() {
             className="mx-auto drop-shadow-[0_0_30px_var(--accent-glow)]"
             priority
           />
-          <p className="text-white/80 text-base sm:text-lg mt-4 max-w-md mx-auto leading-relaxed">
+          <h1 className="text-white/90 text-2xl sm:text-3xl md:text-4xl font-bold mt-4 max-w-md mx-auto leading-tight tracking-tight">
             Understand your car&apos;s health — no mechanic degree required
-          </p>
-          <p className="text-white/60 text-sm mt-2 max-w-sm mx-auto leading-relaxed">
+          </h1>
+          <p className="text-white/60 text-sm sm:text-base mt-3 max-w-sm mx-auto leading-relaxed">
             A simple scan that reads your car&apos;s sensors and tells you what&apos;s good, what to watch, and what needs fixing.
           </p>
         </div>
