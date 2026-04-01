@@ -258,7 +258,7 @@ export default function HomePage() {
       </section>
 
       {/* ── Bengkel Onex BYKI ────────────────────── */}
-      <section className="relative max-w-3xl mx-auto px-6 pb-16">
+      <section className="relative max-w-3xl md:max-w-md mx-auto px-6 pb-16">
         <div className="flex justify-center">
           <Image
             src="/brand/bengkel-onex-byki.png"
