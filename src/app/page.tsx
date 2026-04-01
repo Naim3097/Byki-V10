@@ -4,7 +4,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useBluetoothStore } from '@/stores/bluetooth-store';
 import { Card, Button } from '@/components/ui';
-import NeonGrid from '@/components/neon-grid';
 
 const FEATURES = [
   {
@@ -109,7 +108,6 @@ export default function HomePage() {
       {/* Background grid + green gradient + neon lines */}
       <div className="absolute inset-0 bg-grid opacity-30 pointer-events-none" />
       <div className="absolute inset-0 bg-green-gradient pointer-events-none" />
-      <NeonGrid />
 
       {/* ── Hero ──────────────────────────────────── */}
       <section className="relative flex flex-col items-center justify-center min-h-[70vh] px-6 pt-8 pb-12 text-center overflow-hidden">
