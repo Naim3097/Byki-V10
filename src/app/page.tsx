@@ -257,6 +257,19 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ── Bengkel Onex BYKI ────────────────────── */}
+      <section className="relative max-w-3xl mx-auto px-6 pb-16">
+        <div className="flex justify-center">
+          <Image
+            src="/brand/bengkel-onex-byki.png"
+            alt="Bengkel Onex BYKI"
+            width={800}
+            height={500}
+            className="w-full h-auto rounded-2xl"
+          />
+        </div>
+      </section>
+
       {/* ── What you'll need ─────────────────────── */}
       <section className="relative max-w-3xl mx-auto px-6 pb-16">
         <div className="text-center mb-8">
