@@ -169,7 +169,9 @@ export default function HomePage() {
       {/* ── What is BYKI? ─────────────────────────── */}
       <section className="relative max-w-3xl mx-auto px-6 pb-16">
         <div className="text-center mb-10">
-          <h2 className="text-xs font-medium text-white/60 tracking-widest uppercase mb-4">What is BYKI?</h2>
+          <div className="flex justify-center mb-4">
+            <span className="section-pill">What is BYKI?</span>
+          </div>
           <p className="text-white/80 text-sm sm:text-base leading-relaxed max-w-xl mx-auto">
             Every car made after 1996 has a hidden computer that tracks how your engine, fuel system, 
             and emissions are doing. <strong className="text-[var(--accent)]">BYKI connects to it through your phone&apos;s browser</strong> and 
@@ -180,7 +182,9 @@ export default function HomePage() {
 
       {/* ── How it helps you ──────────────────────── */}
       <section className="relative max-w-4xl mx-auto px-6 pb-16">
-        <h2 className="text-xs font-mono text-white/60 tracking-widest uppercase text-center mb-8">How BYKI helps you</h2>
+        <div className="flex justify-center mb-8">
+          <span className="section-pill">How BYKI helps you</span>
+        </div>
         <div className="grid gap-4 sm:grid-cols-2">
           {BENEFITS.map((b) => (
             <Card key={b.title} className="card-green-hover flex gap-4 items-start transition-all cursor-pointer">
@@ -210,7 +214,9 @@ export default function HomePage() {
       {/* ── What sensors mean ─────────────────────── */}
       <section className="relative max-w-3xl mx-auto px-6 pb-16">
         <div className="text-center mb-8">
-          <h2 className="text-xs font-medium text-white/60 tracking-widest uppercase mb-3">What your car is telling you</h2>
+          <div className="flex justify-center mb-3">
+            <span className="section-pill">What your car is telling you</span>
+          </div>
           <p className="text-white/70 text-sm max-w-md mx-auto leading-relaxed">
             Your car has sensors that monitor everything. Here&apos;s what they mean in everyday terms:
           </p>
@@ -227,7 +233,9 @@ export default function HomePage() {
 
       {/* ── Feature cards ─────────────────────────── */}
       <section className="relative max-w-4xl mx-auto px-6 pb-16">
-        <h2 className="text-xs font-medium text-white/60 tracking-widest uppercase text-center mb-8">What you can do</h2>
+        <div className="flex justify-center mb-8">
+          <span className="section-pill">What you can do</span>
+        </div>
         <div className="grid gap-4 sm:grid-cols-3">
           {FEATURES.map((f) => (
             <Link key={f.title} href={f.href} className="group">
@@ -245,7 +253,9 @@ export default function HomePage() {
 
       {/* ── How it works ──────────────────────────── */}
       <section className="relative max-w-4xl mx-auto px-6 pb-16">
-        <h2 className="text-xs font-medium text-white/60 tracking-widest uppercase text-center mb-14">How it works</h2>
+        <div className="flex justify-center mb-14">
+          <span className="section-pill">How it works</span>
+        </div>
 
         {/* ── Desktop layout (horizontal) ── */}
         <div className="hidden sm:block">
@@ -316,7 +326,9 @@ export default function HomePage() {
       {/* ── What you'll need ─────────────────────── */}
       <section className="relative max-w-3xl mx-auto px-6 pb-16">
         <div className="text-center mb-8">
-          <h2 className="text-xs font-medium text-white/60 tracking-widest uppercase mb-3">What you&apos;ll need</h2>
+          <div className="flex justify-center mb-3">
+            <span className="section-pill">What you&apos;ll need</span>
+          </div>
         </div>
         <div className="grid gap-4 sm:grid-cols-3">
           <Card className="text-center">
