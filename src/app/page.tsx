@@ -169,7 +169,7 @@ export default function HomePage() {
       {/* ── What is BYKI? ─────────────────────────── */}
       <section className="relative max-w-3xl mx-auto px-6 pb-16">
         <div className="text-center mb-10">
-          <h2 className="text-xs font-mono text-white/60 tracking-widest uppercase mb-4">What is BYKI?</h2>
+          <h2 className="text-xs font-medium text-white/60 tracking-widest uppercase mb-4">What is BYKI?</h2>
           <p className="text-white/80 text-sm sm:text-base leading-relaxed max-w-xl mx-auto">
             Every car made after 1996 has a hidden computer that tracks how your engine, fuel system, 
             and emissions are doing. <strong className="text-[var(--accent)]">BYKI connects to it through your phone&apos;s browser</strong> and 
@@ -210,7 +210,7 @@ export default function HomePage() {
       {/* ── What sensors mean ─────────────────────── */}
       <section className="relative max-w-3xl mx-auto px-6 pb-16">
         <div className="text-center mb-8">
-          <h2 className="text-xs font-mono text-white/60 tracking-widest uppercase mb-3">What your car is telling you</h2>
+          <h2 className="text-xs font-medium text-white/60 tracking-widest uppercase mb-3">What your car is telling you</h2>
           <p className="text-white/70 text-sm max-w-md mx-auto leading-relaxed">
             Your car has sensors that monitor everything. Here&apos;s what they mean in everyday terms:
           </p>
@@ -227,7 +227,7 @@ export default function HomePage() {
 
       {/* ── Feature cards ─────────────────────────── */}
       <section className="relative max-w-4xl mx-auto px-6 pb-16">
-        <h2 className="text-xs font-mono text-white/60 tracking-widest uppercase text-center mb-8">What you can do</h2>
+        <h2 className="text-xs font-medium text-white/60 tracking-widest uppercase text-center mb-8">What you can do</h2>
         <div className="grid gap-4 sm:grid-cols-3">
           {FEATURES.map((f) => (
             <Link key={f.title} href={f.href} className="group">
@@ -245,7 +245,7 @@ export default function HomePage() {
 
       {/* ── How it works ──────────────────────────── */}
       <section className="relative max-w-4xl mx-auto px-6 pb-16">
-        <h2 className="text-xs font-mono text-white/60 tracking-widest uppercase text-center mb-14">How it works</h2>
+        <h2 className="text-xs font-medium text-white/60 tracking-widest uppercase text-center mb-14">How it works</h2>
 
         {/* ── Desktop layout (horizontal) ── */}
         <div className="hidden sm:block">
@@ -260,7 +260,7 @@ export default function HomePage() {
                   className="step-orb w-14 h-14 rounded-full bg-[var(--accent)] flex items-center justify-center shadow-[0_0_20px_rgba(0,255,136,0.35)]" 
                   style={{ animationDelay: `${i * 1.2}s` }}
                 >
-                  <span className="text-lg font-bold font-mono text-black tracking-tight">{s.num}</span>
+                  <span className="text-lg font-bold tabular-nums text-black tracking-tight">{s.num}</span>
                 </div>
               </div>
             ))}
@@ -289,7 +289,7 @@ export default function HomePage() {
                 className="step-orb w-14 h-14 rounded-full bg-[var(--accent)] flex items-center justify-center shadow-[0_0_20px_rgba(0,255,136,0.35)]"
                 style={{ animationDelay: `${i * 1.2}s` }}
               >
-                <span className="text-lg font-bold font-mono text-black tracking-tight">{s.num}</span>
+                <span className="text-lg font-bold tabular-nums text-black tracking-tight">{s.num}</span>
               </div>
 
               {/* Text */}
@@ -316,7 +316,7 @@ export default function HomePage() {
       {/* ── What you'll need ─────────────────────── */}
       <section className="relative max-w-3xl mx-auto px-6 pb-16">
         <div className="text-center mb-8">
-          <h2 className="text-xs font-mono text-white/60 tracking-widest uppercase mb-3">What you&apos;ll need</h2>
+          <h2 className="text-xs font-medium text-white/60 tracking-widest uppercase mb-3">What you&apos;ll need</h2>
         </div>
         <div className="grid gap-4 sm:grid-cols-3">
           <Card className="text-center">

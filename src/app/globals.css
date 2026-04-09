@@ -1,4 +1,11 @@
+@import url('https://api.fontshare.com/v2/css?f[]=satoshi@900,700,500,400&display=swap');
 @import "tailwindcss";
+
+/* ── Tailwind v4 theme overrides ──────────────── */
+@theme {
+  --font-sans: 'Satoshi', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Satoshi', ui-monospace, monospace;
+}
 
 :root {
   --bg: #000000;
@@ -32,6 +39,53 @@
 body {
   background: var(--bg);
   color: var(--fg);
+  font-family: 'Satoshi', ui-sans-serif, system-ui, sans-serif;
+  font-weight: 400;
+}
+
+/* ── Satoshi Typography Scale (Perfect Fourth 1.333) ── */
+h1 {
+  font-family: 'Satoshi', sans-serif;
+  font-weight: 700;
+  font-size: 2.369rem;   /* ~37.9px */
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+h2 {
+  font-family: 'Satoshi', sans-serif;
+  font-weight: 700;
+  font-size: 1.777rem;   /* ~28.4px */
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+}
+h3 {
+  font-family: 'Satoshi', sans-serif;
+  font-weight: 700;
+  font-size: 1.333rem;   /* ~21.3px */
+  line-height: 1.3;
+}
+h4 {
+  font-family: 'Satoshi', sans-serif;
+  font-weight: 500;
+  font-size: 1rem;
+  line-height: 1.4;
+}
+h5, h6 {
+  font-family: 'Satoshi', sans-serif;
+  font-weight: 500;
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+p, li, span, td, th, label, input, textarea, select {
+  font-family: 'Satoshi', sans-serif;
+}
+button, a.nav-link {
+  font-family: 'Satoshi', sans-serif;
+  font-weight: 500;
+}
+.text-light {
+  font-weight: 400;
+  font-size: 0.75rem;
 }
 
 /* ── Glass card surface ───────────────────────── */
