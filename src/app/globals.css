@@ -158,6 +158,29 @@ body {
   animation: count-appear 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* ── Neumorphic / Soft-UI for How it Works ────── */
+.neu-container {
+  background: #1a1a1a;
+  box-shadow:
+    8px 8px 20px rgba(0, 0, 0, 0.6),
+    -8px -8px 20px rgba(50, 50, 50, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+}
+.neu-step-card {
+  background: #1a1a1a;
+  box-shadow:
+    inset 4px 4px 10px rgba(0, 0, 0, 0.5),
+    inset -4px -4px 10px rgba(50, 50, 50, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+}
+.neu-circle-glow {
+  filter: drop-shadow(0 0 6px rgba(0, 255, 136, 0.3));
+}
+.neu-line-glow {
+  filter: drop-shadow(0 0 3px rgba(0, 255, 136, 0.2));
+}
+
 /* ── Grid background pattern ─────────────────── */
 .bg-grid {
   background-image:

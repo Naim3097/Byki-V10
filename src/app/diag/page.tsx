@@ -904,10 +904,22 @@ export default function DiagPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[80vh] px-6 text-center">
         <div className="animate-fade-up max-w-sm w-full space-y-8">
+          {/* OBD2 Adapter Hero Image */}
+          <div className="w-full flex justify-center">
+            <Image
+              src="/obdii-connect.png"
+              alt="OBD2 Bluetooth Adapter"
+              width={800}
+              height={600}
+              priority
+              className="w-full max-w-[320px] md:max-w-[400px] h-auto object-contain"
+            />
+          </div>
+
           <div>
-            <p className="text-[11px] font-mono text-white/20 tracking-widest uppercase mb-3">Diagnostics</p>
+            <p className="text-[11px] font-mono text-[var(--fg-dim)] tracking-widest uppercase mb-3">Diagnostics</p>
             <h2 className="text-2xl font-bold tracking-tight">Connect Your Adapter</h2>
-            <p className="text-sm text-white/35 mt-3 leading-relaxed">
+            <p className="text-sm text-[var(--fg-muted)] mt-3 leading-relaxed">
               Plug the ELM327 adapter into your car&apos;s OBD2 port (usually under the dashboard, near the steering column), then tap below to pair.
             </p>
           </div>
@@ -930,10 +942,10 @@ export default function DiagPage() {
           </Button>
 
           <div className="space-y-2">
-            <p className="text-xs text-white/15 leading-relaxed">
+            <p className="text-xs text-[var(--fg-muted)] leading-relaxed">
               Your browser will show a device picker — select your ELM327 adapter
             </p>
-            <p className="text-xs text-white/10 leading-relaxed">
+            <p className="text-xs text-[var(--fg-dim)] leading-relaxed">
               Don&apos;t have an adapter? You can get one online for around $15
             </p>
           </div>
