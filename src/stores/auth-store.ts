@@ -59,6 +59,10 @@ export const useAuthStore = create<AuthState>((set) => ({
   isAuthenticated: false,
 
   initialize: () => {
+    if (!auth) {
+      set({ user: null, loading: false, isAuthenticated: false });
+      return () => {};
+    }
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       set({ user, loading: false, isAuthenticated: !!user });
     });
@@ -66,6 +70,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   loginWithEmail: async (email, password) => {
+    if (!auth) { set({ error: 'Auth not configured', loading: false }); return; }
     set({ error: null, loading: true });
     try {
       await signInWithEmailAndPassword(auth, email, password);
@@ -76,6 +81,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   registerWithEmail: async (email, password) => {
+    if (!auth) { set({ error: 'Auth not configured', loading: false }); return; }
     set({ error: null, loading: true });
     try {
       await createUserWithEmailAndPassword(auth, email, password);
@@ -86,6 +92,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   loginWithGoogle: async () => {
+    if (!auth || !googleProvider) { set({ error: 'Auth not configured', loading: false }); return; }
     set({ error: null, loading: true });
     try {
       await signInWithPopup(auth, googleProvider);
@@ -97,7 +104,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   logout: async () => {
     try {
-      await signOut(auth);
+      if (auth) await signOut(auth);
     } catch {
       // Force local state clear even if remote signout fails
     }
