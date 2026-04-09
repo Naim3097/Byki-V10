@@ -243,95 +243,60 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── How it works — Neumorphic ─────────────── */}
-      <section className="relative max-w-3xl mx-auto px-6 pb-16">
-        <h2 className="text-xs font-mono text-white/60 tracking-widest uppercase text-center mb-10">How it works</h2>
+      {/* ── How it works ──────────────────────────── */}
+      <section className="relative max-w-4xl mx-auto px-6 pb-16">
+        <h2 className="text-xs font-mono text-white/60 tracking-widest uppercase text-center mb-14">How it works</h2>
 
-        {/* Neumorphic container */}
-        <div className="neu-container rounded-[28px] p-6 sm:p-10">
+        {/* ── Desktop layout (horizontal) ── */}
+        <div className="hidden sm:block">
+          {/* Circle row with connecting dashes */}
+          <div className="relative flex items-center justify-between max-w-2xl mx-auto mb-10">
+            {/* Dashed connecting line behind circles */}
+            <div className="absolute top-1/2 left-[calc(12.5%+28px)] right-[calc(12.5%+28px)] -translate-y-1/2 border-t border-dashed border-white/15" />
 
-          {/* ── SVG Step Diagram ── */}
-          <div className="w-full mb-10 overflow-x-auto">
-            {/* Desktop: horizontal flow */}
-            <svg viewBox="0 0 800 100" fill="none" className="hidden sm:block w-full h-auto" aria-hidden="true">
-              {/* Connecting line */}
-              <line x1="100" y1="40" x2="700" y2="40" stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
-              <line x1="100" y1="40" x2="700" y2="40" stroke="var(--accent)" strokeWidth="0.5" strokeDasharray="6 4" className="neu-line-glow" />
-
-              {/* Step 1 */}
-              <circle cx="100" cy="40" r="22" fill="none" stroke="var(--accent)" strokeWidth="1.5" className="neu-circle-glow" />
-              <circle cx="100" cy="40" r="14" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="0.5" />
-              <text x="100" y="45" textAnchor="middle" fill="var(--accent)" fontSize="14" fontWeight="700" fontFamily="monospace">1</text>
-              <text x="100" y="78" textAnchor="middle" fill="rgba(255,255,255,0.5)" fontSize="10" fontWeight="500">Plug In</text>
-
-              {/* Arrow 1→2 */}
-              <polygon points="290,36 283,32 283,40" fill="var(--accent)" fillOpacity="0.4" />
-
-              {/* Step 2 */}
-              <circle cx="300" cy="40" r="22" fill="none" stroke="var(--accent)" strokeWidth="1.5" className="neu-circle-glow" />
-              <circle cx="300" cy="40" r="14" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="0.5" />
-              <text x="300" y="45" textAnchor="middle" fill="var(--accent)" fontSize="14" fontWeight="700" fontFamily="monospace">2</text>
-              <text x="300" y="78" textAnchor="middle" fill="rgba(255,255,255,0.5)" fontSize="10" fontWeight="500">Scan</text>
-
-              {/* Arrow 2→3 */}
-              <polygon points="490,36 483,32 483,40" fill="var(--accent)" fillOpacity="0.4" />
-
-              {/* Step 3 */}
-              <circle cx="500" cy="40" r="22" fill="none" stroke="var(--accent)" strokeWidth="1.5" className="neu-circle-glow" />
-              <circle cx="500" cy="40" r="14" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="0.5" />
-              <text x="500" y="45" textAnchor="middle" fill="var(--accent)" fontSize="14" fontWeight="700" fontFamily="monospace">3</text>
-              <text x="500" y="78" textAnchor="middle" fill="rgba(255,255,255,0.5)" fontSize="10" fontWeight="500">Understand</text>
-
-              {/* Arrow 3→4 */}
-              <polygon points="690,36 683,32 683,40" fill="var(--accent)" fillOpacity="0.4" />
-
-              {/* Step 4 */}
-              <circle cx="700" cy="40" r="22" fill="none" stroke="var(--accent)" strokeWidth="1.5" className="neu-circle-glow" />
-              <circle cx="700" cy="40" r="14" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="0.5" />
-              <text x="700" y="45" textAnchor="middle" fill="var(--accent)" fontSize="14" fontWeight="700" fontFamily="monospace">4</text>
-              <text x="700" y="78" textAnchor="middle" fill="rgba(255,255,255,0.5)" fontSize="10" fontWeight="500">Get Help</text>
-            </svg>
-
-            {/* Mobile: vertical flow */}
-            <svg viewBox="0 0 100 420" fill="none" className="block sm:hidden mx-auto h-auto" style={{ width: '100px' }} aria-hidden="true">
-              {/* Vertical connecting line */}
-              <line x1="50" y1="30" x2="50" y2="390" stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
-              <line x1="50" y1="30" x2="50" y2="390" stroke="var(--accent)" strokeWidth="0.5" strokeDasharray="6 4" className="neu-line-glow" />
-
-              {/* Step 1 */}
-              <circle cx="50" cy="30" r="18" fill="none" stroke="var(--accent)" strokeWidth="1.5" className="neu-circle-glow" />
-              <text x="50" y="35" textAnchor="middle" fill="var(--accent)" fontSize="13" fontWeight="700" fontFamily="monospace">1</text>
-
-              {/* Arrow */}
-              <polygon points="46,125 50,132 54,125" fill="var(--accent)" fillOpacity="0.4" />
-              {/* Step 2 */}
-              <circle cx="50" cy="150" r="18" fill="none" stroke="var(--accent)" strokeWidth="1.5" className="neu-circle-glow" />
-              <text x="50" y="155" textAnchor="middle" fill="var(--accent)" fontSize="13" fontWeight="700" fontFamily="monospace">2</text>
-
-              {/* Arrow */}
-              <polygon points="46,245 50,252 54,245" fill="var(--accent)" fillOpacity="0.4" />
-              {/* Step 3 */}
-              <circle cx="50" cy="270" r="18" fill="none" stroke="var(--accent)" strokeWidth="1.5" className="neu-circle-glow" />
-              <text x="50" y="275" textAnchor="middle" fill="var(--accent)" fontSize="13" fontWeight="700" fontFamily="monospace">3</text>
-
-              {/* Arrow */}
-              <polygon points="46,365 50,372 54,365" fill="var(--accent)" fillOpacity="0.4" />
-              {/* Step 4 */}
-              <circle cx="50" cy="390" r="18" fill="none" stroke="var(--accent)" strokeWidth="1.5" className="neu-circle-glow" />
-              <text x="50" y="395" textAnchor="middle" fill="var(--accent)" fontSize="13" fontWeight="700" fontFamily="monospace">4</text>
-            </svg>
-          </div>
-
-          {/* ── Step cards (neumorphic inset) ── */}
-          <div className="grid gap-5 sm:grid-cols-4">
-            {STEPS.map(s => (
-              <div key={s.num} className="neu-step-card rounded-2xl p-5 flex flex-col items-center text-center gap-2">
-                <span className="text-2xl font-bold text-[var(--accent)] font-mono opacity-40">{s.num}</span>
-                <span className="text-sm font-semibold text-white/90">{s.title}</span>
-                <span className="text-xs text-white/50 leading-relaxed">{s.desc}</span>
+            {STEPS.map((s, i) => (
+              <div key={s.num} className="relative z-10 flex flex-col items-center" style={{ width: '25%' }}>
+                <div
+                  className="step-orb w-14 h-14 rounded-full bg-[var(--accent)] flex items-center justify-center shadow-[0_0_20px_rgba(0,255,136,0.35)]" 
+                  style={{ animationDelay: `${i * 1.2}s` }}
+                >
+                  <span className="text-lg font-bold font-mono text-black tracking-tight">{s.num}</span>
+                </div>
               </div>
             ))}
           </div>
+
+          {/* Text row */}
+          <div className="flex justify-between max-w-2xl mx-auto">
+            {STEPS.map(s => (
+              <div key={s.num} className="flex flex-col items-center text-center px-2" style={{ width: '25%' }}>
+                <h3 className="text-base font-bold text-white/90 mb-1.5">{s.title}</h3>
+                <p className="text-xs text-white/45 leading-relaxed max-w-[170px]">{s.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ── Mobile layout (vertical) ── */}
+        <div className="flex sm:hidden flex-col items-center gap-0">
+          {STEPS.map((s, i) => (
+            <div key={s.num} className="flex flex-col items-center">
+              {/* Dashed line above (skip first) */}
+              {i > 0 && <div className="w-px h-10 border-l border-dashed border-white/15" />}
+
+              {/* Circle */}
+              <div
+                className="step-orb w-14 h-14 rounded-full bg-[var(--accent)] flex items-center justify-center shadow-[0_0_20px_rgba(0,255,136,0.35)]"
+                style={{ animationDelay: `${i * 1.2}s` }}
+              >
+                <span className="text-lg font-bold font-mono text-black tracking-tight">{s.num}</span>
+              </div>
+
+              {/* Text */}
+              <h3 className="text-base font-bold text-white/90 mt-3 mb-1">{s.title}</h3>
+              <p className="text-xs text-white/45 leading-relaxed max-w-[220px] text-center mb-2">{s.desc}</p>
+            </div>
+          ))}
         </div>
       </section>
 
