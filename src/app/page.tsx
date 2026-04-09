@@ -121,7 +121,7 @@ export default function HomePage() {
             priority
           />
           <h1 className="text-white/90 text-2xl sm:text-3xl md:text-4xl font-bold mt-4 max-w-md mx-auto leading-tight tracking-tight">
-            Understand your car&apos;s health — no mechanic degree required
+            Understand your car&apos;s health — <span className="text-[var(--accent)]" style={{ textShadow: '0 0 20px rgba(0,255,136,0.4), 0 0 40px rgba(0,255,136,0.15)' }}>no mechanic degree required</span>
           </h1>
           <p className="text-white/60 text-sm sm:text-base mt-3 max-w-sm mx-auto leading-relaxed">
             A simple scan that reads your car&apos;s sensors and tells you what&apos;s good, what to watch, and what needs fixing.
@@ -368,13 +368,13 @@ export default function HomePage() {
 
       {/* ── Bottom CTA ───────────────────────────── */}
       <section className="relative max-w-3xl mx-auto px-6 pb-16 text-center">
-        <Card className="!p-8 sm:!p-10 border-[var(--accent)]/10">
-          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white/90 mb-2">Ready to check your car?</h2>
-          <p className="text-sm text-white/70 mb-6 max-w-sm mx-auto leading-relaxed">
+        <Card className="!p-8 sm:!p-10 border-[var(--accent)]/10 overflow-hidden" style={{ background: 'radial-gradient(circle at 15% 85%, #00ff88 0%, transparent 40%), radial-gradient(circle at 80% 20%, #00cc6a 0%, transparent 45%), radial-gradient(circle at 50% 60%, #009955 0%, transparent 50%), radial-gradient(circle at 90% 90%, #006633 0%, transparent 40%), #003d1f' }}>
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white mb-2">Ready to check your car?</h2>
+          <p className="text-sm text-white/80 mb-6 max-w-sm mx-auto leading-relaxed">
             It takes about 30 seconds. No downloads — just connect and scan.
           </p>
           <Link href="/diag">
-            <Button size="lg" className="text-base">
+            <Button size="lg" className="text-base !bg-white !text-gray-900 hover:!bg-white/90">
               Start Diagnostics
             </Button>
           </Link>
