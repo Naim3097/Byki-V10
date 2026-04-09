@@ -129,44 +129,62 @@ function formatValue(v: number): string {
   return v.toFixed(1);
 }
 
-/* ── ArcGauge (hero) ───────────────────────────────────────────── */
+/* ── ArcGauge (hero — large circular gauge) ────────────────────── */
 
-function ArcGauge({ label, value, unit, min, max, size = 150 }: Omit<GaugeDef, 'key'> & { value: number | null | undefined; size?: number }) {
+function ArcGauge({ label, value, unit, min, max, size = 200 }: Omit<GaugeDef, 'key'> & { value: number | null | undefined; size?: number }) {
   const v = value ?? 0;
   const pct = Math.max(0, Math.min(1, (v - min) / (max - min)));
   const hasValue = value != null;
-  const r = (size - 16) / 2;
-  const arc = Math.PI * 1.5;
-  const circumference = r * arc;
+
+  const strokeW = 10;
+  const r = (size - strokeW) / 2;
+  const cx = size / 2;
+  const cy = size / 2;
+
+  // Full-circle arc (270°) from bottom-left to bottom-right
+  const startAngle = 135;      // 7 o'clock
+  const endAngle = 405;        // 5 o'clock (135 + 270)
+  const arcSweep = 270;
+  const circumference = (arcSweep / 360) * 2 * Math.PI * r;
   const offset = circumference - pct * circumference;
-  const color = pct < 0.7 ? '#10b981' : pct < 0.9 ? '#f59e0b' : '#ef4444';
+
+  // Gradient ID unique per instance
+  const gradId = `gauge-grad-${label.replace(/\s/g, '')}`;
 
   return (
     <div className="flex flex-col items-center">
-      <div className="relative" style={{ width: size, height: size * 0.75 }}>
-        {/* Ambient glow */}
-        {hasValue && (
-          <div
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/3 w-3/4 h-3/4 rounded-full opacity-15 blur-2xl pointer-events-none transition-opacity duration-700"
-            style={{ backgroundColor: color }}
-          />
-        )}
-        <svg width={size} height={size * 0.75} viewBox={`0 0 ${size} ${size * 0.75}`} className="overflow-visible relative z-[1]">
-          <path d={describeArc(size / 2, size * 0.7, r, 225, -45)} fill="none" stroke="rgba(0,0,0,0.08)" strokeWidth="4" strokeLinecap="round" />
+      <div className="relative" style={{ width: size, height: size }}>
+        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="overflow-visible -rotate-[90deg]" style={{ transform: `rotate(${startAngle + 90}deg)` }}>
+          <defs>
+            <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#00ff88" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#10b981" stopOpacity="1" />
+            </linearGradient>
+          </defs>
+          {/* Background track */}
+          <circle cx={cx} cy={cy} r={r} fill="none" stroke="rgba(0,0,0,0.06)" strokeWidth={strokeW}
+            strokeDasharray={circumference} strokeDashoffset={0}
+            strokeLinecap="round"
+            style={{ strokeDasharray: `${circumference} ${2 * Math.PI * r - circumference}` }} />
+          {/* Active arc with gradient */}
           {hasValue && (
-            <path d={describeArc(size / 2, size * 0.7, r, 225, -45)} fill="none" stroke={color} strokeWidth="4" strokeLinecap="round"
-              strokeDasharray={circumference} strokeDashoffset={offset}
-              className="transition-all duration-500" style={{ filter: `drop-shadow(0 0 6px ${color}40)` }} />
+            <circle cx={cx} cy={cy} r={r} fill="none" stroke={`url(#${gradId})`} strokeWidth={strokeW}
+              strokeLinecap="round"
+              strokeDasharray={`${circumference} ${2 * Math.PI * r}`}
+              strokeDashoffset={offset}
+              className="transition-all duration-500"
+              style={{ filter: 'drop-shadow(0 0 8px rgba(0,255,136,0.3))' }} />
           )}
         </svg>
-        <div className="absolute inset-0 flex flex-col items-center justify-end pb-1 z-[2]">
-          <span className={`text-3xl font-bold font-mono tabular-nums tracking-tight ${hasValue ? 'text-gray-900' : 'text-gray-300'} transition-colors`}>
+        {/* Center text */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center z-[2]">
+          <span className={`text-4xl sm:text-5xl font-bold tabular-nums tracking-tight ${hasValue ? 'text-gray-900' : 'text-gray-300'} transition-colors`}>
             {hasValue ? formatValue(v) : '—'}
           </span>
-          <span className="text-[11px] text-gray-400 font-mono mt-0.5">{unit}</span>
+          <span className="text-xs text-gray-400 mt-0.5">{unit}</span>
+          <span className="text-xs text-gray-500 font-bold tracking-widest uppercase mt-0.5">{label}</span>
         </div>
       </div>
-      <span className="text-xs text-gray-500 mt-1.5 font-semibold tracking-wide uppercase">{label}</span>
     </div>
   );
 }
@@ -180,15 +198,15 @@ function MiniGauge({ label, value, unit, min, max }: Omit<GaugeDef, 'key'> & { v
   const color = pct < 70 ? '#10b981' : pct < 90 ? '#f59e0b' : '#ef4444';
 
   return (
-    <div className="rounded-xl bg-gray-50 border border-gray-200 p-3 hover:border-gray-300 transition-all">
-      <div className="flex items-baseline justify-between mb-2">
-        <span className="text-[11px] text-gray-500 font-medium tracking-wide">{label}</span>
-        <span className="text-[11px] text-gray-400 font-mono">{unit}</span>
+    <div className="rounded-lg bg-gray-50 border border-gray-200 p-2.5 hover:border-gray-300 transition-all">
+      <div className="flex items-baseline justify-between mb-1.5">
+        <span className="text-[10px] text-gray-500 font-medium tracking-wide">{label}</span>
+        <span className="text-[10px] text-gray-400">{unit}</span>
       </div>
-      <span className={`block text-xl font-bold font-mono tabular-nums leading-none ${hasValue ? 'text-gray-900' : 'text-gray-300'} transition-colors`}>
+      <span className={`block text-lg font-bold tabular-nums leading-none ${hasValue ? 'text-gray-900' : 'text-gray-300'} transition-colors`}>
         {hasValue ? formatValue(v) : '—'}
       </span>
-      <div className="mt-2.5 h-[3px] rounded-full bg-gray-200 overflow-hidden">
+      <div className="mt-2 h-[3px] rounded-full bg-gray-200 overflow-hidden">
         <div className="h-full rounded-full transition-all duration-300" style={{ width: `${hasValue ? pct : 0}%`, backgroundColor: color }} />
       </div>
     </div>
@@ -1020,18 +1038,36 @@ export default function DiagPage() {
 
           {/* Active: streaming or paused (not during scan) */}
           {(live.state === 'streaming' || (live.state === 'paused' && !isScanning)) && (
-            <div className="space-y-4 animate-fade-up">
+            <div className="space-y-5 animate-fade-up">
               {/* Controls bar */}
-              <div className="flex items-center gap-2">
-                {live.state === 'streaming' && (
-                  <Button onClick={() => live.pauseStream()} size="sm" variant="secondary">Pause</Button>
-                )}
-                {live.state === 'paused' && (
-                  <Button onClick={() => live.resumeStream()} size="sm">Resume</Button>
-                )}
-                <Button onClick={() => live.reset()} size="sm" variant="ghost">Stop</Button>
+              <div className="flex items-center">
+                {/* Pause / Stop toggle pill */}
+                <div className="relative flex items-center bg-gray-100 rounded-full p-0.5 border border-gray-200">
+                  {/* Sliding indicator */}
+                  <div
+                    className="absolute top-0.5 h-[calc(100%-4px)] w-[calc(50%-2px)] rounded-full bg-gray-900 transition-all duration-300 ease-in-out"
+                    style={{ left: live.state === 'streaming' ? '2px' : 'calc(50%)' }}
+                  />
+                  <button
+                    onClick={() => live.state === 'streaming' ? live.pauseStream() : live.resumeStream()}
+                    className={`relative z-10 px-4 py-1.5 text-xs font-medium rounded-full transition-colors duration-300 ${
+                      live.state === 'streaming' ? 'text-white' : 'text-gray-500'
+                    }`}
+                  >
+                    Pause
+                  </button>
+                  <button
+                    onClick={() => live.reset()}
+                    className={`relative z-10 px-4 py-1.5 text-xs font-medium rounded-full transition-colors duration-300 ${
+                      live.state === 'paused' ? 'text-white' : 'text-gray-500'
+                    }`}
+                  >
+                    Stop
+                  </button>
+                </div>
 
-                <div className="ml-auto flex items-center gap-3 text-[11px] font-mono text-gray-400">
+                {/* Status info */}
+                <div className="ml-auto flex items-center gap-3 text-[11px] text-gray-400">
                   {live.sampleCount > 0 && <span className="tabular-nums">{live.sampleCount} samples</span>}
                   {activeKeys.length > 0 && <span>{activeKeys.length} PIDs</span>}
                   {live.state === 'streaming' && (
@@ -1044,10 +1080,10 @@ export default function DiagPage() {
                 </div>
               </div>
 
-              {/* Hero gauges: RPM + Speed */}
-              <div className="flex justify-center gap-8 sm:gap-14 py-2">
+              {/* Hero gauges: RPM + Speed — larger circular */}
+              <div className="flex justify-center items-center gap-4 sm:gap-10 py-2">
                 {HERO_GAUGES.map(g => (
-                  <ArcGauge key={g.key} label={g.label} value={latest?.[g.key] as number | null | undefined} unit={g.unit} min={g.min} max={g.max} size={150} />
+                  <ArcGauge key={g.key} label={g.label} value={latest?.[g.key] as number | null | undefined} unit={g.unit} min={g.min} max={g.max} size={180} />
                 ))}
               </div>
 
