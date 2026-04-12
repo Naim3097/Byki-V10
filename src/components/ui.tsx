@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useBluetoothStore } from '../stores/bluetooth-store';
 import { useAuthStore } from '../stores/auth-store';
@@ -119,7 +120,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <header className="hidden md:flex items-center justify-between px-6 py-3 border-b border-white/5 bg-black/60 backdrop-blur-xl sticky top-0 z-50">
         <div className="flex items-center gap-6">
           <Link href="/" className="flex items-center gap-2">
-            <span className="text-lg font-bold tracking-tight text-[var(--accent)]">BYKI</span>
+            <Image
+              src="/brand/byki-logo-nav.png"
+              alt="BYKI"
+              width={80}
+              height={24}
+              className="h-6 w-auto"
+              priority
+            />
             <span className="text-[10px] font-mono text-white/25 tracking-widest uppercase">v10 web</span>
           </Link>
           <nav className="flex items-center gap-1">
