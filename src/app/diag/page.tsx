@@ -996,7 +996,10 @@ export default function DiagPage() {
           {/* Idle — not streaming, not scanning */}
           {live.state === 'idle' && !isScanning && (
             <div className="flex flex-col items-center text-center animate-fade-up">
-              <h3 className="text-2xl font-bold text-gray-900 tracking-tight">Live Monitoring</h3>
+              <div className="flex items-center gap-2.5">
+                <span className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-md bg-emerald-500 text-white text-sm sm:text-base font-bold">1</span>
+                <h3 className="text-2xl font-bold text-gray-900 tracking-tight">Live Monitoring</h3>
+              </div>
               <p className="text-sm text-gray-500 mt-2 max-w-xs leading-relaxed">
                 Watch your engine&apos;s vital signs in real-time — RPM, temperature, speed, and more
               </p>
@@ -1120,7 +1123,10 @@ export default function DiagPage() {
           {/* Idle */}
           {scan.state === 'idle' && (
             <div className="flex flex-col items-center text-center animate-fade-up">
-              <h3 className="text-2xl font-bold text-gray-900 tracking-tight">Health Scan</h3>
+              <div className="flex items-center gap-2.5">
+                <span className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-md bg-emerald-500 text-white text-sm sm:text-base font-bold">2</span>
+                <h3 className="text-2xl font-bold text-gray-900 tracking-tight">Health Scan</h3>
+              </div>
               <p className="text-sm text-gray-500 mt-2 max-w-xs leading-relaxed">
                 Run a full check-up across 6 systems — engine, fuel, emissions, and more
               </p>
@@ -1333,7 +1339,10 @@ export default function DiagPage() {
           {/* Idle — haven't scanned yet */}
           {dtcStore.state === 'idle' && dtcStore.totalCount === 0 && (
             <div className="flex flex-col items-center text-center animate-fade-up">
-              <h3 className="text-2xl font-bold text-gray-900 tracking-tight">Fault Code Check</h3>
+              <div className="flex items-center gap-2.5">
+                <span className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-md bg-emerald-500 text-white text-sm sm:text-base font-bold">3</span>
+                <h3 className="text-2xl font-bold text-gray-900 tracking-tight">Fault Code Check</h3>
+              </div>
               <p className="text-sm text-gray-500 mt-2 max-w-xs leading-relaxed">
                 Read diagnostic trouble codes stored in your vehicle&apos;s computer
               </p>
