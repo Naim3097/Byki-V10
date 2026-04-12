@@ -1000,8 +1000,8 @@ export default function DiagPage() {
               <p className="text-sm text-gray-500 mt-2 max-w-xs leading-relaxed">
                 Watch your engine&apos;s vital signs in real-time — RPM, temperature, speed, and more
               </p>
-              <div className="relative w-full max-w-[260px] aspect-[4/3] mt-6">
-                <Image src="/brand/diag-car.png" alt="Vehicle diagnostics" fill className="object-contain drop-shadow-[0_0_30px_rgba(0,255,136,0.15)]" priority />
+              <div className="relative w-full max-w-[300px] sm:max-w-[340px] aspect-[4/3] mt-6 rounded-2xl overflow-hidden">
+                <Image src="/brand/live-data.jpg" alt="Vehicle diagnostics" fill className="object-cover" sizes="(max-width: 640px) 300px, 340px" priority />
               </div>
               <Button onClick={() => live.startStream()} size="lg" className="rounded-2xl !px-10 mt-6">
                 Start Stream
@@ -1124,8 +1124,8 @@ export default function DiagPage() {
               <p className="text-sm text-gray-500 mt-2 max-w-xs leading-relaxed">
                 Run a full check-up across 6 systems — engine, fuel, emissions, and more
               </p>
-              <div className="relative w-full max-w-[260px] aspect-[4/3] mt-6">
-                <Image src="/brand/diag-car.png" alt="Vehicle health scan" fill className="object-contain drop-shadow-[0_0_30px_rgba(0,255,136,0.15)]" />
+              <div className="relative w-full max-w-[300px] sm:max-w-[340px] aspect-[4/3] mt-6 rounded-2xl overflow-hidden">
+                <Image src="/brand/health-scan.jpg" alt="Vehicle health scan" fill className="object-cover" sizes="(max-width: 640px) 300px, 340px" />
               </div>
               <Button onClick={handleStartScan} size="lg" className="rounded-2xl !px-10 mt-6">
                 Scan Vehicle
@@ -1337,8 +1337,8 @@ export default function DiagPage() {
               <p className="text-sm text-gray-500 mt-2 max-w-xs leading-relaxed">
                 Read diagnostic trouble codes stored in your vehicle&apos;s computer
               </p>
-              <div className="relative w-full max-w-[260px] aspect-[4/3] mt-6">
-                <Image src="/brand/diag-car.png" alt="Fault code check" fill className="object-contain drop-shadow-[0_0_30px_rgba(0,255,136,0.15)]" />
+              <div className="relative w-full max-w-[300px] sm:max-w-[340px] aspect-[4/3] mt-6 rounded-2xl overflow-hidden">
+                <Image src="/brand/fault-codes.jpg" alt="Fault code check" fill className="object-cover" sizes="(max-width: 640px) 300px, 340px" />
               </div>
               <Button onClick={() => dtcStore.readDtcs()} size="lg" className="rounded-2xl !px-10 mt-6">
                 Read Fault Codes
