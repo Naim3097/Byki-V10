@@ -240,7 +240,7 @@ export default function HomePage() {
           {FEATURES.map((f) => (
             <Link key={f.title} href={f.href} className="group">
               <Card hover className={`h-full flex flex-col gap-3 animate-fade-up ${f.primary ? 'border-[var(--accent)]/15' : ''}`} >
-                <div className={`${f.primary ? 'text-[var(--accent)]' : 'text-white/30 group-hover:text-white/60'} transition-colors`}>
+                <div className="text-[var(--accent)] transition-all duration-300 ease-out group-hover:scale-110 group-hover:drop-shadow-[0_0_8px_rgba(0,255,136,0.4)]">
                   {f.icon}
                 </div>
                 <h3 className="text-sm font-semibold text-white">{f.title}</h3>
