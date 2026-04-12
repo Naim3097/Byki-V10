@@ -381,6 +381,52 @@ export default function HomePage() {
         </Card>
       </section>
 
+      {/* ── App Coming Soon ──────────────────────── */}
+      <section className="relative max-w-3xl mx-auto px-6 pb-16">
+        <div className="relative overflow-hidden rounded-2xl border border-[var(--accent)]/10 bg-gradient-to-br from-[var(--accent)]/[0.03] to-transparent p-6 sm:p-10 text-center">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 rounded-full opacity-8 blur-[80px] pointer-events-none bg-[var(--accent)]" />
+          <div className="relative space-y-4">
+            <div className="flex justify-center gap-3">
+              {/* iOS icon */}
+              <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" className="text-white/60">
+                  <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
+                </svg>
+              </div>
+              {/* Android icon */}
+              <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" className="text-white/60">
+                  <path d="M17.523 15.341a1 1 0 010-2 1 1 0 010 2m-11.046 0a1 1 0 010-2 1 1 0 010 2m11.405-6.02l1.997-3.46a.416.416 0 00-.152-.567.416.416 0 00-.568.152L17.12 8.98c-1.527-.7-3.24-1.09-5.12-1.09s-3.593.39-5.12 1.09L4.84 5.446a.416.416 0 00-.568-.152.416.416 0 00-.152.567l1.997 3.46C2.688 11.186.343 14.658 0 18.761h24c-.344-4.103-2.688-7.575-6.118-9.44" />
+                </svg>
+              </div>
+            </div>
+            <div>
+              <span className="inline-block px-3 py-1 rounded-full bg-[var(--accent)]/10 border border-[var(--accent)]/20 text-[var(--accent)] text-xs font-semibold tracking-wide uppercase mb-3">Coming Soon</span>
+              <h3 className="text-lg sm:text-xl font-bold tracking-tight text-white/90">BYKI App for iOS &amp; Android</h3>
+              <p className="text-sm text-white/60 mt-2 max-w-md mx-auto leading-relaxed">
+                A native mobile experience is on the way — faster scans, offline reports, and push notifications when your car needs attention.
+              </p>
+            </div>
+            <div className="pt-2">
+              <a
+                href="https://wa.me/60199705364?text=Hi%2C%20I%27d%20like%20to%20become%20a%20BYKI%20app%20tester%20and%20learn%20more%20about%20the%20discounted%20gearbox%20service%20at%20One%20X%20Transmission."
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[var(--accent)] text-black text-sm font-semibold hover:brightness-110 transition-all active:scale-[0.97] shadow-[0_0_20px_rgba(0,255,136,0.2)]"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                </svg>
+                Become a Tester Today
+              </a>
+              <p className="text-xs text-white/40 mt-3 max-w-xs mx-auto leading-relaxed">
+                Get early access &amp; a discounted gearbox service at <strong className="text-white/60">One X Transmission</strong>
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── WhatsApp direct ──────────────────────── */}
       <section className="relative max-w-3xl mx-auto px-6 pb-24">
         <div className="relative overflow-hidden rounded-2xl border border-[#25D366]/15 bg-gradient-to-br from-[#25D366]/[0.04] to-transparent p-6 sm:p-8 text-center">
