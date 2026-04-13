@@ -152,9 +152,9 @@ function ArcGauge({ label, value, unit, min, max, size = 200 }: Omit<GaugeDef, '
   const gradId = `gauge-grad-${label.replace(/\s/g, '')}`;
 
   return (
-    <div className="flex flex-col items-center">
-      <div className="relative" style={{ width: size, height: size }}>
-        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="overflow-visible -rotate-[90deg]" style={{ transform: `rotate(${startAngle + 90}deg)` }}>
+    <div className="flex flex-col items-center w-full">
+      <div className="relative w-full aspect-square" style={{ maxWidth: size }}>
+        <svg width="100%" height="100%" viewBox={`0 0 ${size} ${size}`} className="overflow-visible" style={{ transform: `rotate(${startAngle + 90}deg)` }}>
           <defs>
             <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#00ff88" stopOpacity="0.4" />
@@ -178,7 +178,7 @@ function ArcGauge({ label, value, unit, min, max, size = 200 }: Omit<GaugeDef, '
         </svg>
         {/* Center text */}
         <div className="absolute inset-0 flex flex-col items-center justify-center z-[2]">
-          <span className={`text-4xl sm:text-5xl font-bold tabular-nums tracking-tight ${hasValue ? 'text-gray-900' : 'text-gray-300'} transition-colors`}>
+          <span className={`text-3xl sm:text-5xl font-bold tabular-nums tracking-tight ${hasValue ? 'text-gray-900' : 'text-gray-300'} transition-colors`}>
             {hasValue ? formatValue(v) : '—'}
           </span>
           <span className="text-xs text-gray-400 mt-0.5">{unit}</span>
@@ -1084,7 +1084,7 @@ export default function DiagPage() {
               </div>
 
               {/* Hero gauges: RPM + Speed — larger circular */}
-              <div className="flex justify-center items-center gap-4 sm:gap-10 py-2">
+              <div className="flex justify-center items-center gap-1 sm:gap-10 py-2 max-w-full">
                 {HERO_GAUGES.map(g => (
                   <ArcGauge key={g.key} label={g.label} value={latest?.[g.key] as number | null | undefined} unit={g.unit} min={g.min} max={g.max} size={180} />
                 ))}
