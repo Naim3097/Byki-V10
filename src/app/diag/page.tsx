@@ -13,7 +13,7 @@ import type { SystemHealthReport, EvaluatedRule, ComponentRisk, DtcCode, FullAna
 import { DtcSource } from '@/models';
 import { Button, Card, Badge, scoreColor } from '@/components/ui';
 
-const WHATSAPP_NUMBER = '60111505284';
+const WHATSAPP_NUMBER = '601115052834';
 
 /* ── Light-theme color helpers (segment-card context) ────────── */
 

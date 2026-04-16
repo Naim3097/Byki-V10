@@ -398,7 +398,7 @@ export default function HomePage() {
             </div>
             <div className="pt-2">
               <a
-                href="https://wa.me/60111505284?text=Hi%2C%20I%27d%20like%20to%20become%20a%20BYKI%20app%20tester%20and%20learn%20more%20about%20the%20discounted%20gearbox%20service%20at%20One%20X%20Transmission."
+                href="https://wa.me/601115052834?text=Hi%2C%20I%27d%20like%20to%20become%20a%20BYKI%20app%20tester%20and%20learn%20more%20about%20the%20discounted%20gearbox%20service%20at%20One%20X%20Transmission."
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[var(--accent)] text-black text-sm font-semibold hover:brightness-110 transition-all active:scale-[0.97] shadow-[0_0_20px_rgba(0,255,136,0.2)]"
@@ -436,7 +436,7 @@ export default function HomePage() {
             </div>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <a
-                href="https://wa.me/60111505284?text=Hi%2C%20I%27d%20like%20to%20know%20more%20about%20BYKI%20vehicle%20diagnostics."
+                href="https://wa.me/601115052834?text=Hi%2C%20I%27d%20like%20to%20know%20more%20about%20BYKI%20vehicle%20diagnostics."
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#25D366] text-white text-sm font-semibold hover:brightness-110 transition-all active:scale-[0.97] shadow-[0_0_20px_rgba(37,211,102,0.2)]"
@@ -447,7 +447,7 @@ export default function HomePage() {
                 Chat with Us
               </a>
               <a
-                href="https://wa.me/60111505284?text=Hi%2C%20I%27d%20like%20a%20live%20video%20call%20consultation%20for%20my%20vehicle."
+                href="https://wa.me/601115052834?text=Hi%2C%20I%27d%20like%20a%20live%20video%20call%20consultation%20for%20my%20vehicle."
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white/[0.06] border border-[#25D366]/25 text-[#25D366] text-sm font-semibold hover:bg-[#25D366]/10 transition-all active:scale-[0.97]"
