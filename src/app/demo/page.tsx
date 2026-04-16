@@ -619,6 +619,13 @@ function DemoFlow({ caseData, onExit }: { caseData: DemoCase; onExit: () => void
           </section>
         )}
 
+        {/* ═══ TRY ANOTHER SCENARIO ═══ */}
+        {(isScanComplete || showDtcResult) && (
+          <section className="animate-fade-up">
+            <TryAnotherScenario onExit={onExit} />
+          </section>
+        )}
+
         {/* Bottom spacer for mobile nav */}
         <div className="h-6" />
       </div>
@@ -889,6 +896,30 @@ function TalkingPointsPanel({ caseData }: { caseData: DemoCase }) {
             <p className="text-sm text-gray-700 leading-relaxed">{pt}</p>
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+function TryAnotherScenario({ onExit }: { onExit: () => void }) {
+  return (
+    <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-gradient-to-br from-[var(--accent)]/[0.06] to-transparent p-6 sm:p-7 text-center">
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 rounded-full opacity-10 blur-[80px] pointer-events-none bg-[var(--accent)]" />
+      <div className="relative space-y-3">
+        <p className="text-[11px] font-mono text-white/40 tracking-widest uppercase">Demo complete</p>
+        <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-white">Try another scenario</h3>
+        <p className="text-sm text-white/50 max-w-sm mx-auto leading-relaxed">
+          Compare how the diagnostic flow responds to a healthier or more severe vehicle.
+        </p>
+        <button
+          onClick={onExit}
+          className="inline-flex items-center gap-2.5 px-7 py-3 mt-2 rounded-2xl bg-[var(--accent)] text-black text-sm font-semibold hover:brightness-110 transition-all active:scale-[0.97] shadow-[0_0_20px_var(--accent-glow)]"
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M2 8a6 6 0 1 1 1.76 4.24M2 13v-3h3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          Choose a different scenario
+        </button>
       </div>
     </div>
   );
