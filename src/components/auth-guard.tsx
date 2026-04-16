@@ -4,7 +4,14 @@ import { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth-store';
 
-const PUBLIC_ROUTES = ['/login', '/register'];
+// Routes unauthenticated visitors are allowed to see.
+const PUBLIC_ROUTES = ['/login', '/register', '/demo'];
+// Routes authenticated users should be bounced off of (login/register).
+const AUTH_ONLY_REDIRECTS = ['/login', '/register'];
+
+function isPublicPath(pathname: string): boolean {
+  return PUBLIC_ROUTES.some(r => pathname === r || pathname.startsWith(`${r}/`));
+}
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const { loading, isAuthenticated, initialize } = useAuthStore();
@@ -19,11 +26,9 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (loading) return;
 
-    const isPublicRoute = PUBLIC_ROUTES.includes(pathname);
-
-    if (!isAuthenticated && !isPublicRoute) {
+    if (!isAuthenticated && !isPublicPath(pathname)) {
       router.replace('/login');
-    } else if (isAuthenticated && isPublicRoute) {
+    } else if (isAuthenticated && AUTH_ONLY_REDIRECTS.includes(pathname)) {
       router.replace('/');
     }
   }, [loading, isAuthenticated, pathname, router]);
@@ -39,9 +44,8 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  const isPublicRoute = PUBLIC_ROUTES.includes(pathname);
-  if (!isAuthenticated && !isPublicRoute) return null;
-  if (isAuthenticated && isPublicRoute) return null;
+  if (!isAuthenticated && !isPublicPath(pathname)) return null;
+  if (isAuthenticated && AUTH_ONLY_REDIRECTS.includes(pathname)) return null;
 
   return <>{children}</>;
 }
