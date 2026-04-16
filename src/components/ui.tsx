@@ -210,7 +210,10 @@ function ConnectionPill() {
 // ── Logout button ───────────────────────────────────────────────────
 
 function LogoutButton({ mobile }: { mobile?: boolean }) {
-  const { logout } = useAuthStore();
+  const { logout, isAuthenticated } = useAuthStore();
+
+  // Hide the logout control for unauthenticated visitors (e.g. /demo).
+  if (!isAuthenticated) return null;
 
   if (mobile) {
     return (
