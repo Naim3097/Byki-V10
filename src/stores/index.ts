@@ -3,3 +3,4 @@ export { useScanStore, type ScanState, type ScanLogEntry, type ScanFeedCard, typ
 export { useLiveDataStore, type LiveDataState } from './live-data-store';
 export { useDtcStore, type DtcState } from './dtc-store';
 export { useAuthStore, type AuthState } from './auth-store';
+export { useLocationStore, type LocationState } from './location-store';

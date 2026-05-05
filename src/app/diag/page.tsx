@@ -12,8 +12,12 @@ import { PID_SNAPSHOT_KEYS } from '@/models';
 import type { SystemHealthReport, EvaluatedRule, ComponentRisk, DtcCode, FullAnalysisResult } from '@/models';
 import { DtcSource } from '@/models';
 import { Button, Card, Badge, scoreColor } from '@/components/ui';
-
-const WHATSAPP_NUMBER = '601115052834';
+import { useLocationStore } from '@/stores/location-store';
+import {
+  WHATSAPP_LOCATIONS,
+  getLocationById,
+  type WhatsAppLocationId,
+} from '@/lib/whatsapp-locations';
 
 /* ── Light-theme color helpers (segment-card context) ────────── */
 
@@ -677,12 +681,61 @@ function buildWhatsAppReport(
   return lines.join('\n');
 }
 
-function openWhatsApp(message: string) {
+function openWhatsApp(message: string, number: string) {
   const encoded = encodeURIComponent(message);
-  window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encoded}`, '_blank', 'noopener,noreferrer');
+  window.open(`https://wa.me/${number}?text=${encoded}`, '_blank', 'noopener,noreferrer');
 }
 
 /* ── WhatsApp CTA Card ─────────────────────────────────────────── */
+
+function LocationPickerLight({
+  selectedId,
+  onSelect,
+}: {
+  selectedId: WhatsAppLocationId | null;
+  onSelect: (id: WhatsAppLocationId) => void;
+}) {
+  const selected = getLocationById(selectedId);
+  return (
+    <div className="text-left">
+      <p className="text-xs uppercase tracking-wide text-gray-500 font-semibold mb-2">
+        {selected ? 'Your location' : 'Choose your location'}
+      </p>
+      <div className="grid gap-2">
+        {WHATSAPP_LOCATIONS.map((loc) => {
+          const active = selectedId === loc.id;
+          return (
+            <button
+              key={loc.id}
+              type="button"
+              onClick={() => onSelect(loc.id)}
+              aria-pressed={active}
+              className={`w-full text-left rounded-xl border px-3 py-2.5 transition-all active:scale-[0.99] ${
+                active
+                  ? 'border-[#25D366] bg-[#25D366]/[0.08]'
+                  : 'border-gray-200 bg-white hover:border-[#25D366]/40 hover:bg-[#25D366]/[0.03]'
+              }`}
+            >
+              <div className="flex items-start gap-2.5">
+                <span
+                  className={`mt-1 w-3 h-3 rounded-full border-2 flex-shrink-0 ${
+                    active ? 'border-[#25D366] bg-[#25D366]' : 'border-gray-300'
+                  }`}
+                />
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm font-semibold text-gray-800 leading-tight">
+                    {loc.city} <span className="text-gray-500 font-normal">({loc.area})</span>
+                  </div>
+                  <div className="text-xs text-gray-500 mt-0.5">{loc.branch}</div>
+                </div>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 function WhatsAppBookingCTA({
   scanResult,
@@ -693,44 +746,64 @@ function WhatsAppBookingCTA({
   dtcs: { stored: DtcCode[]; pending: DtcCode[]; permanent: DtcCode[] };
   variant?: 'full' | 'compact' | 'inline';
 }) {
+  const selectedId = useLocationStore((s) => s.selectedId);
+  const setLocation = useLocationStore((s) => s.setLocation);
+  const selectedLocation = getLocationById(selectedId);
+
   const hasIssues = (scanResult && (scanResult.overallScore < 85 || scanResult.diagnosticMatches.length > 0))
     || dtcs.stored.length > 0 || dtcs.pending.length > 0 || dtcs.permanent.length > 0;
 
   const handleClick = useCallback(() => {
+    if (!selectedLocation) return;
     const msg = buildWhatsAppReport(scanResult, dtcs);
-    openWhatsApp(msg);
-  }, [scanResult, dtcs]);
+    openWhatsApp(msg, selectedLocation.number);
+  }, [scanResult, dtcs, selectedLocation]);
 
   if (variant === 'inline') {
     return (
-      <button
-        onClick={handleClick}
-        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#25D366]/10 border border-[#25D366]/20 text-[#25D366] text-sm font-medium hover:bg-[#25D366]/15 transition-all active:scale-[0.97]"
-      >
-        <WhatsAppIcon size={16} />
-        Send Report via WhatsApp
-      </button>
+      <div className="flex flex-col gap-2">
+        <LocationPickerLight selectedId={selectedId} onSelect={setLocation} />
+        <button
+          onClick={handleClick}
+          disabled={!selectedLocation}
+          className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl border text-sm font-medium transition-all ${
+            selectedLocation
+              ? 'bg-[#25D366]/10 border-[#25D366]/20 text-[#25D366] hover:bg-[#25D366]/15 active:scale-[0.97]'
+              : 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
+          }`}
+        >
+          <WhatsAppIcon size={16} className={selectedLocation ? 'text-[#25D366]' : 'text-gray-400'} />
+          Send Report via WhatsApp
+        </button>
+      </div>
     );
   }
 
   if (variant === 'compact') {
     return (
-      <div className="rounded-2xl border border-[#25D366]/20 bg-[#25D366]/[0.05] p-4 flex items-center gap-4">
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-gray-800">
-            {hasIssues ? 'Need help with these results?' : 'Want a professional opinion?'}
-          </p>
-          <p className="text-xs text-gray-400 mt-0.5">
-            {hasIssues ? 'Send your report to our team — we\'ll advise you' : 'Share your clean scan for peace of mind'}
-          </p>
+      <div className="rounded-2xl border border-[#25D366]/20 bg-[#25D366]/[0.05] p-4 space-y-3">
+        <div className="flex items-center gap-4">
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-gray-800">
+              {hasIssues ? 'Need help with these results?' : 'Want a professional opinion?'}
+            </p>
+            <p className="text-xs text-gray-400 mt-0.5">
+              {hasIssues ? 'Send your report to our team — we\'ll advise you' : 'Share your clean scan for peace of mind'}
+            </p>
+          </div>
         </div>
+        <LocationPickerLight selectedId={selectedId} onSelect={setLocation} />
         <button
           onClick={handleClick}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#25D366] text-white text-sm font-semibold hover:brightness-110 transition-all active:scale-[0.97] flex-shrink-0 shadow-[0_0_15px_rgba(37,211,102,0.2)]"
+          disabled={!selectedLocation}
+          className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all flex-shrink-0 ${
+            selectedLocation
+              ? 'bg-[#25D366] text-white hover:brightness-110 active:scale-[0.97] shadow-[0_0_15px_rgba(37,211,102,0.2)]'
+              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+          }`}
         >
-          <WhatsAppIcon size={18} className="text-white" />
-          <span className="hidden sm:inline">WhatsApp Us</span>
-          <span className="sm:hidden">Chat</span>
+          <WhatsAppIcon size={18} className={selectedLocation ? 'text-white' : 'text-gray-400'} />
+          {selectedLocation ? `WhatsApp ${selectedLocation.branch}` : 'Choose a location to chat'}
         </button>
       </div>
     );
@@ -756,12 +829,20 @@ function WhatsAppBookingCTA({
               : 'Your vehicle is in good shape. Want a professional to confirm? Send your scan report and we\'ll give you a quick review.'}
           </p>
         </div>
+        <div className="max-w-sm mx-auto">
+          <LocationPickerLight selectedId={selectedId} onSelect={setLocation} />
+        </div>
         <button
           onClick={handleClick}
-          className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-2xl bg-[#25D366] text-white text-base font-semibold hover:brightness-110 transition-all active:scale-[0.97] shadow-[0_0_25px_rgba(37,211,102,0.25)]"
+          disabled={!selectedLocation}
+          className={`inline-flex items-center gap-2.5 px-8 py-3.5 rounded-2xl text-base font-semibold transition-all ${
+            selectedLocation
+              ? 'bg-[#25D366] text-white hover:brightness-110 active:scale-[0.97] shadow-[0_0_25px_rgba(37,211,102,0.25)]'
+              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+          }`}
         >
-          <WhatsAppIcon size={20} className="text-white" />
-          Send Report &amp; Book Service
+          <WhatsAppIcon size={20} className={selectedLocation ? 'text-white' : 'text-gray-500'} />
+          {selectedLocation ? 'Send Report & Book Service' : 'Choose a location above'}
         </button>
         <p className="text-xs text-gray-400">Your scan data is included automatically · Free consultation</p>
       </div>
@@ -786,6 +867,11 @@ export default function DiagPage() {
   const live = useLiveDataStore();
   const scan = useScanStore();
   const dtcStore = useDtcStore();
+  const hydrateLocation = useLocationStore((s) => s.hydrate);
+
+  useEffect(() => {
+    hydrateLocation();
+  }, [hydrateLocation]);
 
   const feedEndRef = useRef<HTMLDivElement>(null);
   const [activeSection, setActiveSection] = useState('live');

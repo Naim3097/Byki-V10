@@ -2,7 +2,10 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
+import { useEffect } from 'react';
 import { useBluetoothStore } from '@/stores/bluetooth-store';
+import { useLocationStore } from '@/stores/location-store';
+import { WHATSAPP_LOCATIONS, getLocationById } from '@/lib/whatsapp-locations';
 import { Card, Button } from '@/components/ui';
 
 const FEATURES = [
@@ -102,6 +105,22 @@ const PLAIN_LANGUAGE = [
 
 export default function HomePage() {
   const bt = useBluetoothStore();
+  const selectedId = useLocationStore((s) => s.selectedId);
+  const setLocation = useLocationStore((s) => s.setLocation);
+  const hydrate = useLocationStore((s) => s.hydrate);
+
+  useEffect(() => {
+    hydrate();
+  }, [hydrate]);
+
+  const selectedLocation = getLocationById(selectedId);
+  const waNumber = selectedLocation?.number ?? '';
+  const chatHref = selectedLocation
+    ? `https://wa.me/${waNumber}?text=Hi%2C%20I%27d%20like%20to%20know%20more%20about%20BYKI%20vehicle%20diagnostics.`
+    : undefined;
+  const videoHref = selectedLocation
+    ? `https://wa.me/${waNumber}?text=Hi%2C%20I%27d%20like%20a%20live%20video%20call%20consultation%20for%20my%20vehicle.`
+    : undefined;
 
   return (
     <div className="relative">
@@ -398,7 +417,7 @@ export default function HomePage() {
             </div>
             <div className="pt-2">
               <a
-                href="https://wa.me/601115052834?text=Hi%2C%20I%27d%20like%20to%20become%20a%20BYKI%20app%20tester%20and%20learn%20more%20about%20the%20discounted%20gearbox%20service%20at%20One%20X%20Transmission."
+                href="https://wa.me/60102020723?text=Hi%2C%20I%27d%20like%20to%20become%20a%20BYKI%20app%20tester%20and%20learn%20more%20about%20the%20discounted%20gearbox%20service%20at%20One%20X%20Transmission."
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[var(--accent)] text-black text-sm font-semibold hover:brightness-110 transition-all active:scale-[0.97] shadow-[0_0_20px_rgba(0,255,136,0.2)]"
@@ -434,25 +453,80 @@ export default function HomePage() {
                 After your scan, you can send your results directly to us on WhatsApp. We&apos;ll review your report and advise you — for free.
               </p>
             </div>
+
+            {/* Location picker */}
+            <div className="text-left max-w-md mx-auto">
+              <p className="text-xs uppercase tracking-wide text-white/50 font-semibold mb-2 text-center">
+                {selectedLocation ? 'Your location' : 'Choose your location'}
+              </p>
+              <div className="grid gap-2">
+                {WHATSAPP_LOCATIONS.map((loc) => {
+                  const active = selectedId === loc.id;
+                  return (
+                    <button
+                      key={loc.id}
+                      type="button"
+                      onClick={() => setLocation(loc.id)}
+                      aria-pressed={active}
+                      className={`w-full text-left rounded-xl border px-4 py-3 transition-all active:scale-[0.99] ${
+                        active
+                          ? 'border-[#25D366]/60 bg-[#25D366]/10 shadow-[0_0_15px_rgba(37,211,102,0.15)]'
+                          : 'border-white/10 bg-white/[0.03] hover:border-[#25D366]/30 hover:bg-[#25D366]/[0.04]'
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <span
+                          className={`mt-1 w-3.5 h-3.5 rounded-full border-2 flex-shrink-0 ${
+                            active ? 'border-[#25D366] bg-[#25D366]' : 'border-white/30'
+                          }`}
+                        />
+                        <div className="min-w-0 flex-1">
+                          <div className="text-sm font-semibold text-white/90 leading-tight">
+                            {loc.city} <span className="text-white/50 font-normal">({loc.area})</span>
+                          </div>
+                          <div className="text-xs text-white/60 mt-0.5">{loc.branch}</div>
+                          {active && (
+                            <div className="text-xs text-[#25D366] font-medium mt-1">{loc.display}</div>
+                          )}
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <a
-                href="https://wa.me/601115052834?text=Hi%2C%20I%27d%20like%20to%20know%20more%20about%20BYKI%20vehicle%20diagnostics."
+                href={chatHref}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#25D366] text-white text-sm font-semibold hover:brightness-110 transition-all active:scale-[0.97] shadow-[0_0_20px_rgba(37,211,102,0.2)]"
+                aria-disabled={!selectedLocation}
+                onClick={(e) => { if (!selectedLocation) e.preventDefault(); }}
+                className={`inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-all ${
+                  selectedLocation
+                    ? 'bg-[#25D366] text-white hover:brightness-110 active:scale-[0.97] shadow-[0_0_20px_rgba(37,211,102,0.2)]'
+                    : 'bg-white/[0.06] text-white/40 cursor-not-allowed'
+                }`}
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" className="text-white">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" className={selectedLocation ? 'text-white' : 'text-white/40'}>
                   <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
                 </svg>
                 Chat with Us
               </a>
               <a
-                href="https://wa.me/601115052834?text=Hi%2C%20I%27d%20like%20a%20live%20video%20call%20consultation%20for%20my%20vehicle."
+                href={videoHref}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white/[0.06] border border-[#25D366]/25 text-[#25D366] text-sm font-semibold hover:bg-[#25D366]/10 transition-all active:scale-[0.97]"
+                aria-disabled={!selectedLocation}
+                onClick={(e) => { if (!selectedLocation) e.preventDefault(); }}
+                className={`inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-all ${
+                  selectedLocation
+                    ? 'bg-white/[0.06] border border-[#25D366]/25 text-[#25D366] hover:bg-[#25D366]/10 active:scale-[0.97]'
+                    : 'bg-white/[0.03] border border-white/10 text-white/30 cursor-not-allowed'
+                }`}
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-[#25D366]">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className={selectedLocation ? 'text-[#25D366]' : 'text-white/30'}>
                   <rect x="2" y="4" width="20" height="14" rx="3" stroke="currentColor" strokeWidth="1.5" />
                   <polygon points="10,8.5 16,11 10,13.5" fill="currentColor" />
                   <path d="M18 18l3 3M18 21l3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
@@ -460,7 +534,11 @@ export default function HomePage() {
                 Live Video Call
               </a>
             </div>
-            <p className="text-xs text-white/12">No automated bots — you&apos;ll talk to a real person</p>
+            <p className="text-xs text-white/40">
+              {selectedLocation
+                ? 'No automated bots — you’ll talk to a real person'
+                : 'Pick a location above to start a chat'}
+            </p>
           </div>
         </div>
       </section>
