@@ -18,6 +18,7 @@ import {
   getLocationById,
   type WhatsAppLocationId,
 } from '@/lib/whatsapp-locations';
+import { UseMyLocationButton } from '@/components/use-my-location-button';
 
 /* ── Light-theme color helpers (segment-card context) ────────── */
 
@@ -701,6 +702,9 @@ function LocationPickerLight({
       <p className="text-xs uppercase tracking-wide text-gray-500 font-semibold mb-2">
         {selected ? 'Your location' : 'Choose your location'}
       </p>
+      <div className="flex justify-center mb-2">
+        <UseMyLocationButton variant="light" />
+      </div>
       <div className="grid gap-2">
         {WHATSAPP_LOCATIONS.map((loc) => {
           const active = selectedId === loc.id;

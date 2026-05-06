@@ -7,6 +7,7 @@ import { useBluetoothStore } from '@/stores/bluetooth-store';
 import { useLocationStore } from '@/stores/location-store';
 import { WHATSAPP_LOCATIONS, getLocationById } from '@/lib/whatsapp-locations';
 import { Card, Button } from '@/components/ui';
+import { UseMyLocationButton } from '@/components/use-my-location-button';
 
 const FEATURES = [
   {
@@ -459,6 +460,9 @@ export default function HomePage() {
               <p className="text-xs uppercase tracking-wide text-white/50 font-semibold mb-2 text-center">
                 {selectedLocation ? 'Your location' : 'Choose your location'}
               </p>
+              <div className="flex justify-center mb-2">
+                <UseMyLocationButton variant="dark" />
+              </div>
               <div className="grid gap-2">
                 {WHATSAPP_LOCATIONS.map((loc) => {
                   const active = selectedId === loc.id;
