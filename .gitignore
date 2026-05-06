@@ -17,6 +17,13 @@ build/
 # debug
 npm-debug.log*
 
+# firebase
+firebase-debug.log*
+firestore-debug.log*
+database-debug.log*
+ui-debug.log*
+.firebase/
+
 # IDE
 .vscode/
 *.swp
