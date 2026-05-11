@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth-store';
 
 // Routes authenticated users should be bounced off of (login/register).
@@ -17,7 +17,6 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   const { loading, isAuthenticated, initialize } = useAuthStore();
   const pathname = usePathname();
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   useEffect(() => {
     const unsubscribe = initialize();
@@ -28,9 +27,13 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     if (loading) return;
 
     if (isAuthenticated && AUTH_ONLY_REDIRECTS.includes(pathname)) {
-      router.replace(safeNext(searchParams.get('next')));
+      // Read `next` from window directly to avoid a CSR-bailout on /login.
+      const next = typeof window !== 'undefined'
+        ? new URLSearchParams(window.location.search).get('next')
+        : null;
+      router.replace(safeNext(next));
     }
-  }, [loading, isAuthenticated, pathname, router, searchParams]);
+  }, [loading, isAuthenticated, pathname, router]);
 
   if (loading) {
     return (
