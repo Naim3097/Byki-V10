@@ -2,10 +2,12 @@
 
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { useBluetoothStore } from '@/stores/bluetooth-store';
 import { useLiveDataStore } from '@/stores/live-data-store';
 import { useScanStore } from '@/stores/scan-store';
 import { useDtcStore } from '@/stores/dtc-store';
+import { useAuthStore } from '@/stores/auth-store';
 import type { ScanFeedCard } from '@/stores/scan-store';
 import type { PidSnapshot } from '@/models';
 import { PID_SNAPSHOT_KEYS } from '@/models';
@@ -714,10 +716,10 @@ function LocationPickerLight({
               type="button"
               onClick={() => onSelect(loc.id)}
               aria-pressed={active}
-              className={`w-full text-left rounded-xl border px-3 py-2.5 transition-all active:scale-[0.99] ${
+              className={`w-full text-left rounded-xl border px-3 py-2.5 transition-transform active:scale-[0.99] ${
                 active
-                  ? 'border-[#25D366] bg-[#25D366]/[0.08]'
-                  : 'border-gray-200 bg-white hover:border-[#25D366]/40 hover:bg-[#25D366]/[0.03]'
+                  ? 'border-[#25D366] bg-emerald-50 ring-1 ring-[#25D366]/30'
+                  : 'border-gray-200 bg-white hover:scale-[1.015]'
               }`}
             >
               <div className="flex items-start gap-2.5">
@@ -753,15 +755,21 @@ function WhatsAppBookingCTA({
   const selectedId = useLocationStore((s) => s.selectedId);
   const setLocation = useLocationStore((s) => s.setLocation);
   const selectedLocation = getLocationById(selectedId);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const router = useRouter();
 
   const hasIssues = (scanResult && (scanResult.overallScore < 85 || scanResult.diagnosticMatches.length > 0))
     || dtcs.stored.length > 0 || dtcs.pending.length > 0 || dtcs.permanent.length > 0;
 
   const handleClick = useCallback(() => {
     if (!selectedLocation) return;
+    if (!isAuthenticated) {
+      router.push(`/login?next=${encodeURIComponent('/diag')}`);
+      return;
+    }
     const msg = buildWhatsAppReport(scanResult, dtcs);
     openWhatsApp(msg, selectedLocation.number);
-  }, [scanResult, dtcs, selectedLocation]);
+  }, [scanResult, dtcs, selectedLocation, isAuthenticated, router]);
 
   if (variant === 'inline') {
     return (
@@ -876,6 +884,36 @@ export default function DiagPage() {
   useEffect(() => {
     hydrateLocation();
   }, [hydrateLocation]);
+
+  // Dev-only seed: /diag?seed=healthy|monitor|warning|critical fakes a connected
+  // adapter and a completed scan so the WhatsApp "Send Report" CTA flow can be
+  // tested without real hardware. Dead-code-eliminated in production builds.
+  useEffect(() => {
+    if (process.env.NODE_ENV !== 'development') return;
+    const seed = new URLSearchParams(window.location.search).get('seed');
+    if (!seed) return;
+    void (async () => {
+      const { DEMO_CASES } = await import('../demo/mock-cases');
+      const key = (seed in DEMO_CASES ? seed : 'warning') as keyof typeof DEMO_CASES;
+      const c = DEMO_CASES[key];
+      useBluetoothStore.setState({
+        state: 'connected',
+        isConnected: true,
+        connectedAdapter: { name: 'Mock OBD2', deviceId: 'mock', type: 'unknown' } as never,
+      });
+      useScanStore.setState({ state: 'complete', result: c.analysis });
+      const total = c.dtcs.stored.length + c.dtcs.pending.length + c.dtcs.permanent.length;
+      useDtcStore.setState({
+        state: 'complete',
+        scanResult: { ...c.dtcs, scannedAt: new Date() },
+        storedDtcs: c.dtcs.stored,
+        pendingDtcs: c.dtcs.pending,
+        permanentDtcs: c.dtcs.permanent,
+        totalCount: total,
+        hasDtcs: total > 0,
+      });
+    })();
+  }, []);
 
   const feedEndRef = useRef<HTMLDivElement>(null);
   const [activeSection, setActiveSection] = useState('live');

@@ -1,22 +1,23 @@
 'use client';
 
 import { useEffect } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth-store';
 
-// Routes unauthenticated visitors are allowed to see.
-const PUBLIC_ROUTES = ['/login', '/register', '/demo'];
 // Routes authenticated users should be bounced off of (login/register).
 const AUTH_ONLY_REDIRECTS = ['/login', '/register'];
 
-function isPublicPath(pathname: string): boolean {
-  return PUBLIC_ROUTES.some(r => pathname === r || pathname.startsWith(`${r}/`));
+function safeNext(next: string | null): string {
+  // Only allow same-origin relative paths to prevent open-redirect.
+  if (!next || !next.startsWith('/') || next.startsWith('//')) return '/';
+  return next;
 }
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const { loading, isAuthenticated, initialize } = useAuthStore();
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     const unsubscribe = initialize();
@@ -26,12 +27,10 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (loading) return;
 
-    if (!isAuthenticated && !isPublicPath(pathname)) {
-      router.replace('/login');
-    } else if (isAuthenticated && AUTH_ONLY_REDIRECTS.includes(pathname)) {
-      router.replace('/');
+    if (isAuthenticated && AUTH_ONLY_REDIRECTS.includes(pathname)) {
+      router.replace(safeNext(searchParams.get('next')));
     }
-  }, [loading, isAuthenticated, pathname, router]);
+  }, [loading, isAuthenticated, pathname, router, searchParams]);
 
   if (loading) {
     return (
@@ -44,7 +43,6 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!isAuthenticated && !isPublicPath(pathname)) return null;
   if (isAuthenticated && AUTH_ONLY_REDIRECTS.includes(pathname)) return null;
 
   return <>{children}</>;
