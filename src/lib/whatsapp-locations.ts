@@ -1,5 +1,4 @@
 export type WhatsAppLocationId =
-  | 'shah-alam-jalan-kebun'
   | 'shah-alam-alam-impian'
   | 'johor-bahru-tampoi';
 
@@ -17,17 +16,6 @@ export interface WhatsAppLocation {
 }
 
 export const WHATSAPP_LOCATIONS: WhatsAppLocation[] = [
-  {
-    id: 'shah-alam-jalan-kebun',
-    city: 'Shah Alam',
-    area: 'Jalan Kebun',
-    branch: 'One X Transmission',
-    number: '60102020723',
-    display: '+60 10-202 0723',
-    // Jalan Haji Taib, Batu 7 1/2, Kampung Jln Kebun, 40460 Shah Alam
-    lat: 3.0226,
-    lng: 101.5388,
-  },
   {
     id: 'shah-alam-alam-impian',
     city: 'Shah Alam',

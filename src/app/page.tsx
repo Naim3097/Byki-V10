@@ -122,6 +122,9 @@ export default function HomePage() {
   const videoHref = selectedLocation
     ? `https://wa.me/${waNumber}?text=Hi%2C%20I%27d%20like%20a%20live%20video%20call%20consultation%20for%20my%20vehicle.`
     : undefined;
+  // Tester CTA routes to the chosen branch, or the first branch if none is picked yet.
+  const testerNumber = (selectedLocation ?? WHATSAPP_LOCATIONS[0]).number;
+  const testerHref = `https://wa.me/${testerNumber}?text=Hi%2C%20I%27d%20like%20to%20become%20a%20BYKI%20app%20tester.`;
 
   return (
     <div className="relative">
@@ -418,7 +421,7 @@ export default function HomePage() {
             </div>
             <div className="pt-2">
               <a
-                href="https://wa.me/60102020723?text=Hi%2C%20I%27d%20like%20to%20become%20a%20BYKI%20app%20tester%20and%20learn%20more%20about%20the%20discounted%20gearbox%20service%20at%20One%20X%20Transmission."
+                href={testerHref}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[var(--accent)] text-black text-sm font-semibold hover:brightness-110 transition-all active:scale-[0.97] shadow-[0_0_20px_rgba(0,255,136,0.2)]"
@@ -429,7 +432,7 @@ export default function HomePage() {
                 Become a Tester Today
               </a>
               <p className="text-xs text-white/40 mt-3 max-w-xs mx-auto leading-relaxed">
-                Get early access &amp; a discounted gearbox service at <strong className="text-white/60">One X Transmission</strong>
+                Get early access to the BYKI app before public release
               </p>
             </div>
           </div>
@@ -489,9 +492,6 @@ export default function HomePage() {
                             {loc.city} <span className="text-white/50 font-normal">({loc.area})</span>
                           </div>
                           <div className="text-xs text-white/60 mt-0.5">{loc.branch}</div>
-                          {active && (
-                            <div className="text-xs text-[#25D366] font-medium mt-1">{loc.display}</div>
-                          )}
                         </div>
                       </div>
                     </button>
