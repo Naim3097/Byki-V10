@@ -14,7 +14,7 @@ import type { PidSnapshot, FullAnalysisResult } from '../../models';
 // ── Helpers ──────────────────────────────────────────────────────────
 
 function loadAsset(name: string): string {
-  return fs.readFileSync(path.join(__dirname, '../../../public/data', name), 'utf-8');
+  return fs.readFileSync(path.join(__dirname, '../../server/data', name), 'utf-8');
 }
 
 function loadEngine(): AnalysisEngine {

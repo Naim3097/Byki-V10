@@ -18,8 +18,8 @@ import {
   cleanResponse, cleanAdapterResponse,
   shouldRetry, maxRetriesFor,
 } from './obd-protocol';
-import { AnalysisEngine } from './analysis-engine';
-import { DtcLookupService } from './dtc-lookup-service';
+import type { AnalysisBackend, DtcSummary } from './analysis-backend';
+import { httpAnalysisBackend, formatCostRange } from './analysis-backend';
 
 // ─── Progress Event ──────────────────────────────────────────────────────────
 
@@ -43,6 +43,7 @@ export type ProgressCallback = (event: ScanProgressEvent) => void;
 
 export class OBDScanService {
   private ble: WebBluetoothService;
+  private backend: AnalysisBackend;
   private progressListeners: ProgressCallback[] = [];
   private adapter: AdapterInfo | null = null;
   private supported = new PidSupportBitmask();
@@ -51,8 +52,9 @@ export class OBDScanService {
 
   get isInitialized(): boolean { return this._initialized; }
 
-  constructor(ble: WebBluetoothService) {
+  constructor(ble: WebBluetoothService, backend: AnalysisBackend = httpAnalysisBackend) {
     this.ble = ble;
+    this.backend = backend;
   }
 
   onProgress(cb: ProgressCallback): () => void {
@@ -148,13 +150,12 @@ export class OBDScanService {
     this.emit(0.08, 'connect', 'ECU protocol connected',
       { detail: `${this.supported.supportedPids.length} PIDs supported` });
 
-    const engine = AnalysisEngine.instance;
-    await engine.load();
-
-    const ruleCount = engine.systemRuleCount;
-    const diagCount = engine.diagnosticRuleCount;
-    const corrCount = engine.correlationCount;
-    const derivedCount = engine.derivedMetricCount;
+    const {
+      systemRuleCount: ruleCount,
+      diagnosticRuleCount: diagCount,
+      correlationCount: corrCount,
+      derivedMetricCount: derivedCount,
+    } = await this.backend.meta();
 
     this.emit(0.10, 'loading', `Loaded ${ruleCount} system health rules`);
     this.emit(0.12, 'loading', `Loaded ${diagCount} diagnostic patterns`);
@@ -183,7 +184,7 @@ export class OBDScanService {
       const analysisCheckpoints = new Set([3, 6]);
       const cycleNum = i + 1;
       if (analysisCheckpoints.has(cycleNum)) {
-        const interim = engine.analyze([...snapshots]);
+        const interim = await this.backend.analyze([...snapshots]);
         this.emit(pct, 'sampling',
           `Interim analysis — ${cycleNum} cycles analyzed`,
           {
@@ -225,7 +226,7 @@ export class OBDScanService {
 
     this.emit(0.88, 'scoring', 'Computing weighted system scores...');
     await delay(300);
-    const result = engine.analyze(snapshots);
+    const result = await this.backend.analyze(snapshots);
 
     for (let i = 0; i < result.systems.length; i++) {
       const sys = result.systems[i];
@@ -309,9 +310,6 @@ export class OBDScanService {
   // ─── DTC Read/Clear ────────────────────────────────────────────────────
 
   async readDtcs(): Promise<DtcScanResult> {
-    const lookup = DtcLookupService.instance;
-    await lookup.load();
-
     const storedRaw = await this.sendSafe('03', 5000);
     const storedCodes = storedRaw ? parseDtcResponse(storedRaw) : [];
     await delay(this.quirks.interCommandDelayMs);
@@ -323,6 +321,10 @@ export class OBDScanService {
     const permanentRaw = await this.sendSafe('0A', 5000);
     const permanentCodes = permanentRaw ? parseDtcResponse(permanentRaw) : [];
 
+    const allCodes = [...new Set([...storedCodes, ...pendingCodes, ...permanentCodes])];
+    const summaries = allCodes.length ? await this.backend.lookupDtcs(allCodes) : [];
+    const lookup = new Map(summaries.map(s => [s.code, s]));
+
     return {
       stored: this.enrichDtcCodes(storedCodes, DtcSource.STORED, lookup),
       pending: this.enrichDtcCodes(pendingCodes, DtcSource.PENDING, lookup),
@@ -331,10 +333,10 @@ export class OBDScanService {
     };
   }
 
-  private enrichDtcCodes(codes: string[], source: DtcSource, lookup: DtcLookupService): DtcCode[] {
+  private enrichDtcCodes(codes: string[], source: DtcSource, lookup: Map<string, DtcSummary>): DtcCode[] {
     if (!codes.length) return [];
     return codes.map(code => {
-      const r = lookup.lookup(code);
+      const r = lookup.get(code);
       return {
         code,
         source,
@@ -343,7 +345,8 @@ export class OBDScanService {
         severity: r?.severity || 'Unknown',
         consumerAdvice: r?.userExplanation || null,
         possibleCauses: r?.commonCauses || [],
-        estimatedCost: r?.estimatedCostRange !== 'Unknown' ? (r?.estimatedCostRange ?? null) : null,
+        estimatedCost: r && formatCostRange(r.estimatedCostMin, r.estimatedCostMax) !== 'Unknown'
+          ? formatCostRange(r.estimatedCostMin, r.estimatedCostMax) : null,
         commonParts: [],
         repairPriority: severityToPriority(r?.severity || ''),
       };

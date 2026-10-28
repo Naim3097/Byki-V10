@@ -11,10 +11,12 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "botid": "^1.5.11",
     "firebase": "^12.11.0",
     "next": "^15.3.3",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "server-only": "^0.0.1",
     "zustand": "^5.0.5"
   },
   "devDependencies": {

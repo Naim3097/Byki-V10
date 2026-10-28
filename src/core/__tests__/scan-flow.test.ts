@@ -10,13 +10,19 @@ import { WebBluetoothService } from '../web-bluetooth-service';
 import { PidSupportBitmask, AdapterQuirks } from '../obd-protocol';
 import { AnalysisEngine } from '../analysis-engine';
 import { DtcLookupService } from '../dtc-lookup-service';
+import { createLocalBackend } from '../local-analysis-backend';
 import { AdapterChipType } from '../../models/adapter-info';
 import type { PidSnapshot, FullAnalysisResult } from '../../models';
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
 function loadAsset(name: string): string {
-  return fs.readFileSync(path.join(__dirname, '../../../public/data', name), 'utf-8');
+  return fs.readFileSync(path.join(__dirname, '../../server/data', name), 'utf-8');
+}
+
+/** In-process stand-in for the /api routes, backed by the singletons. */
+function localBackend() {
+  return createLocalBackend(AnalysisEngine.instance, DtcLookupService.instance);
 }
 
 function preloadEngine(): void {
@@ -126,7 +132,7 @@ function createMockBleWithDtcs(): WebBluetoothService {
 
 /** Prepare an OBDScanService with adapter already initialized (for DTC/live tests). */
 function createInitializedService(ble: WebBluetoothService): OBDScanService {
-  const svc = new OBDScanService(ble);
+  const svc = new OBDScanService(ble, localBackend());
   (svc as any)._initialized = true;
   (svc as any).adapter = { ...MOCK_ADAPTER };
   (svc as any).quirks = AdapterQuirks.elm327Clone();
@@ -145,7 +151,7 @@ describe('Health Scan E2E', () => {
   beforeEach(() => {
     preloadEngine();
     const ble = createMockBle();
-    svc = new OBDScanService(ble);
+    svc = new OBDScanService(ble, localBackend());
     events = [];
     svc.onProgress(e => events.push(e));
   });
@@ -242,14 +248,7 @@ describe('DTC Read/Clear', () => {
   beforeEach(() => {
     // Preload DTC lookup service with real data
     DtcLookupService.resetForTest();
-    const lookupSvc = DtcLookupService.instance;
-    const dtcJson = JSON.parse(loadAsset('dtc.json'));
-    const codes = new Map<string, Record<string, any>>();
-    for (const c of dtcJson.codes as any[]) {
-      codes.set(c.code as string, c);
-    }
-    (lookupSvc as any).codes = codes;
-    (lookupSvc as any)._loaded = true;
+    DtcLookupService.instance.loadFromData(JSON.parse(loadAsset('dtc.json')));
   });
 
   afterEach(() => {
@@ -281,6 +280,19 @@ describe('DTC Read/Clear', () => {
     const p0420 = result.pending.find(d => d.code === 'P0420');
     expect(p0420).toBeTruthy();
     expect(p0420!.source).toBe('pending');
+  });
+
+  it('enriches DTCs with database details', async () => {
+    const ble = createMockBleWithDtcs();
+    const svc = createInitializedService(ble);
+
+    const result = await svc.readDtcs();
+    const p0171 = result.stored.find(d => d.code === 'P0171')!;
+
+    expect(p0171.description).toBe('System Too Lean (Bank 1)');
+    expect(p0171.consumerAdvice).toBeTruthy();
+    expect(p0171.possibleCauses.length).toBeGreaterThan(0);
+    expect(p0171.estimatedCost).toMatch(/^RM \d+ - RM \d+$/);
   });
 
   it('clears DTCs successfully', async () => {
@@ -366,7 +378,7 @@ describe('Unified Scan Flow', () => {
   it('completes full flow: init → discover → scan → analyze → report', async () => {
     preloadEngine();
     const ble = createMockBle();
-    const svc = new OBDScanService(ble);
+    const svc = new OBDScanService(ble, localBackend());
 
     const events: ScanProgressEvent[] = [];
     svc.onProgress(e => events.push(e));

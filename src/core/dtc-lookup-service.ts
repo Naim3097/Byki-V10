@@ -1,6 +1,8 @@
 // ─── DTC Lookup Service ──────────────────────────────────────────────
-// Loads and queries the 4565-code DTC database from /data/dtc.json.
+// Queries the 4565-code DTC database (src/server/data/dtc.json, server-only).
 // Direct port of dtc_lookup_service.dart.
+
+import { formatCostRange } from './analysis-backend';
 
 export interface DtcLookupResult {
   code: string;
@@ -20,8 +22,7 @@ export interface DtcLookupResult {
 }
 
 export function estimatedCostRange(r: DtcLookupResult): string {
-  if (r.estimatedCostMin <= 0 && r.estimatedCostMax <= 0) return 'Unknown';
-  return `RM ${Math.round(r.estimatedCostMin)} - RM ${Math.round(r.estimatedCostMax)}`;
+  return formatCostRange(r.estimatedCostMin, r.estimatedCostMax);
 }
 
 function categoryFromPrefix(code: string): string {
@@ -52,15 +53,14 @@ export class DtcLookupService {
   get isLoaded(): boolean { return this._loaded; }
   get codeCount(): number { return this.codes.size; }
 
-  /** Load the DTC database from /data/dtc.json. Safe to call multiple times. */
-  async load(): Promise<void> {
-    if (this._loaded) return;
-    const resp = await fetch('/data/dtc.json');
-    const data = await resp.json();
+  /** Load from the parsed DTC database. Server-only: see src/server/engine.ts. */
+  loadFromData(data: Record<string, any>): void {
     const codeList = data.codes as any[];
     this.codes = new Map();
+    // dtc.json lists ~1250 codes more than once; the first entry is the
+    // standard definition, later ones are mis-coded. Keep the first.
     for (const c of codeList) {
-      this.codes.set(c.code as string, c);
+      if (!this.codes.has(c.code)) this.codes.set(c.code as string, c);
     }
     this._loaded = true;
   }

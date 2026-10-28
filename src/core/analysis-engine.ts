@@ -115,24 +115,17 @@ export class AnalysisEngine {
     return (this.derivedMetricsDef.derivedMetricDefinitions as any[] | undefined)?.length ?? 0;
   }
 
-  /** Load all JSON data files from /data/. Safe to call multiple times. */
-  async load(): Promise<void> {
-    if (this._loaded) return;
-
-    const [rulesText, derivedText, diagText, , corrText] = await Promise.all([
-      fetch('/data/analyzer_rules_v2.json').then(r => r.text()),
-      fetch('/data/derived_metrics.json').then(r => r.text()),
-      fetch('/data/diagnostic_rules_workshop.json').then(r => r.text()),
-      fetch('/data/obd2_parameters.json').then(r => r.text()),
-      fetch('/data/parameter_correlations.json').then(r => r.text()),
-    ]);
-
-    this.analyzerRules = JSON.parse(rulesText);
-    this.derivedMetricsDef = JSON.parse(derivedText);
-    const diagData = JSON.parse(diagText);
-    this.diagnosticRules = diagData.rules as any[];
-    const corrData = JSON.parse(corrText);
-    this.correlationsDef = corrData.correlations as any[];
+  /** Load from parsed rule data. Server-only: see src/server/engine.ts. */
+  loadFromData(data: {
+    analyzerRules: Record<string, any>;
+    derivedMetrics: Record<string, any>;
+    diagnosticRules: Record<string, any>;
+    correlations: Record<string, any>;
+  }): void {
+    this.analyzerRules = data.analyzerRules;
+    this.derivedMetricsDef = data.derivedMetrics;
+    this.diagnosticRules = data.diagnosticRules.rules as any[];
+    this.correlationsDef = data.correlations.correlations as any[];
     this._loaded = true;
   }
 
