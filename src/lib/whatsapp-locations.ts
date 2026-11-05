@@ -1,5 +1,6 @@
 export type WhatsAppLocationId =
   | 'shah-alam-alam-impian'
+  | 'shah-alam-seksyen-24'
   | 'johor-bahru-tampoi';
 
 export interface WhatsAppLocation {
@@ -26,6 +27,17 @@ export const WHATSAPP_LOCATIONS: WhatsAppLocation[] = [
     // 18 Lebuh Keluli, Bukit Raja Industrial Estate, 41050 Klang
     lat: 3.0834,
     lng: 101.4598,
+  },
+  {
+    id: 'shah-alam-seksyen-24',
+    city: 'Shah Alam',
+    area: 'Seksyen 24',
+    branch: 'DM Garage Motorsport',
+    number: '601133485042',
+    display: '+60 11-3348 5042',
+    // 11, Jalan Bawang Besar 24/35, Seksyen 24, 40300 Shah Alam
+    lat: 3.0441,
+    lng: 101.5134,
   },
   {
     id: 'johor-bahru-tampoi',
