@@ -15,12 +15,14 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params;
   const partner = getPartner(slug);
   if (!partner) return {};
+  // A running campaign sets the page's title so it matches the ad.
+  const seo = partner.campaign?.seo ?? partner.seo;
   return {
-    title: partner.seo.title,
-    description: partner.seo.description,
+    title: seo.title,
+    description: seo.description,
     openGraph: {
-      title: partner.seo.title,
-      description: partner.seo.description,
+      title: seo.title,
+      description: seo.description,
       type: 'website',
       locale: 'ms_MY',
     },

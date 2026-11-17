@@ -126,6 +126,9 @@ const BTN_OUTLINE = `${BTN} border border-[var(--accent)]/30 text-[var(--accent)
 
 const EXTERNAL = { target: '_blank', rel: 'noopener noreferrer' } as const;
 
+const FIELD =
+  'w-full rounded-xl border border-white/12 bg-black/50 px-4 py-3.5 text-base text-white outline-none transition-colors [color-scheme:dark] placeholder:text-white/30 focus:border-[var(--accent)]/60';
+
 // Proof cards: one sits centred, two or three share a row.
 const PROOF_GRID: Record<number, string> = {
   1: 'mx-auto max-w-md',
@@ -204,6 +207,10 @@ export default function PartnerLanding({ partner: p }: { partner: Partner }) {
   const [lang, setLang] = useState<Lang>('bm');
   const [status, setStatus] = useState<OpenStatus | null>(null);
   const [today, setToday] = useState<number | null>(null);
+  // Claim form (campaign only): the answers are written into the WhatsApp message.
+  const [car, setCar] = useState('');
+  const [svc, setSvc] = useState(0);
+  const c = p.campaign;
 
   // Language: ?lang= wins, then the visitor's last choice, then BM.
   useEffect(() => {
@@ -247,21 +254,32 @@ export default function PartnerLanding({ partner: p }: { partner: Partner }) {
 
   const track = (action: string, detail?: string) => {
     const w = window as unknown as { dataLayer?: Record<string, unknown>[] };
-    w.dataLayer?.push({ event: 'partner_cta', partner: p.slug, cta_action: action, cta_detail: detail, lang });
+    w.dataLayer?.push({ event: 'partner_cta', partner: p.slug, campaign: c?.id, cta_action: action, cta_detail: detail, lang });
+    if (c && action === 'whatsapp') {
+      w.dataLayer?.push({ event: 'generate_lead', partner: p.slug, campaign: c.id, lead_source: detail, lang });
+    }
   };
 
   // ── WhatsApp messages ──
-  const intro =
-    lang === 'bm'
+  // While a campaign runs, every message opens by claiming the offer.
+  const intro = c
+    ? c.waIntro[lang]
+    : lang === 'bm'
       ? `Hi ${p.greetingName}, saya jumpa bengkel ini melalui BYKI.`
       : `Hi ${p.greetingName}, I found your workshop through BYKI.`;
   const carLine = lang === 'bm' ? 'Model kereta: ' : 'Car model: ';
   const problemLine = lang === 'bm' ? 'Masalah: ' : 'Problem: ';
+  const serviceLine = lang === 'bm' ? 'Servis: ' : 'Service: ';
 
   const waGeneral = waLink(
     p.whatsapp,
-    `${intro}\n\n${lang === 'bm' ? 'Saya nak tanya tentang kereta saya.' : "I'd like to ask about my car."}\n${carLine}\n${problemLine}`,
+    c
+      ? `${intro}\n\n${carLine}\n${serviceLine}`
+      : `${intro}\n\n${lang === 'bm' ? 'Saya nak tanya tentang kereta saya.' : "I'd like to ask about my car."}\n${carLine}\n${problemLine}`,
   );
+  const waClaim = c
+    ? waLink(p.whatsapp, `${intro}\n\n${carLine}${car.trim()}\n${serviceLine}${c.claim.form.services[svc][lang]}`)
+    : waGeneral;
   const waSymptom = (label: string) =>
     waLink(
       p.whatsapp,
@@ -272,7 +290,9 @@ export default function PartnerLanding({ partner: p }: { partner: Partner }) {
   const waService = (title: string) =>
     waLink(
       p.whatsapp,
-      `${intro}\n\n${lang === 'bm' ? 'Saya nak tanya harga untuk' : "I'd like a quote for"}: ${title}\n${carLine}\n${problemLine}`,
+      c
+        ? `${intro}\n\n${serviceLine}${title}\n${carLine}`
+        : `${intro}\n\n${lang === 'bm' ? 'Saya nak tanya harga untuk' : "I'd like a quote for"}: ${title}\n${carLine}\n${problemLine}`,
     );
   const waBanner = p.banner
     ? waLink(p.whatsapp, `${intro}\n\n${p.banner.ask[lang]}\n${carLine}\n${p.banner.field[lang]}`)
@@ -285,6 +305,8 @@ export default function PartnerLanding({ partner: p }: { partner: Partner }) {
   const proofCount =
     1 + (p.links.tiktok && p.proof.tiktokFollowers ? 1 : 0) + (p.links.facebook && p.proof.facebookFollowers ? 1 : 0);
   const hourGroups = groupHours(p.hours);
+  const faqs = c ? [...c.faq, ...p.faq] : p.faq;
+  const ctaLabel = c ? t(c.cta) : t(UI.waCta);
 
   const statusBadge = status && (
     <span
@@ -341,88 +363,189 @@ export default function PartnerLanding({ partner: p }: { partner: Partner }) {
               className={`${BTN_PRIMARY} px-4 py-2 text-xs max-md:hidden`}
             >
               <WhatsAppIcon size={15} />
-              {t(UI.waCta)}
+              {c ? t(c.ctaShort) : t(UI.waCta)}
             </a>
           </div>
         </div>
       </header>
 
       <main className="relative">
-        {/* ── Hero ───────────────────────────────────── */}
-        <section className="mx-auto grid max-w-6xl items-center gap-10 px-5 pb-10 pt-10 sm:px-6 lg:grid-cols-[1.05fr_1fr] lg:gap-14 lg:pb-14 lg:pt-16">
-          <div className="animate-fade-up">
-            <span className="inline-flex items-center gap-2 rounded-full border border-[var(--accent)]/20 bg-[var(--accent)]/[0.06] px-3.5 py-1.5 text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--accent)]">
-              <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)] status-dot" />
-              {t(UI.eyebrow)} · {t(p.area)}
-            </span>
-            <h1 className="mt-5 text-balance !text-[2.15rem] font-bold !leading-[1.06] tracking-tight text-white sm:!text-5xl sm:!leading-[1.04] lg:!text-[3.35rem]">
-              {t(p.hero.title)}
-            </h1>
-            <p className="mt-4 max-w-xl text-base leading-relaxed text-white/70 sm:text-lg">{t(p.hero.sub)}</p>
+        {/* ── Campaign hero ──────────────────────────── */}
+        {c && (
+          <section className="mx-auto grid max-w-6xl items-center gap-9 px-5 pb-10 pt-8 sm:px-6 lg:grid-cols-[1.05fr_1fr] lg:gap-14 lg:pb-14 lg:pt-14">
+            <div className="animate-fade-up">
+              <span className="inline-flex items-center gap-2 rounded-full border border-[var(--accent)]/20 bg-[var(--accent)]/[0.06] px-3.5 py-1.5 text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--accent)]">
+                <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)] status-dot" />
+                {t(c.eyebrow)}
+              </span>
+              <h1 className="mt-5 text-balance !text-[2.2rem] font-bold !leading-[1.05] tracking-tight text-white sm:!text-5xl sm:!leading-[1.04] lg:!text-[3.4rem]">
+                <Emphasis text={t(c.title)} />
+              </h1>
+              <p className="mt-4 max-w-xl text-base leading-relaxed text-white/70 sm:text-lg">{t(c.sub)}</p>
 
-            <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-              <a
-                href={waGeneral}
-                {...EXTERNAL}
-                onClick={() => track('whatsapp', 'hero')}
-                className={`${BTN_PRIMARY} px-7 py-4 text-base`}
-              >
-                <WhatsAppIcon size={20} />
-                {t(UI.waCta)}
-              </a>
-              <a href={telHref} onClick={() => track('call', 'hero')} className={`${BTN_GHOST} px-6 py-4 text-base`}>
-                <PhoneIcon size={18} />
-                {p.phoneDisplay}
-              </a>
-            </div>
+              <ul className="mt-5 grid gap-2">
+                {c.bullets.map((b) => (
+                  <CheckItem key={b.en}>{t(b)}</CheckItem>
+                ))}
+              </ul>
 
-            <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2">
-              <a
-                href={p.links.googleReviews}
-                {...EXTERNAL}
-                onClick={() => track('reviews', 'hero')}
-                className="inline-flex items-center gap-2 text-sm text-white/70 hover:text-white"
-              >
-                <Stars />
-                <span>
-                  <strong className="font-bold text-white">{p.proof.googleRating.toFixed(1)}</strong> {t(UI.onGoogle)} ·{' '}
-                  {p.proof.googleReviews} {t(UI.reviews)}
-                </span>
-              </a>
-            </div>
-          </div>
+              <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+                <a
+                  href={waGeneral}
+                  {...EXTERNAL}
+                  onClick={() => track('whatsapp', 'hero')}
+                  className={`${BTN_PRIMARY} px-7 py-4 text-base`}
+                >
+                  <WhatsAppIcon size={20} />
+                  {t(c.cta)}
+                </a>
+                <a href={telHref} onClick={() => track('call', 'hero')} className={`${BTN_GHOST} px-6 py-4 text-base`}>
+                  <PhoneIcon size={18} />
+                  {p.phoneDisplay}
+                </a>
+              </div>
+              <p className="mt-3 text-xs leading-relaxed text-white/40">{t(c.terms)}</p>
 
-          <div className="relative animate-fade-up" style={{ animationDelay: '0.08s' }}>
-            <div className="pointer-events-none absolute -inset-6 rounded-[2.5rem] bg-[var(--accent)]/[0.07] blur-3xl" />
-            <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-[var(--bg-card)]">
-              <Image
-                src={p.heroImage.src}
-                alt={`${p.name} — ${p.subtitle}`}
-                width={p.heroImage.width}
-                height={p.heroImage.height}
-                className="aspect-[4/3] h-full w-full object-cover"
-                priority
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
-              <div className="absolute inset-x-0 bottom-0 flex flex-col gap-3 p-4 sm:p-5">
-                <div className="flex items-center gap-3">
-                  <Image
-                    src={p.logo.src}
-                    alt={`${p.legalName} logo`}
-                    width={p.logo.width}
-                    height={p.logo.height}
-                    className="h-14 w-auto rounded-xl border border-white/10 bg-black p-1 sm:h-16"
-                  />
-                  <div className="min-w-0">
-                    <div className="text-base font-bold leading-tight text-white sm:text-lg">{p.name}</div>
-                    <div className="text-xs text-white/60">{p.subtitle}</div>
-                  </div>
+              {/* Who is making the offer */}
+              <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-3 rounded-2xl border border-white/[0.07] bg-white/[0.02] p-3">
+                <Image
+                  src={p.logo.src}
+                  alt={`${p.legalName} logo`}
+                  width={p.logo.width}
+                  height={p.logo.height}
+                  className="h-12 w-auto rounded-lg bg-black"
+                />
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm font-bold leading-tight text-white">{p.name}</div>
+                  <a
+                    href={p.links.googleReviews}
+                    {...EXTERNAL}
+                    onClick={() => track('reviews', 'hero')}
+                    className="mt-1 inline-flex items-center gap-1.5 text-xs text-white/65 hover:text-white"
+                  >
+                    <Stars />
+                    <span>
+                      <strong className="font-bold text-white">{p.proof.googleRating.toFixed(1)}</strong> {t(UI.onGoogle)} ·{' '}
+                      {p.proof.googleReviews} {t(UI.reviews)}
+                    </span>
+                  </a>
                 </div>
-                <div className="min-h-[30px]">{statusBadge}</div>
+                {statusBadge}
               </div>
             </div>
-          </div>
-        </section>
+
+            <div className="relative animate-fade-up" style={{ animationDelay: '0.08s' }}>
+              <div className="pointer-events-none absolute -inset-6 rounded-[2.5rem] bg-[var(--accent)]/[0.08] blur-3xl" />
+              <div className="relative grid grid-cols-2 gap-3">
+                <div className="relative col-span-2 overflow-hidden rounded-3xl border border-[var(--accent)]/20 bg-[#050505]">
+                  <div className="pointer-events-none absolute inset-0 bg-grid opacity-70" />
+                  <Image
+                    src={c.productImage.src}
+                    alt={t(c.productImage.alt)}
+                    width={c.productImage.width}
+                    height={c.productImage.height}
+                    className="relative mx-auto h-auto w-full max-w-md px-6 pt-8"
+                    priority
+                  />
+                  <div className="absolute left-4 top-4 -rotate-6 rounded-2xl bg-[var(--accent)] px-4 py-2 text-center text-black shadow-[0_0_30px_rgba(0,255,136,0.45)]">
+                    <div className="text-xl font-black leading-none tracking-tight">{t(c.badge.top)}</div>
+                    <div className="mt-1 text-[10px] font-bold uppercase leading-none tracking-[0.08em]">{t(c.badge.bottom)}</div>
+                  </div>
+                  <div className="relative px-5 pb-4 pt-1 text-center text-sm font-semibold text-white/80">BYKI OBD2</div>
+                </div>
+                {c.photos.items.slice(0, 2).map((ph) => (
+                  <div key={ph.src} className="overflow-hidden rounded-2xl border border-white/10">
+                    <Image
+                      src={ph.src}
+                      alt={t(ph.alt)}
+                      width={ph.width}
+                      height={ph.height}
+                      className="aspect-[4/5] h-full w-full object-cover"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* ── Hero ───────────────────────────────────── */}
+        {!c && (
+          <section className="mx-auto grid max-w-6xl items-center gap-10 px-5 pb-10 pt-10 sm:px-6 lg:grid-cols-[1.05fr_1fr] lg:gap-14 lg:pb-14 lg:pt-16">
+            <div className="animate-fade-up">
+              <span className="inline-flex items-center gap-2 rounded-full border border-[var(--accent)]/20 bg-[var(--accent)]/[0.06] px-3.5 py-1.5 text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--accent)]">
+                <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)] status-dot" />
+                {t(UI.eyebrow)} · {t(p.area)}
+              </span>
+              <h1 className="mt-5 text-balance !text-[2.15rem] font-bold !leading-[1.06] tracking-tight text-white sm:!text-5xl sm:!leading-[1.04] lg:!text-[3.35rem]">
+                {t(p.hero.title)}
+              </h1>
+              <p className="mt-4 max-w-xl text-base leading-relaxed text-white/70 sm:text-lg">{t(p.hero.sub)}</p>
+
+              <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+                <a
+                  href={waGeneral}
+                  {...EXTERNAL}
+                  onClick={() => track('whatsapp', 'hero')}
+                  className={`${BTN_PRIMARY} px-7 py-4 text-base`}
+                >
+                  <WhatsAppIcon size={20} />
+                  {t(UI.waCta)}
+                </a>
+                <a href={telHref} onClick={() => track('call', 'hero')} className={`${BTN_GHOST} px-6 py-4 text-base`}>
+                  <PhoneIcon size={18} />
+                  {p.phoneDisplay}
+                </a>
+              </div>
+
+              <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2">
+                <a
+                  href={p.links.googleReviews}
+                  {...EXTERNAL}
+                  onClick={() => track('reviews', 'hero')}
+                  className="inline-flex items-center gap-2 text-sm text-white/70 hover:text-white"
+                >
+                  <Stars />
+                  <span>
+                    <strong className="font-bold text-white">{p.proof.googleRating.toFixed(1)}</strong> {t(UI.onGoogle)} ·{' '}
+                    {p.proof.googleReviews} {t(UI.reviews)}
+                  </span>
+                </a>
+              </div>
+            </div>
+
+            <div className="relative animate-fade-up" style={{ animationDelay: '0.08s' }}>
+              <div className="pointer-events-none absolute -inset-6 rounded-[2.5rem] bg-[var(--accent)]/[0.07] blur-3xl" />
+              <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-[var(--bg-card)]">
+                <Image
+                  src={p.heroImage.src}
+                  alt={`${p.name} — ${p.subtitle}`}
+                  width={p.heroImage.width}
+                  height={p.heroImage.height}
+                  className="aspect-[4/3] h-full w-full object-cover"
+                  priority
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
+                <div className="absolute inset-x-0 bottom-0 flex flex-col gap-3 p-4 sm:p-5">
+                  <div className="flex items-center gap-3">
+                    <Image
+                      src={p.logo.src}
+                      alt={`${p.legalName} logo`}
+                      width={p.logo.width}
+                      height={p.logo.height}
+                      className="h-14 w-auto rounded-xl border border-white/10 bg-black p-1 sm:h-16"
+                    />
+                    <div className="min-w-0">
+                      <div className="text-base font-bold leading-tight text-white sm:text-lg">{p.name}</div>
+                      <div className="text-xs text-white/60">{p.subtitle}</div>
+                    </div>
+                  </div>
+                  <div className="min-h-[30px]">{statusBadge}</div>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* ── Key facts ──────────────────────────────── */}
         <section className="mx-auto max-w-6xl px-5 pb-6 sm:px-6">
@@ -450,48 +573,165 @@ export default function PartnerLanding({ partner: p }: { partner: Partner }) {
           </div>
         </section>
 
-        {/* ── Symptoms ───────────────────────────────── */}
-        <section id="symptoms" className="mx-auto max-w-6xl scroll-mt-20 px-5 py-10 sm:px-6 sm:py-14">
-          <SectionHead pill={t(UI.symptomsPill)} title={t(UI.symptomsTitle)} sub={t(UI.symptomsSub)} />
-          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-5">
-            {p.symptoms.map((s) => (
-              <a
-                key={s.id}
-                href={waSymptom(t(s.label))}
-                {...EXTERNAL}
-                onClick={() => track('whatsapp', `symptom:${s.id}`)}
-                className="group glass card-green-hover flex min-h-[112px] flex-col justify-between gap-3 rounded-2xl p-4"
-              >
-                <div className="flex items-start justify-between">
-                  <span className={`flex h-9 w-9 items-center justify-center rounded-xl ${GROUP_TONE[s.group]}`}>
-                    <GroupIcon group={s.group} />
+        {/* ── Campaign: what the scanner does ────────── */}
+        {c && (
+          <section className="mx-auto max-w-6xl px-5 py-10 sm:px-6 sm:py-14">
+            <SectionHead pill={t(c.explainer.pill)} title={t(c.explainer.title)} sub={t(c.explainer.sub)} />
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {c.explainer.benefits.map((b) => (
+                <div key={b.title.en} className="glass rounded-2xl p-5">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--accent)]/10 text-[var(--accent)]">
+                    <PointIcon icon={b.icon} />
                   </span>
-                  <ArrowIcon className="text-white/20 transition-colors group-hover:text-[var(--accent)]" />
+                  <h3 className="mt-4 !text-base font-bold !leading-snug text-white">{t(b.title)}</h3>
+                  <p className="mt-1.5 text-[13px] leading-relaxed text-white/65">{t(b.desc)}</p>
                 </div>
-                <div>
-                  <div className="text-sm font-semibold leading-snug text-white/90">{t(s.label)}</div>
-                  <div className="mt-1 text-[10px] font-medium uppercase tracking-[0.12em] text-white/35">
-                    {t(GROUP_LABEL[s.group])}
+              ))}
+            </div>
+            <p className="mt-5 text-center text-sm">
+              <Link
+                href="/"
+                onClick={() => track('byki', 'explainer')}
+                className="text-white/55 underline decoration-white/20 underline-offset-4 hover:text-[var(--accent)]"
+              >
+                {t(c.explainer.link)}
+              </Link>
+            </p>
+          </section>
+        )}
+
+        {/* ── Campaign: people with the scanner ──────── */}
+        {c && c.photos.items.length > 0 && (
+          <section className="mx-auto max-w-6xl px-5 py-10 sm:px-6 sm:py-14">
+            <SectionHead pill={t(c.photos.pill)} title={t(c.photos.title)} sub={t(c.photos.sub)} />
+            <div className="-mx-5 flex snap-x snap-mandatory scroll-px-5 gap-3 overflow-x-auto px-5 [scrollbar-width:none] sm:-mx-6 sm:scroll-px-6 sm:px-6 md:mx-0 md:grid md:grid-cols-6 md:overflow-visible md:px-0 [&::-webkit-scrollbar]:hidden">
+              {c.photos.items.map((ph) => (
+                <div
+                  key={ph.src}
+                  className="w-[44%] shrink-0 snap-start overflow-hidden rounded-2xl border border-white/10 sm:w-[30%] md:w-auto"
+                >
+                  <Image
+                    src={ph.src}
+                    alt={t(ph.alt)}
+                    width={ph.width}
+                    height={ph.height}
+                    className="aspect-[3/4] h-full w-full object-cover object-[50%_30%]"
+                  />
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* ── Campaign: how to claim ─────────────────── */}
+        {c && (
+          <section id="claim" className="mx-auto max-w-6xl scroll-mt-20 px-5 py-10 sm:px-6 sm:py-14">
+            <SectionHead pill={t(c.claim.pill)} title={t(c.claim.title)} />
+            <div className="grid gap-4 lg:grid-cols-2 lg:gap-6">
+              <ol className="grid content-start gap-3">
+                {c.claim.steps.map((step, i) => (
+                  <li key={step.title.en} className="glass flex items-start gap-4 rounded-2xl p-5">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--accent)] text-sm font-bold tabular-nums text-black shadow-[0_0_18px_rgba(0,255,136,0.3)]">
+                      {String(i + 1).padStart(2, '0')}
+                    </span>
+                    <div>
+                      <h3 className="!text-base font-bold text-white">{t(step.title)}</h3>
+                      <p className="mt-1 text-[13px] leading-relaxed text-white/65">{t(step.desc)}</p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+
+              <div className="rounded-3xl border border-[var(--accent)]/25 bg-gradient-to-b from-[var(--accent)]/[0.09] to-transparent p-6 sm:p-7">
+                <h3 className="!text-xl font-bold tracking-tight text-white">{t(c.claim.form.title)}</h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-white/65">{t(c.claim.form.sub)}</p>
+                <div className="mt-5 grid gap-4">
+                  <label className="grid gap-1.5">
+                    <span className="text-xs font-semibold text-white/75">{t(c.claim.form.carLabel)}</span>
+                    <input
+                      type="text"
+                      value={car}
+                      onChange={(e) => setCar(e.target.value)}
+                      placeholder={t(c.claim.form.carPlaceholder)}
+                      maxLength={60}
+                      autoComplete="off"
+                      className={FIELD}
+                    />
+                  </label>
+                  <label className="grid gap-1.5">
+                    <span className="text-xs font-semibold text-white/75">{t(c.claim.form.serviceLabel)}</span>
+                    <select value={svc} onChange={(e) => setSvc(Number(e.target.value))} className={FIELD}>
+                      {c.claim.form.services.map((option, i) => (
+                        <option key={option.en} value={i}>
+                          {t(option)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <a
+                    href={waClaim}
+                    {...EXTERNAL}
+                    onClick={() => track('whatsapp', 'claim-form')}
+                    className={`${BTN_PRIMARY} px-6 py-4 text-base`}
+                  >
+                    <WhatsAppIcon size={20} />
+                    {t(c.claim.form.submit)}
+                  </a>
+                </div>
+                <p className="mt-3 text-xs leading-relaxed text-white/40">{t(c.claim.form.note)}</p>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* ── Symptoms ───────────────────────────────── */}
+        {!c && (
+          <section id="symptoms" className="mx-auto max-w-6xl scroll-mt-20 px-5 py-10 sm:px-6 sm:py-14">
+            <SectionHead pill={t(UI.symptomsPill)} title={t(UI.symptomsTitle)} sub={t(UI.symptomsSub)} />
+            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-5">
+              {p.symptoms.map((s) => (
+                <a
+                  key={s.id}
+                  href={waSymptom(t(s.label))}
+                  {...EXTERNAL}
+                  onClick={() => track('whatsapp', `symptom:${s.id}`)}
+                  className="group glass card-green-hover flex min-h-[112px] flex-col justify-between gap-3 rounded-2xl p-4"
+                >
+                  <div className="flex items-start justify-between">
+                    <span className={`flex h-9 w-9 items-center justify-center rounded-xl ${GROUP_TONE[s.group]}`}>
+                      <GroupIcon group={s.group} />
+                    </span>
+                    <ArrowIcon className="text-white/20 transition-colors group-hover:text-[var(--accent)]" />
                   </div>
-                </div>
+                  <div>
+                    <div className="text-sm font-semibold leading-snug text-white/90">{t(s.label)}</div>
+                    <div className="mt-1 text-[10px] font-medium uppercase tracking-[0.12em] text-white/35">
+                      {t(GROUP_LABEL[s.group])}
+                    </div>
+                  </div>
+                </a>
+              ))}
+            </div>
+            <p className="mt-5 text-center text-sm">
+              <a
+                href={waGeneral}
+                {...EXTERNAL}
+                onClick={() => track('whatsapp', 'symptom:other')}
+                className="text-white/55 underline decoration-white/20 underline-offset-4 hover:text-[var(--accent)]"
+              >
+                {t(UI.symptomsOther)}
               </a>
-            ))}
-          </div>
-          <p className="mt-5 text-center text-sm">
-            <a
-              href={waGeneral}
-              {...EXTERNAL}
-              onClick={() => track('whatsapp', 'symptom:other')}
-              className="text-white/55 underline decoration-white/20 underline-offset-4 hover:text-[var(--accent)]"
-            >
-              {t(UI.symptomsOther)}
-            </a>
-          </p>
-        </section>
+            </p>
+          </section>
+        )}
 
         {/* ── Services ───────────────────────────────── */}
         <section id="services" className="mx-auto max-w-6xl scroll-mt-20 px-5 py-10 sm:px-6 sm:py-14">
-          <SectionHead pill={t(UI.servicesPill)} title={t(UI.servicesTitle)} sub={t(p.servicesSub)} />
+          <SectionHead
+            pill={t(UI.servicesPill)}
+            title={c ? t(c.servicesTitle) : t(UI.servicesTitle)}
+            sub={c ? t(c.servicesSub) : t(p.servicesSub)}
+          />
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {featured && (
               <article className="relative flex flex-col overflow-hidden rounded-3xl border border-[var(--accent)]/20 bg-gradient-to-br from-[var(--accent)]/[0.08] via-white/[0.02] to-transparent p-6 sm:p-8 md:col-span-2">
@@ -645,72 +885,76 @@ export default function PartnerLanding({ partner: p }: { partner: Partner }) {
         </section>
 
         {/* ── How it works ───────────────────────────── */}
-        <section className="mx-auto max-w-6xl px-5 py-10 sm:px-6 sm:py-14">
-          <SectionHead pill={t(UI.stepsPill)} title={t(UI.stepsTitle)} />
-          <ol className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            {p.steps.map((s, i) => (
-              <li key={s.title.en} className="glass rounded-2xl p-4 sm:p-5">
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--accent)] text-sm font-bold tabular-nums text-black shadow-[0_0_18px_rgba(0,255,136,0.3)]">
-                  {String(i + 1).padStart(2, '0')}
-                </span>
-                <h3 className="mt-4 !text-base font-bold text-white">{t(s.title)}</h3>
-                <p className="mt-1.5 text-[13px] leading-relaxed text-white/65">{t(s.desc)}</p>
-              </li>
-            ))}
-          </ol>
-          <div className="mt-8 flex justify-center">
-            <a
-              href={waGeneral}
-              {...EXTERNAL}
-              onClick={() => track('whatsapp', 'steps')}
-              className={`${BTN_PRIMARY} w-full px-7 py-4 text-base sm:w-auto`}
-            >
-              <WhatsAppIcon size={20} />
-              {t(UI.waCta)}
-            </a>
-          </div>
-        </section>
+        {!c && (
+          <section className="mx-auto max-w-6xl px-5 py-10 sm:px-6 sm:py-14">
+            <SectionHead pill={t(UI.stepsPill)} title={t(UI.stepsTitle)} />
+            <ol className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+              {p.steps.map((s, i) => (
+                <li key={s.title.en} className="glass rounded-2xl p-4 sm:p-5">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--accent)] text-sm font-bold tabular-nums text-black shadow-[0_0_18px_rgba(0,255,136,0.3)]">
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                  <h3 className="mt-4 !text-base font-bold text-white">{t(s.title)}</h3>
+                  <p className="mt-1.5 text-[13px] leading-relaxed text-white/65">{t(s.desc)}</p>
+                </li>
+              ))}
+            </ol>
+            <div className="mt-8 flex justify-center">
+              <a
+                href={waGeneral}
+                {...EXTERNAL}
+                onClick={() => track('whatsapp', 'steps')}
+                className={`${BTN_PRIMARY} w-full px-7 py-4 text-base sm:w-auto`}
+              >
+                <WhatsAppIcon size={20} />
+                {t(UI.waCta)}
+              </a>
+            </div>
+          </section>
+        )}
 
         {/* ── BYKI ───────────────────────────────────── */}
-        <section className="mx-auto max-w-6xl px-5 py-10 sm:px-6 sm:py-14">
-          <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#050505]">
-            <div className="pointer-events-none absolute inset-0 bg-grid opacity-60" />
-            <div className="pointer-events-none absolute -right-24 top-1/2 h-96 w-96 -translate-y-1/2 rounded-full bg-[var(--accent)]/10 blur-[100px]" />
-            <div className="relative grid items-center gap-8 p-6 sm:p-10 lg:grid-cols-[1.1fr_1fr]">
-              <div>
-                <div className="flex items-center gap-3">
-                  <Image src="/brand/byki-logo.png" alt="BYKI" width={90} height={24} className="h-5 w-auto" />
-                  <span className="text-[10px] font-medium uppercase tracking-[0.16em] text-white/45">
-                    {t(UI.bykiPill)}
-                  </span>
+        {!c && (
+          <section className="mx-auto max-w-6xl px-5 py-10 sm:px-6 sm:py-14">
+            <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#050505]">
+              <div className="pointer-events-none absolute inset-0 bg-grid opacity-60" />
+              <div className="pointer-events-none absolute -right-24 top-1/2 h-96 w-96 -translate-y-1/2 rounded-full bg-[var(--accent)]/10 blur-[100px]" />
+              <div className="relative grid items-center gap-8 p-6 sm:p-10 lg:grid-cols-[1.1fr_1fr]">
+                <div>
+                  <div className="flex items-center gap-3">
+                    <Image src="/brand/byki-logo.png" alt="BYKI" width={90} height={24} className="h-5 w-auto" />
+                    <span className="text-[10px] font-medium uppercase tracking-[0.16em] text-white/45">
+                      {t(UI.bykiPill)}
+                    </span>
+                  </div>
+                  <h2 className="mt-5 text-balance !text-[1.6rem] font-bold tracking-tight text-white sm:!text-[2rem]">
+                    {t(UI.bykiTitle)}
+                  </h2>
+                  <p className="mt-3 max-w-xl text-sm leading-relaxed text-white/70 sm:text-base">{t(UI.bykiBody)}</p>
+                  <ul className="mt-5 grid gap-2.5">
+                    {UI.bykiPoints.map((pt) => (
+                      <CheckItem key={pt.en}>{t(pt)}</CheckItem>
+                    ))}
+                  </ul>
+                  <div className="mt-7 flex flex-col items-start gap-2.5">
+                    <Link href="/" onClick={() => track('byki', 'band')} className={`${BTN_OUTLINE} px-6 py-3.5 text-sm`}>
+                      {t(UI.bykiCta)}
+                      <ArrowIcon />
+                    </Link>
+                    <span className="text-xs text-white/40">{t(UI.bykiNote)}</span>
+                  </div>
                 </div>
-                <h2 className="mt-5 text-balance !text-[1.6rem] font-bold tracking-tight text-white sm:!text-[2rem]">
-                  {t(UI.bykiTitle)}
-                </h2>
-                <p className="mt-3 max-w-xl text-sm leading-relaxed text-white/70 sm:text-base">{t(UI.bykiBody)}</p>
-                <ul className="mt-5 grid gap-2.5">
-                  {UI.bykiPoints.map((pt) => (
-                    <CheckItem key={pt.en}>{t(pt)}</CheckItem>
-                  ))}
-                </ul>
-                <div className="mt-7 flex flex-col items-start gap-2.5">
-                  <Link href="/" onClick={() => track('byki', 'band')} className={`${BTN_OUTLINE} px-6 py-3.5 text-sm`}>
-                    {t(UI.bykiCta)}
-                    <ArrowIcon />
-                  </Link>
-                  <span className="text-xs text-white/40">{t(UI.bykiNote)}</span>
-                </div>
+                <Image
+                  src="/brand/obdii.png"
+                  alt=""
+                  width={1169}
+                  height={796}
+                  className="mx-auto h-auto w-full max-w-md"
+                />
               </div>
-              <Image
-                src="/brand/obdii.png"
-                alt=""
-                width={1169}
-                height={796}
-                className="mx-auto h-auto w-full max-w-md"
-              />
             </div>
-          </div>
-        </section>
+          </section>
+        )}
 
         {/* ── Proof ──────────────────────────────────── */}
         <section className="mx-auto max-w-6xl px-5 py-10 sm:px-6 sm:py-14">
@@ -889,7 +1133,7 @@ export default function PartnerLanding({ partner: p }: { partner: Partner }) {
         <section id="faq" className="mx-auto max-w-3xl scroll-mt-20 px-5 py-10 sm:px-6 sm:py-14">
           <SectionHead pill={t(UI.faqPill)} title={t(UI.faqTitle)} />
           <div className="grid gap-2.5">
-            {p.faq.map((f) => (
+            {faqs.map((f) => (
               <details key={f.q.en} className="group glass rounded-2xl">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 text-[15px] font-semibold text-white/90 [&::-webkit-details-marker]:hidden">
                   {t(f.q)}
@@ -907,9 +1151,9 @@ export default function PartnerLanding({ partner: p }: { partner: Partner }) {
             <div className="pointer-events-none absolute left-1/2 top-0 h-56 w-56 -translate-x-1/2 rounded-full bg-[var(--accent)]/15 blur-[90px]" />
             <div className="relative">
               <h2 className="mx-auto max-w-xl text-balance !text-[1.75rem] font-bold tracking-tight text-white sm:!text-4xl">
-                {t(p.finalCta.title)}
+                {t((c ?? p).finalCta.title)}
               </h2>
-              <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-white/70 sm:text-base">{t(p.finalCta.sub)}</p>
+              <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-white/70 sm:text-base">{t((c ?? p).finalCta.sub)}</p>
               <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
                 <a
                   href={waGeneral}
@@ -918,7 +1162,7 @@ export default function PartnerLanding({ partner: p }: { partner: Partner }) {
                   className={`${BTN_PRIMARY} px-7 py-4 text-base`}
                 >
                   <WhatsAppIcon size={20} />
-                  {t(UI.waCta)}
+                  {ctaLabel}
                 </a>
                 <a href={telHref} onClick={() => track('call', 'final')} className={`${BTN_GHOST} px-6 py-4 text-base`}>
                   <PhoneIcon size={18} />
@@ -961,7 +1205,7 @@ export default function PartnerLanding({ partner: p }: { partner: Partner }) {
             className={`${BTN_PRIMARY} h-12 flex-1 text-sm`}
           >
             <WhatsAppIcon size={18} />
-            {t(UI.waCta)}
+            {ctaLabel}
           </a>
           <a
             href={telHref}
@@ -1055,6 +1299,23 @@ function ServiceCard({
         </a>
       </div>
     </article>
+  );
+}
+
+/** Renders "Car scanner *PERCUMA* ..." with the starred words in the accent colour. */
+function Emphasis({ text }: { text: string }) {
+  return (
+    <>
+      {text.split('*').map((part, i) =>
+        i % 2 === 1 ? (
+          <span key={i} className="text-[var(--accent)]">
+            {part}
+          </span>
+        ) : (
+          part
+        ),
+      )}
+    </>
   );
 }
 
@@ -1304,6 +1565,15 @@ function PointIcon({ icon }: { icon: PartnerPoint['icon'] }) {
         <svg {...common}>
           <circle cx="9" cy="8" r="3.2" {...stroke} />
           <path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M16 5.2a3.2 3.2 0 010 5.6M17.5 14.4c2.1.8 3.5 2.9 3.5 5.6" {...stroke} />
+        </svg>
+      );
+    case 'alert':
+      // Warning triangle
+      return (
+        <svg {...common}>
+          <path d="M12 4l9 15.5H3L12 4z" {...stroke} />
+          <path d="M12 10v4.5" {...stroke} />
+          <circle cx="12" cy="17" r="0.9" fill="currentColor" />
         </svg>
       );
     case 'parts':

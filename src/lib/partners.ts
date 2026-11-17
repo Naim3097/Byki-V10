@@ -29,7 +29,7 @@ export interface PartnerService {
 }
 
 export interface PartnerPoint {
-  icon: 'free' | 'scan' | 'quote' | 'warranty' | 'team' | 'panel' | 'parts' | 'return';
+  icon: 'free' | 'scan' | 'quote' | 'warranty' | 'team' | 'panel' | 'parts' | 'return' | 'alert';
   title: L10n;
   desc: L10n;
 }
@@ -38,6 +38,59 @@ export interface PartnerPoint {
 export interface PartnerStat {
   value: L10n;
   label: L10n;
+}
+
+type PartnerImage = { src: string; width: number; height: number; alt: L10n };
+
+/**
+ * A running offer. While a partner has one, their page leads with it: the hero,
+ * the claim steps and form, and every WhatsApp message are about the offer.
+ * Delete the `campaign` block to return the page to the standard layout.
+ */
+export interface PartnerCampaign {
+  /** Short id used in tracking events. */
+  id: string;
+  seo: { title: string; description: string };
+  eyebrow: L10n;
+  /** Wrap the words to highlight in asterisks, e.g. "Car scanner *PERCUMA* ...". */
+  title: L10n;
+  sub: L10n;
+  cta: L10n;
+  ctaShort: L10n;
+  bullets: L10n[];
+  badge: { top: L10n; bottom: L10n };
+  productImage: PartnerImage;
+  terms: L10n;
+  /** Opening line of every WhatsApp message while the campaign runs. */
+  waIntro: L10n;
+  explainer: {
+    pill: L10n;
+    title: L10n;
+    sub: L10n;
+    benefits: { icon: PartnerPoint['icon']; title: L10n; desc: L10n }[];
+    link: L10n;
+  };
+  photos: { pill: L10n; title: L10n; sub: L10n; items: PartnerImage[] };
+  claim: {
+    pill: L10n;
+    title: L10n;
+    steps: { title: L10n; desc: L10n }[];
+    form: {
+      title: L10n;
+      sub: L10n;
+      carLabel: L10n;
+      carPlaceholder: L10n;
+      serviceLabel: L10n;
+      services: L10n[];
+      submit: L10n;
+      note: L10n;
+    };
+  };
+  servicesTitle: L10n;
+  servicesSub: L10n;
+  /** Shown ahead of the partner's standing FAQ. */
+  faq: { q: L10n; a: L10n }[];
+  finalCta: { title: L10n; sub: L10n };
 }
 
 export interface Partner {
@@ -100,6 +153,7 @@ export interface Partner {
   proofTitle: L10n;
   faq: { q: L10n; a: L10n }[];
   finalCta: { title: L10n; sub: L10n };
+  campaign?: PartnerCampaign;
 }
 
 const IMG = '/partners/dseventeen';
@@ -175,6 +229,203 @@ const dseventeen: Partner = {
       alt: { bm: 'Torque converter sedang diperiksa', en: 'A torque converter being inspected' },
     },
   ],
+
+  // Campaign: a free BYKI OBD2 car scanner with a service at DSeventeen.
+  // Qualifying services, dates and stock limits were not specified when this was
+  // written, so the copy stays general and points to the workshop for terms.
+  campaign: {
+    id: 'free-car-scanner',
+    seo: {
+      title: 'Car Scanner PERCUMA Bila Servis Kereta di DSeventeen, Johor Bahru | BYKI',
+      description:
+        'Servis kereta di DSeventeen Work Motor (Pakar Gearbox Tampoi), Johor Bahru dan dapatkan car scanner BYKI OBD2 percuma. Gearbox, enjin, aircond & servis berkala. Free car scanner with your service.',
+    },
+    eyebrow: { bm: 'Promosi DSeventeen × BYKI · Johor Bahru', en: 'DSeventeen × BYKI offer · Johor Bahru' },
+    title: {
+      bm: 'Car scanner *PERCUMA* bila servis kereta di DSeventeen.',
+      en: 'A *FREE* car scanner when you service your car at DSeventeen.',
+    },
+    sub: {
+      bm: 'BYKI OBD2 ialah alat kecil yang dipasang pada kereta dan disambung ke telefon. Ia tunjuk kesihatan enjin dan terangkan lampu check engine dalam bahasa mudah.',
+      en: "BYKI OBD2 is a small device that plugs into your car and connects to your phone. It shows your engine's health and explains a check-engine light in plain language.",
+    },
+    cta: { bm: 'Tuntut car scanner percuma', en: 'Claim my free car scanner' },
+    ctaShort: { bm: 'Tuntut percuma', en: 'Claim free scanner' },
+    bullets: [
+      { bm: 'BYKI OBD2 percuma dengan servis di DSeventeen', en: 'BYKI OBD2 free with a service at DSeventeen' },
+      { bm: 'Pemeriksaan & diagnosis awal percuma', en: 'Free initial inspection & diagnosis' },
+      { bm: 'Sebut harga jelas sebelum kerja bermula', en: 'Clear quote before any work starts' },
+    ],
+    badge: { top: { bm: 'PERCUMA', en: 'FREE' }, bottom: { bm: 'dengan servis', en: 'with a service' } },
+    productImage: {
+      src: '/brand/obdii.png',
+      width: 1169,
+      height: 796,
+      alt: { bm: 'Car scanner BYKI OBD2 dan aplikasi BYKI di telefon', en: 'The BYKI OBD2 car scanner and the BYKI app on a phone' },
+    },
+    terms: {
+      bm: 'Tertakluk pada terma & syarat. Tanya bengkel servis yang layak semasa WhatsApp.',
+      en: 'Terms and conditions apply. Ask the workshop which services qualify when you WhatsApp.',
+    },
+    waIntro: {
+      bm: 'Hi DSeventeen, saya nak tuntut car scanner percuma (BYKI OBD2) dengan servis kereta.',
+      en: "Hi DSeventeen, I'd like to claim the free car scanner (BYKI OBD2) with a car service.",
+    },
+
+    explainer: {
+      pill: { bm: 'Car scanner', en: 'Car scanner' },
+      title: { bm: 'Apa car scanner ni buat untuk anda?', en: 'What does this car scanner do for you?' },
+      sub: {
+        bm: 'Pasang pada port OBD2 di bawah dashboard, sambung ke telefon melalui Bluetooth, dan scan. Itu saja.',
+        en: "Plug it into the OBD2 port under the dashboard, connect to your phone over Bluetooth, and scan. That's it.",
+      },
+      benefits: [
+        {
+          icon: 'alert',
+          title: { bm: 'Lampu check engine menyala? Jangan panik.', en: "Check-engine light on? Don't panic." },
+          desc: {
+            bm: 'Scanner baca kod kerosakan dan terangkan maksudnya dalam bahasa mudah.',
+            en: 'The scanner reads the fault code and explains what it means in plain language.',
+          },
+        },
+        {
+          icon: 'scan',
+          title: { bm: 'Semak kesihatan kereta bila-bila masa', en: "Check your car's health any time" },
+          desc: {
+            bm: 'Skor kesihatan yang mudah difahami, terus di telefon anda.',
+            en: 'An easy-to-read health score, right on your phone.',
+          },
+        },
+        {
+          icon: 'quote',
+          title: { bm: 'Lebih yakin bila ke bengkel', en: 'Walk into the workshop with confidence' },
+          desc: {
+            bm: 'Anda dah tahu apa masalahnya sebelum bincang harga.',
+            en: "You already know what's wrong before you talk price.",
+          },
+        },
+        {
+          icon: 'free',
+          title: { bm: 'Kesan masalah awal', en: 'Catch problems early' },
+          desc: {
+            bm: 'Masalah kecil dikesan sebelum jadi pembaikan yang mahal.',
+            en: 'Small issues are spotted before they become expensive repairs.',
+          },
+        },
+      ],
+      link: { bm: 'Lihat cara BYKI berfungsi', en: 'See how BYKI works' },
+    },
+
+    photos: {
+      pill: { bm: 'Pengguna BYKI', en: 'BYKI users' },
+      title: { bm: 'Kecil di tangan, besar gunanya', en: 'Small in the hand, big on usefulness' },
+      sub: { bm: 'Pemandu dengan BYKI OBD2 mereka.', en: 'Drivers with their BYKI OBD2.' },
+      items: [
+        { src: `${IMG}/customers/byki-driver-1.webp`, width: 720, height: 1280, alt: { bm: 'Pemandu memegang BYKI OBD2 di dalam kereta', en: 'A driver holding the BYKI OBD2 in his car' } },
+        { src: `${IMG}/customers/byki-driver-2.webp`, width: 720, height: 960, alt: { bm: 'Pemandu menunjukkan BYKI di telefon bersama alat OBD2', en: 'A driver showing BYKI on his phone with the OBD2 device' } },
+        { src: `${IMG}/customers/byki-driver-3.webp`, width: 720, height: 960, alt: { bm: 'Pemandu memegang BYKI OBD2 di tempat duduk pemandu', en: 'A driver holding the BYKI OBD2 in the driver seat' } },
+        { src: `${IMG}/customers/byki-driver-4.webp`, width: 720, height: 960, alt: { bm: 'Pemandu memegang BYKI OBD2 di sebelah keretanya', en: 'A driver holding the BYKI OBD2 beside his car' } },
+        { src: `${IMG}/customers/byki-driver-5.webp`, width: 720, height: 1280, alt: { bm: 'Pemandu memegang BYKI OBD2', en: 'A driver holding the BYKI OBD2' } },
+        { src: `${IMG}/customers/byki-driver-6.webp`, width: 720, height: 960, alt: { bm: 'Pemandu memegang BYKI OBD2 di dalam kereta', en: 'A driver holding the BYKI OBD2 in his car' } },
+      ],
+    },
+
+    claim: {
+      pill: { bm: 'Cara tuntut', en: 'How to claim' },
+      title: { bm: '3 langkah untuk car scanner percuma anda', en: '3 steps to your free car scanner' },
+      steps: [
+        {
+          title: { bm: 'WhatsApp DSeventeen', en: 'WhatsApp DSeventeen' },
+          desc: {
+            bm: 'Beritahu model kereta dan servis yang anda perlukan.',
+            en: 'Tell them your car model and the service you need.',
+          },
+        },
+        {
+          title: { bm: 'Servis kereta di Tampoi', en: 'Service your car in Tampoi' },
+          desc: {
+            bm: 'Pemeriksaan awal percuma, dan harga dipersetujui sebelum kerja bermula.',
+            en: 'The initial inspection is free, and the price is agreed before work starts.',
+          },
+        },
+        {
+          title: { bm: 'Bawa balik BYKI OBD2', en: 'Take home your BYKI OBD2' },
+          desc: {
+            bm: 'Car scanner anda, percuma dengan servis.',
+            en: 'Your car scanner, free with your service.',
+          },
+        },
+      ],
+      form: {
+        title: { bm: 'Tuntut car scanner percuma anda', en: 'Claim your free car scanner' },
+        sub: {
+          bm: 'Isi dua perkara ini. WhatsApp akan terbuka dengan mesej siap ditulis untuk DSeventeen.',
+          en: 'Fill in these two things. WhatsApp opens with a message already written for DSeventeen.',
+        },
+        carLabel: { bm: 'Model kereta', en: 'Car model' },
+        carPlaceholder: { bm: 'cth. Perodua Myvi 2018', en: 'e.g. Perodua Myvi 2018' },
+        serviceLabel: { bm: 'Servis yang diperlukan', en: 'Service needed' },
+        services: [
+          { bm: 'Servis berkala (minyak hitam)', en: 'Regular service (engine oil)' },
+          { bm: 'Gearbox', en: 'Gearbox' },
+          { bm: 'Aircond', en: 'Air-cond' },
+          { bm: 'Enjin', en: 'Engine' },
+          { bm: 'Suspension / brek', en: 'Suspension / brakes' },
+          { bm: 'Belum pasti, nak periksa dulu', en: 'Not sure yet, inspect first' },
+        ],
+        submit: { bm: 'Hantar di WhatsApp', en: 'Send on WhatsApp' },
+        note: {
+          bm: 'Maklumat ini hanya dihantar kepada DSeventeen melalui WhatsApp anda. Tiada apa disimpan di laman ini.',
+          en: 'This is sent only to DSeventeen through your own WhatsApp. Nothing is stored on this page.',
+        },
+      },
+    },
+
+    servicesTitle: { bm: 'Servis yang boleh dibuat di DSeventeen', en: 'What you can get serviced at DSeventeen' },
+    servicesSub: {
+      bm: 'Pilih servis, WhatsApp bengkel, dan tanya tentang car scanner percuma anda.',
+      en: 'Pick a service, WhatsApp the workshop, and ask about your free car scanner.',
+    },
+
+    faq: [
+      {
+        q: { bm: 'Betul ke car scanner ni percuma?', en: 'Is the car scanner really free?' },
+        a: {
+          bm: 'Ya. BYKI OBD2 diberi percuma apabila anda servis kereta di DSeventeen Work Motor. Tertakluk pada terma & syarat, jadi tanya bengkel servis yang layak semasa WhatsApp.',
+          en: 'Yes. The BYKI OBD2 is given free when you service your car at DSeventeen Work Motor. Terms and conditions apply, so ask the workshop which services qualify when you WhatsApp.',
+        },
+      },
+      {
+        q: { bm: 'Apa itu BYKI OBD2?', en: 'What is BYKI OBD2?' },
+        a: {
+          bm: 'Alat kecil yang dipasang pada port OBD2 kereta, biasanya di bawah dashboard. Ia bersambung ke telefon melalui Bluetooth, dan BYKI menunjukkan kesihatan kereta serta menerangkan kod kerosakan dalam bahasa mudah.',
+          en: "A small device that plugs into your car's OBD2 port, usually under the dashboard. It connects to your phone over Bluetooth, and BYKI shows your car's health and explains fault codes in plain language.",
+        },
+      },
+      {
+        q: { bm: 'Kereta saya boleh guna?', en: 'Will it work with my car?' },
+        a: {
+          bm: 'Kebanyakan kereta moden ada port OBD2. Tak pasti? Beritahu model kereta anda di WhatsApp dan bengkel akan semak.',
+          en: 'Most modern cars have an OBD2 port. Not sure? Tell the workshop your car model on WhatsApp and they will check.',
+        },
+      },
+      {
+        q: { bm: 'Telefon apa yang boleh guna?', en: 'Which phones does it work with?' },
+        a: {
+          bm: 'Buat masa ini BYKI berjalan dalam pelayar Chrome atau Edge pada telefon Android yang ada Bluetooth. Aplikasi BYKI untuk iOS & Android akan datang.',
+          en: 'For now BYKI runs in the Chrome or Edge browser on Android phones with Bluetooth. BYKI apps for iOS and Android are coming.',
+        },
+      },
+    ],
+
+    finalCta: {
+      title: { bm: 'Tuntut car scanner percuma anda hari ini', en: 'Claim your free car scanner today' },
+      sub: {
+        bm: 'WhatsApp DSeventeen sekarang, tempah slot servis, dan bawa balik BYKI OBD2 anda.',
+        en: 'WhatsApp DSeventeen now, book your service slot, and take home your BYKI OBD2.',
+      },
+    },
+  },
 
   seo: {
     title: 'Pakar Gearbox Tampoi (DSeventeen Work Motor) — Rakan Bengkel BYKI, Johor Bahru',
