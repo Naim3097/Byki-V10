@@ -10,6 +10,10 @@ export default function AppShellWrapper({ children }: { children: React.ReactNod
   const pathname = usePathname();
   const isAuthPage = AUTH_ROUTES.includes(pathname);
 
+  // Partner landing pages are public marketing pages: no app nav, no adapter
+  // status, and no wait on auth before the content renders.
+  if (pathname.startsWith('/partner/')) return <>{children}</>;
+
   return (
     <AuthGuard>
       {isAuthPage ? children : <AppShell>{children}</AppShell>}

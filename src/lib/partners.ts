@@ -1,0 +1,835 @@
+// ─── BYKI Workshop Partners ──────────────────────────────────────────
+// Content for the partner landing pages at /partner/[slug].
+// Everything partner-specific (copy, contact details, images) lives here;
+// the layout and shared labels live in components/partner-landing.tsx.
+
+export type Lang = 'bm' | 'en';
+export type L10n = Record<Lang, string>;
+
+export type SymptomGroup = 'gearbox' | 'aircond' | 'engine' | 'warning' | 'general';
+
+export interface PartnerSymptom {
+  id: string;
+  group: SymptomGroup;
+  label: L10n;
+}
+
+export interface PartnerService {
+  id: string;
+  group: SymptomGroup;
+  title: L10n;
+  blurb: L10n;
+  items: L10n[];
+  tags?: string[];
+  image?: { src: string; width: number; height: number; kind: 'cutout' | 'photo' };
+  /** Shown in place of a picture when the service has no image. */
+  icon?: PartnerPoint['icon'];
+  featured?: boolean;
+  cta: L10n;
+}
+
+export interface PartnerPoint {
+  icon: 'free' | 'scan' | 'quote' | 'warranty' | 'team' | 'panel' | 'parts' | 'return';
+  title: L10n;
+  desc: L10n;
+}
+
+/** Rendered label-first: "Full overhaul warranty up to" / "6 months". */
+export interface PartnerStat {
+  value: L10n;
+  label: L10n;
+}
+
+export interface Partner {
+  slug: string;
+  /** Name customers know the workshop by. */
+  name: string;
+  /** Registered / trading name. */
+  legalName: string;
+  /** Short line shown under the name. */
+  subtitle: string;
+  /** How the WhatsApp greeting addresses the workshop. */
+  greetingName: string;
+  area: L10n;
+
+  /** Digits only, with country code — used for wa.me links. */
+  whatsapp: string;
+  phoneE164: string;
+  phoneDisplay: string;
+  email?: string;
+  address: { lines: string[]; postcode: string; city: string; state: string };
+
+  /** Sunday-first week; each day is [openMinute, closeMinute] in Malaysia time, or null when closed. */
+  hours: ([number, number] | null)[];
+
+  links: {
+    maps: string;
+    waze: string;
+    googleReviews: string;
+    website?: string;
+    facebook?: string;
+    tiktok?: string;
+    instagram?: string;
+  };
+
+  /** Public figures captured from the profiles on the date noted — refresh occasionally. */
+  proof: {
+    asOf: string;
+    googleRating: number;
+    googleReviews: number;
+    tiktokFollowers?: string;
+    facebookFollowers?: string;
+  };
+
+  logo: { src: string; width: number; height: number };
+  affiliationLogo?: { src: string; width: number; height: number; alt: string };
+  heroImage: { src: string; width: number; height: number };
+  gallery: { src: string; width: number; height: number; alt: L10n }[];
+
+  seo: { title: string; description: string };
+  hero: { title: L10n; sub: L10n };
+  stats: PartnerStat[];
+  symptoms: PartnerSymptom[];
+  servicesSub: L10n;
+  /** The featured service leads; the next one sits beside it; the rest follow as a row of cards. */
+  services: PartnerService[];
+  /** Extra offer under the services. `ask` and `field` build its WhatsApp message. */
+  banner?: { icon: 'home' | 'parts'; title: L10n; desc: L10n; cta: L10n; ask: L10n; field: L10n };
+  points: PartnerPoint[];
+  steps: { title: L10n; desc: L10n }[];
+  proofTitle: L10n;
+  faq: { q: L10n; a: L10n }[];
+  finalCta: { title: L10n; sub: L10n };
+}
+
+const IMG = '/partners/dseventeen';
+
+const dseventeen: Partner = {
+  slug: 'dseventeen',
+  name: 'Pakar Gearbox Tampoi',
+  legalName: 'DSeventeen Work Motor',
+  subtitle: 'DSeventeen Work Motor',
+  greetingName: 'DSeventeen',
+  area: { bm: 'Tampoi, Johor Bahru', en: 'Tampoi, Johor Bahru' },
+
+  whatsapp: '60197199503',
+  phoneE164: '+60197199503',
+  phoneDisplay: '019-719 9503',
+  email: 'd7teenworkjb@gmail.com',
+  address: {
+    lines: ['18, Jalan Mangga', 'Taman Tampoi'],
+    postcode: '81200',
+    city: 'Johor Bahru',
+    state: 'Johor',
+  },
+
+  // Mon–Sat 9:30am–6:30pm, closed Sunday (per the Google Business Profile).
+  hours: [null, [570, 1110], [570, 1110], [570, 1110], [570, 1110], [570, 1110], [570, 1110]],
+
+  links: {
+    maps: 'https://maps.google.com/?cid=11913601188609467370',
+    waze: 'https://waze.com/ul?q=DSEVENTEEN%20WORK%20MOTOR%20(PAKAR%20GEARBOX%20TAMPOI)&navigate=yes',
+    googleReviews: 'https://share.google/7YnwveTpgKShaN0Fc',
+    website: 'https://dseventeen.com/',
+    facebook: 'https://www.facebook.com/p/Pakar-Gearbox-Tampoi-61556944482962/',
+    tiktok: 'https://www.tiktok.com/@d7teenworkjb',
+    instagram: 'https://www.instagram.com/pakargearboxtampoi/',
+  },
+
+  proof: {
+    asOf: '2026-11-17',
+    googleRating: 4.8,
+    googleReviews: 63,
+    tiktokFollowers: '22K+',
+    facebookFollowers: '3K+',
+  },
+
+  logo: { src: `${IMG}/logo-d7teen.png`, width: 400, height: 314 },
+  affiliationLogo: {
+    src: `${IMG}/logo-jv-autolube.png`,
+    width: 539,
+    height: 251,
+    alt: 'JV Auto Lube',
+  },
+  heroImage: { src: `${IMG}/workshop-lifts.webp`, width: 1400, height: 1050 },
+  gallery: [
+    {
+      src: `${IMG}/team-gearbox.webp`,
+      width: 600,
+      height: 361,
+      alt: {
+        bm: 'Mekanik DSeventeen membaik pulih gearbox',
+        en: 'DSeventeen mechanics rebuilding a gearbox',
+      },
+    },
+    {
+      src: `${IMG}/workshop-floor.webp`,
+      width: 720,
+      height: 1280,
+      alt: { bm: 'Ruang kerja bengkel di Tampoi', en: 'The workshop floor in Tampoi' },
+    },
+    {
+      src: `${IMG}/svc-torque.webp`,
+      width: 680,
+      height: 453,
+      alt: { bm: 'Torque converter sedang diperiksa', en: 'A torque converter being inspected' },
+    },
+  ],
+
+  seo: {
+    title: 'Pakar Gearbox Tampoi (DSeventeen Work Motor) — Rakan Bengkel BYKI, Johor Bahru',
+    description:
+      'Baik pulih gearbox, enjin & aircond di Tampoi, Johor Bahru. Pemeriksaan percuma, sebut harga jelas, waranti overhaul hingga 6 bulan. Gearbox, engine & air-cond repair — BYKI Workshop Partner.',
+  },
+
+  hero: {
+    title: {
+      bm: 'Gearbox bermasalah? Jumpa pakar gearbox di Tampoi.',
+      en: 'Gearbox trouble? See the gearbox specialists in Tampoi.',
+    },
+    sub: {
+      bm: 'DSeventeen Work Motor membaiki gearbox, enjin dan aircond, serta servis berkala. Pemeriksaan percuma, dan sebut harga jelas sebelum kerja bermula.',
+      en: 'DSeventeen Work Motor repairs gearboxes, engines and air-cond, and handles regular servicing. Inspection is free, and you get a clear quote before any work starts.',
+    },
+  },
+
+  stats: [
+    {
+      value: { bm: 'RM0', en: 'RM0' },
+      label: { bm: 'Pemeriksaan & diagnosis awal', en: 'Initial inspection & diagnosis' },
+    },
+    {
+      value: { bm: '6 bulan', en: '6 months' },
+      label: { bm: 'Waranti full overhaul hingga', en: 'Full overhaul warranty up to' },
+    },
+    {
+      value: { bm: '2019', en: '2019' },
+      label: { bm: 'Beroperasi di Johor sejak', en: 'Serving Johor since' },
+    },
+  ],
+
+  symptoms: [
+    { id: 'jerk', group: 'gearbox', label: { bm: 'Gear tersentak (jerking)', en: 'Gear jerks when shifting' } },
+    { id: 'slip', group: 'gearbox', label: { bm: 'Lambat masuk gear / slip', en: 'Slow to engage or slipping' } },
+    { id: 'reverse', group: 'gearbox', label: { bm: 'Reverse tak masuk', en: "Reverse won't engage" } },
+    { id: 'leak', group: 'gearbox', label: { bm: 'Minyak gearbox bocor', en: 'Gearbox oil leaking' } },
+    { id: 'ac-warm', group: 'aircond', label: { bm: 'Aircond tak sejuk', en: 'Air-cond not cold' } },
+    { id: 'ac-noise', group: 'aircond', label: { bm: 'Aircond berbunyi / berbau', en: 'Air-cond noisy or smelly' } },
+    { id: 'cel', group: 'engine', label: { bm: 'Lampu check engine menyala', en: 'Check-engine light is on' } },
+    { id: 'heat', group: 'engine', label: { bm: 'Enjin cepat panas / bergegar', en: 'Engine overheating or shaking' } },
+    { id: 'knock', group: 'general', label: { bm: 'Bunyi dari suspension / brek', en: 'Noise from suspension or brakes' } },
+    { id: 'service', group: 'general', label: { bm: 'Dah sampai masa servis', en: 'Due for a service' } },
+  ],
+
+  servicesSub: {
+    bm: 'Satu bengkel untuk gearbox, enjin, aircond dan servis harian.',
+    en: 'One workshop for gearbox, engine, air-cond and everyday servicing.',
+  },
+
+  services: [
+    {
+      id: 'gearbox',
+      group: 'gearbox',
+      featured: true,
+      title: { bm: 'Gearbox & Transmisi', en: 'Gearbox & Transmission' },
+      blurb: {
+        bm: 'Kepakaran utama bengkel ini. Panel Pakar Gearbox berdaftar JV Auto Lube untuk Johor — automatik, CVT dan DSG.',
+        en: "The workshop's speciality. A registered JV Auto Lube gearbox panel for Johor, covering automatic, CVT and DSG.",
+      },
+      tags: ['ATF', 'CVT', 'DSG'],
+      items: [
+        { bm: 'Diagnostik & ujian jalan', en: 'Diagnostics & road test' },
+        { bm: 'Overhaul gearbox', en: 'Gearbox overhaul' },
+        { bm: 'Flushing minyak ATF, CVT & DSG', en: 'ATF, CVT & DSG fluid flushing' },
+        { bm: 'Baik pulih valve body & solenoid', en: 'Valve body & solenoid repair' },
+        { bm: 'Mechatronics (DSG & CVT)', en: 'Mechatronics (DSG & CVT)' },
+        { bm: 'Reset ECU & TCU', en: 'ECU & TCU reset' },
+      ],
+      image: { src: `${IMG}/cutout-gearbox.webp`, width: 900, height: 484, kind: 'cutout' },
+      cta: { bm: 'Tanya harga gearbox', en: 'Ask for a gearbox quote' },
+    },
+    {
+      id: 'aircond',
+      group: 'aircond',
+      title: { bm: 'Aircond', en: 'Air-cond' },
+      blurb: {
+        bm: 'Tak sejuk, berbunyi atau berbau? Punca dikenal pasti dahulu sebelum apa-apa ditukar.',
+        en: 'Not cold, noisy or smelly? The cause is found first, before anything gets replaced.',
+      },
+      items: [
+        { bm: 'Servis kompresor', en: 'Compressor service' },
+        { bm: 'Isi gas & semak kebocoran', en: 'Gas top-up & leak check' },
+        { bm: 'Cooling coil & filter dryer', en: 'Cooling coil & filter dryer' },
+        { bm: 'Expansion valve', en: 'Expansion valve' },
+        { bm: 'Kipas kondenser & blower', en: 'Condenser fan & blower' },
+      ],
+      image: { src: `${IMG}/cutout-aircond.webp`, width: 900, height: 533, kind: 'cutout' },
+      cta: { bm: 'Tanya harga aircond', en: 'Ask for an air-cond quote' },
+    },
+    {
+      id: 'engine',
+      group: 'engine',
+      title: { bm: 'Enjin', en: 'Engine' },
+      blurb: {
+        bm: 'Lampu check engine, enjin bergegar atau cepat panas — diperiksa dengan alat imbasan OBD.',
+        en: 'Check-engine light, rough running or overheating — checked with OBD scan tools.',
+      },
+      items: [
+        { bm: 'Diagnosis lampu check engine', en: 'Check-engine light diagnosis' },
+        { bm: 'Servis & baik pulih enjin', en: 'Engine service & repair' },
+        { bm: 'Kerja overhaul', en: 'Overhaul work' },
+      ],
+      image: { src: `${IMG}/workshop-civic.webp`, width: 900, height: 1200, kind: 'photo' },
+      cta: { bm: 'Tanya tentang enjin', en: 'Ask about engine work' },
+    },
+    {
+      id: 'servicing',
+      group: 'general',
+      title: { bm: 'Servis Berkala', en: 'Regular Servicing' },
+      blurb: {
+        bm: 'Servis harian mengikut jadual supaya kereta kekal sihat.',
+        en: 'Routine servicing on schedule so the car stays healthy.',
+      },
+      items: [
+        { bm: 'Minyak hitam & oil filter', en: 'Engine oil & oil filter' },
+        { bm: 'Auto filter', en: 'Transmission (auto) filter' },
+        { bm: 'Pelincir JV Auto Lube', en: 'JV Auto Lube lubricants' },
+      ],
+      image: { src: `${IMG}/svc-oil.webp`, width: 900, height: 600, kind: 'photo' },
+      cta: { bm: 'Tempah servis', en: 'Book a service' },
+    },
+    {
+      id: 'undercarriage',
+      group: 'general',
+      title: { bm: 'Suspension, Brek & Driveshaft', en: 'Suspension, Brakes & Driveshaft' },
+      blurb: {
+        bm: 'Bunyi ketuk, stereng bergegar atau brek kurang makan? Bahagian bawah kereta diperiksa sekali.',
+        en: 'Knocking sounds, a shaky steering wheel or weak brakes? The undercarriage gets checked too.',
+      },
+      items: [
+        { bm: 'Suspension', en: 'Suspension' },
+        { bm: 'Brek', en: 'Brakes' },
+        { bm: 'Driveshaft', en: 'Driveshaft' },
+      ],
+      image: { src: `${IMG}/workshop-bays.webp`, width: 1400, height: 1050, kind: 'photo' },
+      cta: { bm: 'Tanya tentang kerja ini', en: 'Ask about this work' },
+    },
+  ],
+
+  banner: {
+    icon: 'home',
+    ask: {
+      bm: 'Saya nak tanya tentang servis rumah ke rumah.',
+      en: "I'd like to ask about door-to-door service.",
+    },
+    field: { bm: 'Kawasan: ', en: 'Area: ' },
+    title: { bm: 'Tak sempat ke bengkel?', en: "Can't make it to the workshop?" },
+    desc: {
+      bm: 'DSeventeen ada servis rumah ke rumah. WhatsApp untuk semak kawasan dan jenis kerja yang boleh dibuat.',
+      en: 'DSeventeen offers door-to-door service. WhatsApp them to check the areas covered and what can be done on site.',
+    },
+    cta: { bm: 'Tanya servis ke rumah', en: 'Ask about door-to-door' },
+  },
+
+  points: [
+    {
+      icon: 'free',
+      title: { bm: 'Pemeriksaan percuma', en: 'Free inspection' },
+      desc: {
+        bm: 'Diagnosis awal tanpa caj untuk kenal pasti masalah.',
+        en: 'Initial diagnosis at no charge to pin down the problem.',
+      },
+    },
+    {
+      icon: 'scan',
+      title: { bm: 'Diagnosis tepat', en: 'Accurate diagnosis' },
+      desc: {
+        bm: 'Alat imbasan OBD digunakan, bukan teka-teki.',
+        en: 'OBD scan tools are used, not guesswork.',
+      },
+    },
+    {
+      icon: 'quote',
+      title: { bm: 'Sebut harga jelas', en: 'Clear quotes' },
+      desc: {
+        bm: 'Harga dipersetujui dahulu. Tiada caj tersembunyi.',
+        en: 'The price is agreed first. No hidden charges.',
+      },
+    },
+    {
+      icon: 'warranty',
+      title: { bm: 'Waranti hingga 6 bulan', en: "Up to 6 months' warranty" },
+      desc: {
+        bm: 'Jaminan servis untuk kerja full overhaul.',
+        en: 'Service warranty on full overhaul jobs.',
+      },
+    },
+    {
+      icon: 'team',
+      title: { bm: 'Mekanik berpengalaman', en: 'Experienced mechanics' },
+      desc: {
+        bm: 'Pasukan pakar gearbox yang beroperasi sejak 2019.',
+        en: 'A specialist gearbox team operating since 2019.',
+      },
+    },
+    {
+      icon: 'panel',
+      title: { bm: 'Panel JV Auto Lube', en: 'JV Auto Lube panel' },
+      desc: {
+        bm: 'Kerja mengikut piawaian panel Pakar Gearbox JV Auto Lube.',
+        en: 'Work follows the JV Auto Lube gearbox panel standards.',
+      },
+    },
+  ],
+
+  steps: [
+    {
+      title: { bm: 'WhatsApp bengkel', en: 'Message the workshop' },
+      desc: {
+        bm: 'Ceritakan masalah dan model kereta anda.',
+        en: 'Tell them the problem and your car model.',
+      },
+    },
+    {
+      title: { bm: 'Pemeriksaan percuma', en: 'Free inspection' },
+      desc: {
+        bm: 'Bawa kereta untuk diagnosis awal tanpa caj.',
+        en: 'Bring the car in for a no-charge initial diagnosis.',
+      },
+    },
+    {
+      title: { bm: 'Sebut harga jelas', en: 'Clear quote' },
+      desc: {
+        bm: 'Anda setuju dengan harga sebelum kerja bermula.',
+        en: 'You agree on the price before work starts.',
+      },
+    },
+    {
+      title: { bm: 'Baiki & waranti', en: 'Repair & warranty' },
+      desc: {
+        bm: 'Kereta dibaiki. Full overhaul ada waranti hingga 6 bulan.',
+        en: "The car is fixed. Full overhauls carry up to 6 months' warranty.",
+      },
+    },
+  ],
+
+  proofTitle: { bm: 'Dipercayai pemilik kereta di Johor', en: 'Trusted by car owners in Johor' },
+
+  finalCta: {
+    title: { bm: 'Dapatkan diagnosis percuma hari ini', en: 'Get your free diagnosis today' },
+    sub: {
+      bm: 'WhatsApp bengkel sekarang. Beritahu model kereta dan masalahnya, dan tempah slot pemeriksaan.',
+      en: 'WhatsApp the workshop now. Tell them your car model and the problem, and book an inspection slot.',
+    },
+  },
+
+  faq: [
+    {
+      q: { bm: 'Betul ke pemeriksaan percuma?', en: 'Is the inspection really free?' },
+      a: {
+        bm: 'Ya. Diagnosis awal untuk kenal pasti masalah adalah tanpa caj. Sebut harga pembaikan dibincang dan dipersetujui bersama sebelum kerja bermula.',
+        en: 'Yes. The initial diagnosis to identify the problem is free of charge. The repair quote is discussed and agreed with you before any work starts.',
+      },
+    },
+    {
+      q: { bm: 'Gearbox jenis apa yang dibaiki?', en: 'Which gearbox types do they repair?' },
+      a: {
+        bm: 'Automatik (ATF), CVT dan DSG — termasuk overhaul, valve body, solenoid dan mechatronics.',
+        en: 'Automatic (ATF), CVT and DSG — including overhauls, valve body, solenoid and mechatronics work.',
+      },
+    },
+    {
+      q: { bm: 'Ada waranti?', en: 'Is there a warranty?' },
+      a: {
+        bm: 'Ada. Kerja full overhaul dilindungi jaminan servis sehingga 6 bulan. Tanya bengkel untuk terma penuh.',
+        en: 'Yes. Full overhaul jobs carry a service warranty of up to 6 months. Ask the workshop for the full terms.',
+      },
+    },
+    {
+      q: { bm: 'Perlu buat temujanji?', en: 'Do I need an appointment?' },
+      a: {
+        bm: 'Digalakkan. WhatsApp bengkel untuk tempah slot pemeriksaan supaya kereta anda dapat dilihat terus apabila sampai.',
+        en: 'It is recommended. WhatsApp the workshop to book an inspection slot so your car can be seen as soon as you arrive.',
+      },
+    },
+    {
+      q: { bm: 'Boleh bengkel datang ke rumah?', en: 'Can the workshop come to me?' },
+      a: {
+        bm: 'Servis rumah ke rumah ada ditawarkan. WhatsApp bengkel untuk semak kawasan dan jenis kerja yang boleh dibuat.',
+        en: 'Door-to-door service is offered. WhatsApp the workshop to check the areas covered and what work can be done on site.',
+      },
+    },
+    {
+      q: { bm: 'Apa kaitan BYKI dengan bengkel ini?', en: 'How is BYKI connected to this workshop?' },
+      a: {
+        bm: 'BYKI ialah aplikasi diagnostik kereta. DSeventeen Work Motor ialah rakan bengkel BYKI di Johor Bahru — anda boleh scan kereta dengan BYKI, kemudian bawa laporan ke bengkel. Semua kerja, harga dan waranti adalah antara anda dan bengkel.',
+        en: "BYKI is a car diagnostics app. DSeventeen Work Motor is BYKI's workshop partner in Johor Bahru — you can scan your car with BYKI, then take the report to the workshop. All work, pricing and warranty are between you and the workshop.",
+      },
+    },
+  ],
+};
+
+const MNA_IMG = '/partners/mna-dynamic-torque';
+
+const mna: Partner = {
+  slug: 'mna-dynamic-torque',
+  name: 'MNA Dynamic Torque',
+  legalName: 'MNA Dynamic Torque – Pro Transmission',
+  subtitle: 'Pro Transmission · CVT & Auto',
+  greetingName: 'MNA Dynamic Torque',
+  area: { bm: 'Alam Impian, Shah Alam', en: 'Alam Impian, Shah Alam' },
+
+  whatsapp: '601111741442',
+  phoneE164: '+601111741442',
+  phoneDisplay: '011-1174 1442',
+  address: {
+    lines: ['No 13, Jalan Tok Janggut H35/H', 'Alam Impian'],
+    postcode: '40470',
+    city: 'Shah Alam',
+    state: 'Selangor',
+  },
+
+  // Mon–Sat 10am–6pm, closed Sunday (per the Google Business Profile).
+  hours: [null, [600, 1080], [600, 1080], [600, 1080], [600, 1080], [600, 1080], [600, 1080]],
+
+  // No `website` link: mnadynamictorque.my still showed placeholder phone and
+  // address details when this page was written (2026-11-17).
+  links: {
+    maps: 'https://maps.google.com/?cid=10768171555483465123',
+    waze: 'https://waze.com/ul?ll=3.0148089,101.4992069&navigate=yes',
+    googleReviews: 'https://share.google/fXBkncYjz9Gkwlqw9',
+    facebook: 'https://www.facebook.com/share/18cpCsJAQT/',
+    instagram: 'https://www.instagram.com/mnadynamictorque.my/',
+  },
+
+  proof: {
+    asOf: '2026-11-17',
+    googleRating: 5.0,
+    googleReviews: 9,
+  },
+
+  logo: { src: `${MNA_IMG}/logo-mna.png`, width: 520, height: 255 },
+  heroImage: { src: `${MNA_IMG}/workshop-exterior.webp`, width: 1280, height: 960 },
+  gallery: [
+    {
+      src: `${MNA_IMG}/bench.webp`,
+      width: 1280,
+      height: 960,
+      alt: {
+        bm: 'Komponen gearbox disusun di meja kerja MNA',
+        en: 'Gearbox components laid out on the MNA workbench',
+      },
+    },
+    {
+      src: `${MNA_IMG}/overhaul-kit.webp`,
+      width: 900,
+      height: 1200,
+      alt: { bm: 'Overhaul kit dan alat ganti MNA', en: 'MNA overhaul kit and parts' },
+    },
+    {
+      src: `${MNA_IMG}/pulleys.webp`,
+      width: 900,
+      height: 1200,
+      alt: { bm: 'Barisan pulley CVT di bengkel', en: 'A row of CVT pulleys in the workshop' },
+    },
+  ],
+
+  seo: {
+    title: 'MNA Dynamic Torque — Pakar Gearbox CVT & Automatik, Shah Alam | Rakan Bengkel BYKI',
+    description:
+      'Pakar gearbox CVT, automatik & DSG di Alam Impian, Shah Alam. Diagnostik dahulu, sebut harga bertulis, waranti kerja 6 bulan. CVT & automatic transmission specialist — BYKI Workshop Partner.',
+  },
+
+  hero: {
+    title: {
+      bm: 'CVT sentap, slip atau delay? Jumpa pakar transmisi di Shah Alam.',
+      en: 'CVT jerking, slip or delay? See the transmission specialists in Shah Alam.',
+    },
+    sub: {
+      bm: 'MNA Dynamic Torque hanya membaiki gearbox — CVT, automatik dan DSG. Kerosakan dibuktikan dengan diagnostik dahulu, sebut harga bertulis sebelum kerja bermula, dan waranti kerja 6 bulan.',
+      en: 'MNA Dynamic Torque works on gearboxes only — CVT, automatic and DSG. The fault is proven with diagnostics first, you get a written quote before work starts, and repairs carry a 6-month workmanship warranty.',
+    },
+  },
+
+  stats: [
+    {
+      value: { bm: '6 bulan', en: '6 months' },
+      label: { bm: 'Waranti kerja pembaikan & rebuild', en: 'Workmanship warranty on repairs & rebuilds' },
+    },
+    {
+      value: { bm: 'Percuma', en: 'Free' },
+      label: { bm: 'Perundingan & sebut harga', en: 'Consultation & quote' },
+    },
+    {
+      value: { bm: 'CVT & Auto', en: 'CVT & Auto' },
+      label: { bm: 'Kepakaran', en: 'Specialises in' },
+    },
+  ],
+
+  symptoms: [
+    { id: 'sentap-start', group: 'gearbox', label: { bm: 'Sentap masa mula bergerak', en: 'Jerking when pulling away' } },
+    { id: 'slip', group: 'gearbox', label: { bm: 'RPM naik, kereta tak laju (slip)', en: 'RPM rises but the car is slow (slip)' } },
+    { id: 'sentap-shift', group: 'gearbox', label: { bm: 'Sentap masa tukar gear', en: 'Jerking on gear changes' } },
+    { id: 'delay-engage', group: 'gearbox', label: { bm: 'Delay masuk D atau R', en: 'Delay engaging D or R' } },
+    { id: 'delay-throttle', group: 'gearbox', label: { bm: 'Delay bila tekan minyak', en: 'Delay when you accelerate' } },
+    { id: 'light', group: 'warning', label: { bm: 'Lampu amaran / D berkelip', en: 'Warning light or flashing D' } },
+    { id: 'whine', group: 'gearbox', label: { bm: 'Bunyi berdengung dari gearbox', en: 'Whining noise from the gearbox' } },
+    { id: 'leak', group: 'gearbox', label: { bm: 'Minyak gearbox bocor', en: 'Gearbox oil leaking' } },
+    { id: 'fluid', group: 'general', label: { bm: 'Masa tukar minyak gearbox', en: 'Gearbox fluid change is due' } },
+    { id: 'buying', group: 'general', label: { bm: 'Nak beli kereta CVT terpakai', en: 'Buying a used CVT car' } },
+  ],
+
+  servicesSub: {
+    bm: 'Bengkel yang hanya membaiki transmisi — CVT, automatik dan DSG.',
+    en: 'A workshop that only works on transmissions — CVT, automatic and DSG.',
+  },
+
+  services: [
+    {
+      id: 'cvt',
+      group: 'gearbox',
+      featured: true,
+      title: { bm: 'Baiki & Rebuild CVT', en: 'CVT Repair & Rebuild' },
+      blurb: {
+        bm: 'Kepakaran utama bengkel ini. Punca sentap, slip dan delay dikesan dahulu, kemudian gearbox dibaiki atau dibina semula mengikut spesifikasi.',
+        en: "The workshop's speciality. The cause of jerking, slip and delay is traced first, then the gearbox is repaired or fully rebuilt to spec.",
+      },
+      tags: ['Proton', 'Perodua', 'Honda', 'Nissan', 'Toyota', 'Mitsubishi'],
+      items: [
+        { bm: 'Belt / rantai CVT', en: 'CVT belt / chain' },
+        { bm: 'Pulley & variator', en: 'Pulleys & variator' },
+        { bm: 'Valve body & solenoid', en: 'Valve body & solenoids' },
+        { bm: 'Bearing', en: 'Bearings' },
+        { bm: 'Baiki sentap & slip', en: 'Jerking & slip fixes' },
+        { bm: 'Alat ganti tulen & gred OEM', en: 'Genuine & OEM-grade parts' },
+      ],
+      image: { src: `${MNA_IMG}/rebuild-clutch.webp`, width: 960, height: 1280, kind: 'photo' },
+      cta: { bm: 'Tanya harga baiki CVT', en: 'Ask for a CVT repair quote' },
+    },
+    {
+      id: 'diagnostic',
+      group: 'warning',
+      icon: 'scan',
+      title: { bm: 'Diagnostik 3D & Imbasan Kod', en: '3D Diagnostic & Code Scan' },
+      blurb: {
+        bm: 'Data langsung dibaca dan dipetakan pada model 3D gearbox, supaya anda nampak sendiri apa yang berlaku di dalam.',
+        en: 'Live data is read and mapped onto a 3D model of the gearbox, so you can see for yourself what is happening inside.',
+      },
+      items: [
+        { bm: 'Tekanan, nisbah & belt slip', en: 'Pressures, ratio & belt slip' },
+        { bm: 'Arus solenoid', en: 'Solenoid currents' },
+        { bm: 'Bacaan kod kerosakan (DTC)', en: 'Fault-code (DTC) read' },
+        { bm: 'Punca sentap & delay dikesan', en: 'Cause of jerking & delay traced' },
+        { bm: 'Penerangan dalam bahasa mudah', en: 'Plain-language explanation' },
+      ],
+      cta: { bm: 'Tempah diagnostik', en: 'Book a diagnostic' },
+    },
+    {
+      id: 'automatic',
+      group: 'gearbox',
+      title: { bm: 'Automatik, DSG & DCT', en: 'Automatic, DSG & DCT' },
+      blurb: {
+        bm: 'Bukan CVT sahaja. Transmisi automatik konvensional, dwi-klac dan kereta continental turut dibaiki.',
+        en: 'Not just CVTs. Conventional automatics, dual-clutch units and continental cars are repaired too.',
+      },
+      items: [
+        { bm: 'Overhaul transmisi automatik', en: 'Automatic transmission overhaul' },
+        { bm: 'DSG / DCT', en: 'DSG / DCT' },
+        { bm: 'Automatik continental', en: 'Continental automatics' },
+      ],
+      image: { src: `${MNA_IMG}/gearset.webp`, width: 1280, height: 960, kind: 'photo' },
+      cta: { bm: 'Tanya harga overhaul', en: 'Ask for an overhaul quote' },
+    },
+    {
+      id: 'fluid',
+      group: 'general',
+      title: { bm: 'Servis Minyak CVT & ATF', en: 'CVT & ATF Fluid Service' },
+      blurb: {
+        bm: 'Minyak yang betul, ditukar pada masanya, dengan flush penuh. Inilah penjagaan paling penting untuk hayat CVT.',
+        en: 'The correct fluid, changed on time, with a full flush. Nothing does more to keep a CVT alive.',
+      },
+      items: [
+        { bm: 'Tukar minyak CVT', en: 'CVT fluid change' },
+        { bm: 'Tukar minyak ATF', en: 'ATF change' },
+        { bm: 'Flush penuh', en: 'Full flush' },
+      ],
+      image: { src: `${MNA_IMG}/teardown.webp`, width: 1072, height: 800, kind: 'photo' },
+      cta: { bm: 'Tempah servis minyak', en: 'Book a fluid service' },
+    },
+    {
+      id: 'prepurchase',
+      group: 'general',
+      title: { bm: 'Pemeriksaan Sebelum Beli', en: 'Pre-Purchase Inspection' },
+      blurb: {
+        bm: 'Nak beli kereta CVT terpakai? Gearbox diperiksa dahulu supaya anda tidak mewarisi kos pembaikan yang besar.',
+        en: "Buying a used CVT car? The gearbox is inspected first so you don't inherit a big repair bill.",
+      },
+      items: [
+        { bm: 'Imbasan kod & data langsung', en: 'Code scan & live data' },
+        { bm: 'Ujian jalan', en: 'Road test' },
+        { bm: 'Penemuan bertulis', en: 'Written findings' },
+      ],
+      image: { src: `${MNA_IMG}/mechanic.webp`, width: 1080, height: 720, kind: 'photo' },
+      cta: { bm: 'Tempah pemeriksaan', en: 'Book an inspection' },
+    },
+  ],
+
+  banner: {
+    icon: 'parts',
+    ask: { bm: 'Saya nak tanya tentang alat ganti gearbox.', en: "I'd like to ask about gearbox parts." },
+    field: { bm: 'Alat ganti / kod gearbox: ', en: 'Part / gearbox code: ' },
+    title: { bm: 'Perlukan alat ganti gearbox sahaja?', en: 'Just need gearbox parts?' },
+    desc: {
+      bm: 'MNA membekalkan alat ganti CVT dan automatik — belt, variator, valve body, torque converter, overhaul kit dan minyak — secara runcit dan borong, dihantar ke seluruh Malaysia.',
+      en: 'MNA supplies CVT and automatic transmission parts — belts, variators, valve bodies, torque converters, overhaul kits and fluids — retail and wholesale, shipped Malaysia-wide.',
+    },
+    cta: { bm: 'Tanya alat ganti', en: 'Ask about parts' },
+  },
+
+  points: [
+    {
+      icon: 'scan',
+      title: { bm: 'Diagnostik dahulu', en: 'Diagnostics first' },
+      desc: {
+        bm: 'Kerosakan dibuktikan dengan data sebelum harga diberi. Tiada tukar alat ganti secara teka-teki.',
+        en: 'The fault is proven with data before a price is given. No blind part-swapping.',
+      },
+    },
+    {
+      icon: 'quote',
+      title: { bm: 'Sebut harga bertulis', en: 'Written quotes' },
+      desc: {
+        bm: 'Harga jelas sebelum kerja bermula. Tiada kejutan semasa ambil kereta.',
+        en: 'A clear price before work starts. No surprises when you collect the car.',
+      },
+    },
+    {
+      icon: 'warranty',
+      title: { bm: 'Waranti kerja 6 bulan', en: '6-month workmanship warranty' },
+      desc: {
+        bm: 'Untuk setiap pembaikan dan rebuild.',
+        en: 'On every repair and rebuild.',
+      },
+    },
+    {
+      icon: 'parts',
+      title: { bm: 'Alat ganti tulen & gred OEM', en: 'Genuine & OEM-grade parts' },
+      desc: {
+        bm: 'Alat ganti mempunyai waranti pengeluar masing-masing.',
+        en: 'Parts carry their own manufacturer warranty.',
+      },
+    },
+    {
+      icon: 'team',
+      title: { bm: 'Hanya transmisi', en: 'Transmissions only' },
+      desc: {
+        bm: 'Gearbox ialah fokus harian bengkel ini: CVT, automatik dan DSG.',
+        en: "Gearboxes are this workshop's daily focus: CVT, automatic and DSG.",
+      },
+    },
+    {
+      icon: 'return',
+      title: { bm: 'Alat ganti lama dipulangkan', en: 'Old parts returned' },
+      desc: {
+        bm: 'Atas permintaan, supaya anda nampak apa yang ditukar.',
+        en: 'On request, so you can see what was replaced.',
+      },
+    },
+  ],
+
+  steps: [
+    {
+      title: { bm: 'WhatsApp bengkel', en: 'Message the workshop' },
+      desc: {
+        bm: 'Beritahu model kereta dan simptomnya. Anda dinasihatkan sama ada ia perlu diperiksa.',
+        en: "Tell them the car and the symptom. They'll advise whether it needs a check.",
+      },
+    },
+    {
+      title: { bm: 'Diagnostik', en: 'Diagnostic' },
+      desc: {
+        bm: 'Kereta diimbas dan punca sebenar dikenal pasti.',
+        en: 'The car is scanned and the real fault pinpointed.',
+      },
+    },
+    {
+      title: { bm: 'Sebut harga jelas', en: 'Clear quote' },
+      desc: {
+        bm: 'Sebut harga terperinci, diterangkan dalam bahasa mudah.',
+        en: 'An itemised quote, explained in plain language.',
+      },
+    },
+    {
+      title: { bm: 'Baiki & waranti', en: 'Repair & warranty' },
+      desc: {
+        bm: 'Dibaiki, diuji jalan dan dipulangkan dengan waranti kerja 6 bulan.',
+        en: 'Fixed, test-driven and handed back with a 6-month workmanship warranty.',
+      },
+    },
+  ],
+
+  proofTitle: { bm: 'Dinilai 5 bintang oleh pelanggan', en: 'Rated 5 stars by customers' },
+
+  finalCta: {
+    title: { bm: 'Tempah diagnostik gearbox anda', en: 'Book your gearbox diagnostic' },
+    sub: {
+      bm: 'WhatsApp bengkel sekarang. Beritahu model kereta dan simptomnya, dan mereka akan nasihatkan langkah seterusnya.',
+      en: "WhatsApp the workshop now. Tell them your car model and the symptom, and they'll advise the next step.",
+    },
+  },
+
+  faq: [
+    {
+      q: { bm: 'Berapa kos diagnostik?', en: 'How much does a diagnostic cost?' },
+      a: {
+        bm: 'WhatsApp bengkel dengan model kereta dan simptom untuk harga semasa. Yuran diagnostik biasanya ditolak daripada kos pembaikan jika anda teruskan.',
+        en: 'WhatsApp the workshop with your car model and symptoms for current pricing. The diagnostic fee is typically credited toward the repair if you go ahead.',
+      },
+    },
+    {
+      q: { bm: 'Jenama kereta apa yang dibaiki?', en: 'Which car brands do they handle?' },
+      a: {
+        bm: 'Kebanyakan transmisi CVT dan automatik — Proton, Perodua, Honda, Nissan, Toyota, Mitsubishi dan lain-lain. Hantar model kereta anda untuk pengesahan.',
+        en: 'Most CVT and automatic transmissions — Proton, Perodua, Honda, Nissan, Toyota, Mitsubishi and more. Send your car model and they will confirm.',
+      },
+    },
+    {
+      q: { bm: 'Gear kereta saya delay. Boleh bantu?', en: 'My gears are slow to engage. Can they help?' },
+      a: {
+        bm: 'Boleh. Delay boleh berpunca daripada beberapa perkara, jadi kereta diimbas dahulu. Kod dibaca dan diterangkan, dan anda diberitahu apa yang perlu dibuat untuk menyelesaikannya.',
+        en: 'Yes. A delay can have several causes, so the car is scanned first. The codes are read and explained, and you are told what it will take to fix it properly.',
+      },
+    },
+    {
+      q: { bm: 'Ada waranti?', en: 'Is there a warranty?' },
+      a: {
+        bm: 'Ada. Setiap pembaikan dan rebuild disertakan waranti kerja 6 bulan. Alat ganti mempunyai waranti pengeluar masing-masing. Tanya bengkel untuk terma penuh.',
+        en: 'Yes. Every repair and rebuild comes with a 6-month workmanship warranty, and parts carry their own manufacturer warranty. Ask the workshop for the full terms.',
+      },
+    },
+    {
+      q: { bm: 'Boleh beli alat ganti sahaja?', en: 'Can I buy parts only?' },
+      a: {
+        bm: 'Boleh. MNA membekalkan alat ganti CVT dan automatik secara runcit dan borong, dengan penghantaran ke seluruh Malaysia.',
+        en: 'Yes. MNA supplies CVT and automatic transmission parts, retail and wholesale, with shipping across Malaysia.',
+      },
+    },
+    {
+      q: { bm: 'Apa kaitan BYKI dengan bengkel ini?', en: 'How is BYKI connected to this workshop?' },
+      a: {
+        bm: 'BYKI ialah aplikasi diagnostik kereta. MNA Dynamic Torque ialah rakan bengkel BYKI di Shah Alam — anda boleh scan kereta dengan BYKI, kemudian bawa laporan ke bengkel. Semua kerja, harga dan waranti adalah antara anda dan bengkel.',
+        en: "BYKI is a car diagnostics app. MNA Dynamic Torque is BYKI's workshop partner in Shah Alam — you can scan your car with BYKI, then take the report to the workshop. All work, pricing and warranty are between you and the workshop.",
+      },
+    },
+  ],
+};
+
+export const PARTNERS: Partner[] = [dseventeen, mna];
+
+export function getPartner(slug: string): Partner | null {
+  return PARTNERS.find((p) => p.slug === slug) ?? null;
+}
+
+export function waLink(number: string, text: string): string {
+  return `https://wa.me/${number}?text=${encodeURIComponent(text)}`;
+}
