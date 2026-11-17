@@ -1,16 +1,29 @@
 import type { NextConfig } from "next";
 import { withBotId } from "botid/next/config";
 
+// Google Tag Manager and the Google Analytics 4 tag inside the GTM container.
+// A tag for another platform (Meta Pixel, TikTok, Google Ads) added in GTM
+// needs its own hosts listed here, or the browser will block it.
+const GTM = "https://*.googletagmanager.com";
+const GA4 = "https://*.google-analytics.com https://*.analytics.google.com";
+
+const csp = [
+  "default-src 'self'",
+  `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${GTM}`,
+  "style-src 'self' 'unsafe-inline'",
+  `connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com ${GTM} ${GA4}`,
+  "font-src 'self' https://fonts.gstatic.com",
+  `img-src 'self' data: https://*.googleusercontent.com ${GTM} ${GA4}`,
+  `frame-src 'self' https://*.firebaseapp.com ${GTM}`,
+].join("; ");
+
 // Security headers, carried over from the Firebase Hosting config.
 const securityHeaders = [
   { key: "X-Frame-Options", value: "DENY" },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   { key: "Permissions-Policy", value: "bluetooth=(self)" },
-  {
-    key: "Content-Security-Policy",
-    value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://*.googleusercontent.com; frame-src 'self' https://*.firebaseapp.com",
-  },
+  { key: "Content-Security-Policy", value: csp },
 ];
 
 const nextConfig: NextConfig = {
