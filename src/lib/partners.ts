@@ -22,14 +22,11 @@ export interface PartnerService {
   items: L10n[];
   tags?: string[];
   image?: { src: string; width: number; height: number; kind: 'cutout' | 'photo' };
-  /** Shown in place of a picture when the service has no image. */
-  icon?: PartnerPoint['icon'];
   featured?: boolean;
   cta: L10n;
 }
 
 export interface PartnerPoint {
-  icon: 'free' | 'scan' | 'quote' | 'warranty' | 'team' | 'panel' | 'parts' | 'return' | 'alert';
   title: L10n;
   desc: L10n;
 }
@@ -64,15 +61,13 @@ export interface PartnerCampaign {
   /** Opening line of every WhatsApp message while the campaign runs. */
   waIntro: L10n;
   explainer: {
-    pill: L10n;
     title: L10n;
     sub: L10n;
-    benefits: { icon: PartnerPoint['icon']; title: L10n; desc: L10n }[];
+    benefits: { title: L10n; desc: L10n }[];
     link: L10n;
   };
-  photos: { pill: L10n; title: L10n; sub: L10n; items: PartnerImage[] };
+  photos: { title: L10n; sub: L10n; items: PartnerImage[] };
   claim: {
-    pill: L10n;
     title: L10n;
     steps: { title: L10n; desc: L10n }[];
     form: {
@@ -147,7 +142,7 @@ export interface Partner {
   /** The featured service leads; the next one sits beside it; the rest follow as a row of cards. */
   services: PartnerService[];
   /** Extra offer under the services. `ask` and `field` build its WhatsApp message. */
-  banner?: { icon: 'home' | 'parts'; title: L10n; desc: L10n; cta: L10n; ask: L10n; field: L10n };
+  banner?: { id: string; title: L10n; desc: L10n; cta: L10n; ask: L10n; field: L10n };
   points: PartnerPoint[];
   steps: { title: L10n; desc: L10n }[];
   proofTitle: L10n;
@@ -273,39 +268,34 @@ const dseventeen: Partner = {
     },
 
     explainer: {
-      pill: { bm: 'Car scanner', en: 'Car scanner' },
-      title: { bm: 'Apa car scanner ni buat untuk anda?', en: 'What does this car scanner do for you?' },
+      title: { bm: 'Apa fungsi car scanner ini', en: 'What the car scanner does' },
       sub: {
-        bm: 'Pasang pada port OBD2 di bawah dashboard, sambung ke telefon melalui Bluetooth, dan scan. Itu saja.',
-        en: "Plug it into the OBD2 port under the dashboard, connect to your phone over Bluetooth, and scan. That's it.",
+        bm: 'Ia dipasang pada port OBD2 di bawah dashboard dan disambung ke telefon melalui Bluetooth.',
+        en: 'It plugs into the OBD2 port under the dashboard and connects to your phone over Bluetooth.',
       },
       benefits: [
         {
-          icon: 'alert',
-          title: { bm: 'Lampu check engine menyala? Jangan panik.', en: "Check-engine light on? Don't panic." },
+          title: { bm: 'Baca kod lampu check engine', en: 'Read check-engine codes' },
           desc: {
             bm: 'Scanner baca kod kerosakan dan terangkan maksudnya dalam bahasa mudah.',
             en: 'The scanner reads the fault code and explains what it means in plain language.',
           },
         },
         {
-          icon: 'scan',
-          title: { bm: 'Semak kesihatan kereta bila-bila masa', en: "Check your car's health any time" },
+          title: { bm: 'Semak kesihatan kereta', en: "Check your car's health" },
           desc: {
-            bm: 'Skor kesihatan yang mudah difahami, terus di telefon anda.',
-            en: 'An easy-to-read health score, right on your phone.',
+            bm: 'Skor kesihatan kereta dipaparkan di telefon.',
+            en: 'A car health score shown on your phone.',
           },
         },
         {
-          icon: 'quote',
-          title: { bm: 'Lebih yakin bila ke bengkel', en: 'Walk into the workshop with confidence' },
+          title: { bm: 'Tahu masalah sebelum ke bengkel', en: 'Know the problem before the workshop' },
           desc: {
-            bm: 'Anda dah tahu apa masalahnya sebelum bincang harga.',
-            en: "You already know what's wrong before you talk price.",
+            bm: 'Anda tahu apa masalahnya sebelum bincang harga.',
+            en: 'You know what is wrong before discussing price.',
           },
         },
         {
-          icon: 'free',
           title: { bm: 'Kesan masalah awal', en: 'Catch problems early' },
           desc: {
             bm: 'Masalah kecil dikesan sebelum jadi pembaikan yang mahal.',
@@ -317,22 +307,20 @@ const dseventeen: Partner = {
     },
 
     photos: {
-      pill: { bm: 'Pengguna BYKI', en: 'BYKI users' },
-      title: { bm: 'Kecil di tangan, besar gunanya', en: 'Small in the hand, big on usefulness' },
-      sub: { bm: 'Pemandu dengan BYKI OBD2 mereka.', en: 'Drivers with their BYKI OBD2.' },
+      title: { bm: 'Pemandu dengan BYKI OBD2', en: 'Drivers with the BYKI OBD2' },
+      sub: { bm: 'Alat ini muat dalam tapak tangan.', en: 'The device fits in the palm of your hand.' },
       items: [
-        { src: `${IMG}/customers/byki-driver-1.webp`, width: 720, height: 1280, alt: { bm: 'Pemandu memegang BYKI OBD2 di dalam kereta', en: 'A driver holding the BYKI OBD2 in his car' } },
-        { src: `${IMG}/customers/byki-driver-2.webp`, width: 720, height: 960, alt: { bm: 'Pemandu menunjukkan BYKI di telefon bersama alat OBD2', en: 'A driver showing BYKI on his phone with the OBD2 device' } },
-        { src: `${IMG}/customers/byki-driver-3.webp`, width: 720, height: 960, alt: { bm: 'Pemandu memegang BYKI OBD2 di tempat duduk pemandu', en: 'A driver holding the BYKI OBD2 in the driver seat' } },
-        { src: `${IMG}/customers/byki-driver-4.webp`, width: 720, height: 960, alt: { bm: 'Pemandu memegang BYKI OBD2 di sebelah keretanya', en: 'A driver holding the BYKI OBD2 beside his car' } },
-        { src: `${IMG}/customers/byki-driver-5.webp`, width: 720, height: 1280, alt: { bm: 'Pemandu memegang BYKI OBD2', en: 'A driver holding the BYKI OBD2' } },
-        { src: `${IMG}/customers/byki-driver-6.webp`, width: 720, height: 960, alt: { bm: 'Pemandu memegang BYKI OBD2 di dalam kereta', en: 'A driver holding the BYKI OBD2 in his car' } },
+        { src: `${IMG}/customers/byki-driver-1.webp`, width: 720, height: 900, alt: { bm: 'Pemandu memegang BYKI OBD2 di dalam kereta', en: 'A driver holding the BYKI OBD2 in his car' } },
+        { src: `${IMG}/customers/byki-driver-2.webp`, width: 720, height: 900, alt: { bm: 'Pemandu menunjukkan BYKI di telefon bersama alat OBD2', en: 'A driver showing BYKI on his phone with the OBD2 device' } },
+        { src: `${IMG}/customers/byki-driver-3.webp`, width: 720, height: 900, alt: { bm: 'Pemandu memegang BYKI OBD2 di tempat duduk pemandu', en: 'A driver holding the BYKI OBD2 in the driver seat' } },
+        { src: `${IMG}/customers/byki-driver-4.webp`, width: 720, height: 900, alt: { bm: 'Pemandu memegang BYKI OBD2 di sebelah keretanya', en: 'A driver holding the BYKI OBD2 beside his car' } },
+        { src: `${IMG}/customers/byki-driver-5.webp`, width: 720, height: 900, alt: { bm: 'Pemandu memegang BYKI OBD2', en: 'A driver holding the BYKI OBD2' } },
+        { src: `${IMG}/customers/byki-driver-6.webp`, width: 720, height: 900, alt: { bm: 'Pemandu memegang BYKI OBD2 di dalam kereta', en: 'A driver holding the BYKI OBD2 in his car' } },
       ],
     },
 
     claim: {
-      pill: { bm: 'Cara tuntut', en: 'How to claim' },
-      title: { bm: '3 langkah untuk car scanner percuma anda', en: '3 steps to your free car scanner' },
+      title: { bm: 'Cara tuntut', en: 'How to claim' },
       steps: [
         {
           title: { bm: 'WhatsApp DSeventeen', en: 'WhatsApp DSeventeen' },
@@ -381,10 +369,10 @@ const dseventeen: Partner = {
       },
     },
 
-    servicesTitle: { bm: 'Servis yang boleh dibuat di DSeventeen', en: 'What you can get serviced at DSeventeen' },
+    servicesTitle: { bm: 'Servis di DSeventeen', en: 'Services at DSeventeen' },
     servicesSub: {
-      bm: 'Pilih servis, WhatsApp bengkel, dan tanya tentang car scanner percuma anda.',
-      en: 'Pick a service, WhatsApp the workshop, and ask about your free car scanner.',
+      bm: 'WhatsApp bengkel untuk servis yang anda perlukan dan tanya tentang car scanner percuma.',
+      en: 'WhatsApp the workshop for the service you need and ask about the free car scanner.',
     },
 
     faq: [
@@ -419,24 +407,24 @@ const dseventeen: Partner = {
     ],
 
     finalCta: {
-      title: { bm: 'Tuntut car scanner percuma anda hari ini', en: 'Claim your free car scanner today' },
+      title: { bm: 'Tuntut car scanner percuma', en: 'Claim your free car scanner' },
       sub: {
-        bm: 'WhatsApp DSeventeen sekarang, tempah slot servis, dan bawa balik BYKI OBD2 anda.',
-        en: 'WhatsApp DSeventeen now, book your service slot, and take home your BYKI OBD2.',
+        bm: 'WhatsApp DSeventeen untuk tempah slot servis.',
+        en: 'WhatsApp DSeventeen to book a service slot.',
       },
     },
   },
 
   seo: {
-    title: 'Pakar Gearbox Tampoi (DSeventeen Work Motor) — Rakan Bengkel BYKI, Johor Bahru',
+    title: 'Pakar Gearbox Tampoi (DSeventeen Work Motor) | Rakan Bengkel BYKI, Johor Bahru',
     description:
-      'Baik pulih gearbox, enjin & aircond di Tampoi, Johor Bahru. Pemeriksaan percuma, sebut harga jelas, waranti overhaul hingga 6 bulan. Gearbox, engine & air-cond repair — BYKI Workshop Partner.',
+      'Baik pulih gearbox, enjin & aircond di Tampoi, Johor Bahru. Pemeriksaan percuma, sebut harga jelas, waranti overhaul hingga 6 bulan. Gearbox, engine & air-cond repair. BYKI Workshop Partner.',
   },
 
   hero: {
     title: {
-      bm: 'Gearbox bermasalah? Jumpa pakar gearbox di Tampoi.',
-      en: 'Gearbox trouble? See the gearbox specialists in Tampoi.',
+      bm: 'Pakar gearbox di Tampoi, Johor Bahru.',
+      en: 'Gearbox specialists in Tampoi, Johor Bahru.',
     },
     sub: {
       bm: 'DSeventeen Work Motor membaiki gearbox, enjin dan aircond, serta servis berkala. Pemeriksaan percuma, dan sebut harga jelas sebelum kerja bermula.',
@@ -484,8 +472,8 @@ const dseventeen: Partner = {
       featured: true,
       title: { bm: 'Gearbox & Transmisi', en: 'Gearbox & Transmission' },
       blurb: {
-        bm: 'Kepakaran utama bengkel ini. Panel Pakar Gearbox berdaftar JV Auto Lube untuk Johor — automatik, CVT dan DSG.',
-        en: "The workshop's speciality. A registered JV Auto Lube gearbox panel for Johor, covering automatic, CVT and DSG.",
+        bm: 'Panel Pakar Gearbox berdaftar JV Auto Lube untuk Johor. Automatik, CVT dan DSG.',
+        en: 'Registered JV Auto Lube gearbox panel for Johor. Automatic, CVT and DSG.',
       },
       tags: ['ATF', 'CVT', 'DSG'],
       items: [
@@ -504,8 +492,8 @@ const dseventeen: Partner = {
       group: 'aircond',
       title: { bm: 'Aircond', en: 'Air-cond' },
       blurb: {
-        bm: 'Tak sejuk, berbunyi atau berbau? Punca dikenal pasti dahulu sebelum apa-apa ditukar.',
-        en: 'Not cold, noisy or smelly? The cause is found first, before anything gets replaced.',
+        bm: 'Untuk aircond tak sejuk, berbunyi atau berbau. Punca diperiksa dahulu sebelum alat ganti ditukar.',
+        en: 'For air-cond that is not cold, noisy or smelly. The cause is checked before any part is replaced.',
       },
       items: [
         { bm: 'Servis kompresor', en: 'Compressor service' },
@@ -522,8 +510,8 @@ const dseventeen: Partner = {
       group: 'engine',
       title: { bm: 'Enjin', en: 'Engine' },
       blurb: {
-        bm: 'Lampu check engine, enjin bergegar atau cepat panas — diperiksa dengan alat imbasan OBD.',
-        en: 'Check-engine light, rough running or overheating — checked with OBD scan tools.',
+        bm: 'Lampu check engine, enjin bergegar atau cepat panas diperiksa dengan alat imbasan OBD.',
+        en: 'A check-engine light, rough running or overheating is checked with OBD scan tools.',
       },
       items: [
         { bm: 'Diagnosis lampu check engine', en: 'Check-engine light diagnosis' },
@@ -538,8 +526,8 @@ const dseventeen: Partner = {
       group: 'general',
       title: { bm: 'Servis Berkala', en: 'Regular Servicing' },
       blurb: {
-        bm: 'Servis harian mengikut jadual supaya kereta kekal sihat.',
-        en: 'Routine servicing on schedule so the car stays healthy.',
+        bm: 'Servis berkala mengikut jadual.',
+        en: 'Routine servicing on schedule.',
       },
       items: [
         { bm: 'Minyak hitam & oil filter', en: 'Engine oil & oil filter' },
@@ -554,8 +542,8 @@ const dseventeen: Partner = {
       group: 'general',
       title: { bm: 'Suspension, Brek & Driveshaft', en: 'Suspension, Brakes & Driveshaft' },
       blurb: {
-        bm: 'Bunyi ketuk, stereng bergegar atau brek kurang makan? Bahagian bawah kereta diperiksa sekali.',
-        en: 'Knocking sounds, a shaky steering wheel or weak brakes? The undercarriage gets checked too.',
+        bm: 'Untuk bunyi ketuk, stereng bergegar atau brek kurang makan.',
+        en: 'For knocking sounds, a shaky steering wheel or weak brakes.',
       },
       items: [
         { bm: 'Suspension', en: 'Suspension' },
@@ -568,13 +556,13 @@ const dseventeen: Partner = {
   ],
 
   banner: {
-    icon: 'home',
+    id: 'door-to-door',
     ask: {
       bm: 'Saya nak tanya tentang servis rumah ke rumah.',
       en: "I'd like to ask about door-to-door service.",
     },
     field: { bm: 'Kawasan: ', en: 'Area: ' },
-    title: { bm: 'Tak sempat ke bengkel?', en: "Can't make it to the workshop?" },
+    title: { bm: 'Servis rumah ke rumah', en: 'Door-to-door service' },
     desc: {
       bm: 'DSeventeen ada servis rumah ke rumah. WhatsApp untuk semak kawasan dan jenis kerja yang boleh dibuat.',
       en: 'DSeventeen offers door-to-door service. WhatsApp them to check the areas covered and what can be done on site.',
@@ -584,7 +572,6 @@ const dseventeen: Partner = {
 
   points: [
     {
-      icon: 'free',
       title: { bm: 'Pemeriksaan percuma', en: 'Free inspection' },
       desc: {
         bm: 'Diagnosis awal tanpa caj untuk kenal pasti masalah.',
@@ -592,15 +579,13 @@ const dseventeen: Partner = {
       },
     },
     {
-      icon: 'scan',
       title: { bm: 'Diagnosis tepat', en: 'Accurate diagnosis' },
       desc: {
-        bm: 'Alat imbasan OBD digunakan, bukan teka-teki.',
-        en: 'OBD scan tools are used, not guesswork.',
+        bm: 'Menggunakan alat imbasan OBD.',
+        en: 'Uses OBD scan tools.',
       },
     },
     {
-      icon: 'quote',
       title: { bm: 'Sebut harga jelas', en: 'Clear quotes' },
       desc: {
         bm: 'Harga dipersetujui dahulu. Tiada caj tersembunyi.',
@@ -608,7 +593,6 @@ const dseventeen: Partner = {
       },
     },
     {
-      icon: 'warranty',
       title: { bm: 'Waranti hingga 6 bulan', en: "Up to 6 months' warranty" },
       desc: {
         bm: 'Jaminan servis untuk kerja full overhaul.',
@@ -616,7 +600,6 @@ const dseventeen: Partner = {
       },
     },
     {
-      icon: 'team',
       title: { bm: 'Mekanik berpengalaman', en: 'Experienced mechanics' },
       desc: {
         bm: 'Pasukan pakar gearbox yang beroperasi sejak 2019.',
@@ -624,7 +607,6 @@ const dseventeen: Partner = {
       },
     },
     {
-      icon: 'panel',
       title: { bm: 'Panel JV Auto Lube', en: 'JV Auto Lube panel' },
       desc: {
         bm: 'Kerja mengikut piawaian panel Pakar Gearbox JV Auto Lube.',
@@ -664,10 +646,10 @@ const dseventeen: Partner = {
     },
   ],
 
-  proofTitle: { bm: 'Dipercayai pemilik kereta di Johor', en: 'Trusted by car owners in Johor' },
+  proofTitle: { bm: 'Ulasan dan media sosial', en: 'Reviews and social media' },
 
   finalCta: {
-    title: { bm: 'Dapatkan diagnosis percuma hari ini', en: 'Get your free diagnosis today' },
+    title: { bm: 'Dapatkan pemeriksaan percuma', en: 'Get a free inspection' },
     sub: {
       bm: 'WhatsApp bengkel sekarang. Beritahu model kereta dan masalahnya, dan tempah slot pemeriksaan.',
       en: 'WhatsApp the workshop now. Tell them your car model and the problem, and book an inspection slot.',
@@ -685,8 +667,8 @@ const dseventeen: Partner = {
     {
       q: { bm: 'Gearbox jenis apa yang dibaiki?', en: 'Which gearbox types do they repair?' },
       a: {
-        bm: 'Automatik (ATF), CVT dan DSG — termasuk overhaul, valve body, solenoid dan mechatronics.',
-        en: 'Automatic (ATF), CVT and DSG — including overhauls, valve body, solenoid and mechatronics work.',
+        bm: 'Automatik (ATF), CVT dan DSG, termasuk overhaul, valve body, solenoid dan mechatronics.',
+        en: 'Automatic (ATF), CVT and DSG, including overhauls, valve body, solenoid and mechatronics work.',
       },
     },
     {
@@ -713,8 +695,8 @@ const dseventeen: Partner = {
     {
       q: { bm: 'Apa kaitan BYKI dengan bengkel ini?', en: 'How is BYKI connected to this workshop?' },
       a: {
-        bm: 'BYKI ialah aplikasi diagnostik kereta. DSeventeen Work Motor ialah rakan bengkel BYKI di Johor Bahru — anda boleh scan kereta dengan BYKI, kemudian bawa laporan ke bengkel. Semua kerja, harga dan waranti adalah antara anda dan bengkel.',
-        en: "BYKI is a car diagnostics app. DSeventeen Work Motor is BYKI's workshop partner in Johor Bahru — you can scan your car with BYKI, then take the report to the workshop. All work, pricing and warranty are between you and the workshop.",
+        bm: 'BYKI ialah aplikasi diagnostik kereta. DSeventeen Work Motor ialah rakan bengkel BYKI di Johor Bahru. Anda boleh scan kereta dengan BYKI, kemudian bawa laporan ke bengkel. Semua kerja, harga dan waranti adalah antara anda dan bengkel.',
+        en: "BYKI is a car diagnostics app. DSeventeen Work Motor is BYKI's workshop partner in Johor Bahru. You can scan your car with BYKI, then take the report to the workshop. All work, pricing and warranty are between you and the workshop.",
       },
     },
   ],
@@ -786,9 +768,9 @@ const mna: Partner = {
   ],
 
   seo: {
-    title: 'MNA Dynamic Torque — Pakar Gearbox CVT & Automatik, Shah Alam | Rakan Bengkel BYKI',
+    title: 'MNA Dynamic Torque | Pakar Gearbox CVT & Automatik, Shah Alam | Rakan Bengkel BYKI',
     description:
-      'Pakar gearbox CVT, automatik & DSG di Alam Impian, Shah Alam. Diagnostik dahulu, sebut harga bertulis, waranti kerja 6 bulan. CVT & automatic transmission specialist — BYKI Workshop Partner.',
+      'Pakar gearbox CVT, automatik & DSG di Alam Impian, Shah Alam. Diagnostik dahulu, sebut harga bertulis, waranti kerja 6 bulan. CVT & automatic transmission specialist. BYKI Workshop Partner.',
   },
 
   hero: {
@@ -797,8 +779,8 @@ const mna: Partner = {
       en: 'CVT jerking, slip or delay? See the transmission specialists in Shah Alam.',
     },
     sub: {
-      bm: 'MNA Dynamic Torque hanya membaiki gearbox — CVT, automatik dan DSG. Kerosakan dibuktikan dengan diagnostik dahulu, sebut harga bertulis sebelum kerja bermula, dan waranti kerja 6 bulan.',
-      en: 'MNA Dynamic Torque works on gearboxes only — CVT, automatic and DSG. The fault is proven with diagnostics first, you get a written quote before work starts, and repairs carry a 6-month workmanship warranty.',
+      bm: 'MNA Dynamic Torque hanya membaiki gearbox: CVT, automatik dan DSG. Kerosakan dibuktikan dengan diagnostik dahulu, sebut harga bertulis sebelum kerja bermula, dan waranti kerja 6 bulan.',
+      en: 'MNA Dynamic Torque works on gearboxes only: CVT, automatic and DSG. The fault is proven with diagnostics first, you get a written quote before work starts, and repairs carry a 6-month workmanship warranty.',
     },
   },
 
@@ -831,8 +813,8 @@ const mna: Partner = {
   ],
 
   servicesSub: {
-    bm: 'Bengkel yang hanya membaiki transmisi — CVT, automatik dan DSG.',
-    en: 'A workshop that only works on transmissions — CVT, automatic and DSG.',
+    bm: 'Bengkel ini hanya membaiki transmisi: CVT, automatik dan DSG.',
+    en: 'This workshop only works on transmissions: CVT, automatic and DSG.',
   },
 
   services: [
@@ -842,8 +824,8 @@ const mna: Partner = {
       featured: true,
       title: { bm: 'Baiki & Rebuild CVT', en: 'CVT Repair & Rebuild' },
       blurb: {
-        bm: 'Kepakaran utama bengkel ini. Punca sentap, slip dan delay dikesan dahulu, kemudian gearbox dibaiki atau dibina semula mengikut spesifikasi.',
-        en: "The workshop's speciality. The cause of jerking, slip and delay is traced first, then the gearbox is repaired or fully rebuilt to spec.",
+        bm: 'Punca sentap, slip dan delay dikesan dahulu, kemudian gearbox dibaiki atau dibina semula mengikut spesifikasi.',
+        en: 'The cause of jerking, slip and delay is traced first, then the gearbox is repaired or fully rebuilt to spec.',
       },
       tags: ['Proton', 'Perodua', 'Honda', 'Nissan', 'Toyota', 'Mitsubishi'],
       items: [
@@ -860,11 +842,10 @@ const mna: Partner = {
     {
       id: 'diagnostic',
       group: 'warning',
-      icon: 'scan',
       title: { bm: 'Diagnostik 3D & Imbasan Kod', en: '3D Diagnostic & Code Scan' },
       blurb: {
-        bm: 'Data langsung dibaca dan dipetakan pada model 3D gearbox, supaya anda nampak sendiri apa yang berlaku di dalam.',
-        en: 'Live data is read and mapped onto a 3D model of the gearbox, so you can see for yourself what is happening inside.',
+        bm: 'Data langsung dibaca dan dipetakan pada model 3D gearbox, supaya anda nampak apa yang berlaku di dalam.',
+        en: 'Live data is read and mapped onto a 3D model of the gearbox, so you can see what is happening inside.',
       },
       items: [
         { bm: 'Tekanan, nisbah & belt slip', en: 'Pressures, ratio & belt slip' },
@@ -880,8 +861,8 @@ const mna: Partner = {
       group: 'gearbox',
       title: { bm: 'Automatik, DSG & DCT', en: 'Automatic, DSG & DCT' },
       blurb: {
-        bm: 'Bukan CVT sahaja. Transmisi automatik konvensional, dwi-klac dan kereta continental turut dibaiki.',
-        en: 'Not just CVTs. Conventional automatics, dual-clutch units and continental cars are repaired too.',
+        bm: 'Transmisi automatik konvensional, dwi-klac dan kereta continental turut dibaiki.',
+        en: 'Conventional automatics, dual-clutch units and continental cars are repaired too.',
       },
       items: [
         { bm: 'Overhaul transmisi automatik', en: 'Automatic transmission overhaul' },
@@ -896,8 +877,8 @@ const mna: Partner = {
       group: 'general',
       title: { bm: 'Servis Minyak CVT & ATF', en: 'CVT & ATF Fluid Service' },
       blurb: {
-        bm: 'Minyak yang betul, ditukar pada masanya, dengan flush penuh. Inilah penjagaan paling penting untuk hayat CVT.',
-        en: 'The correct fluid, changed on time, with a full flush. Nothing does more to keep a CVT alive.',
+        bm: 'Minyak yang betul, ditukar pada masanya, dengan flush penuh.',
+        en: 'The correct fluid, changed on time, with a full flush.',
       },
       items: [
         { bm: 'Tukar minyak CVT', en: 'CVT fluid change' },
@@ -912,8 +893,8 @@ const mna: Partner = {
       group: 'general',
       title: { bm: 'Pemeriksaan Sebelum Beli', en: 'Pre-Purchase Inspection' },
       blurb: {
-        bm: 'Nak beli kereta CVT terpakai? Gearbox diperiksa dahulu supaya anda tidak mewarisi kos pembaikan yang besar.',
-        en: "Buying a used CVT car? The gearbox is inspected first so you don't inherit a big repair bill.",
+        bm: 'Untuk pembeli kereta CVT terpakai. Gearbox diperiksa sebelum anda beli.',
+        en: 'For buyers of used CVT cars. The gearbox is inspected before you buy.',
       },
       items: [
         { bm: 'Imbasan kod & data langsung', en: 'Code scan & live data' },
@@ -926,36 +907,33 @@ const mna: Partner = {
   ],
 
   banner: {
-    icon: 'parts',
+    id: 'parts',
     ask: { bm: 'Saya nak tanya tentang alat ganti gearbox.', en: "I'd like to ask about gearbox parts." },
     field: { bm: 'Alat ganti / kod gearbox: ', en: 'Part / gearbox code: ' },
-    title: { bm: 'Perlukan alat ganti gearbox sahaja?', en: 'Just need gearbox parts?' },
+    title: { bm: 'Alat ganti gearbox', en: 'Gearbox parts' },
     desc: {
-      bm: 'MNA membekalkan alat ganti CVT dan automatik — belt, variator, valve body, torque converter, overhaul kit dan minyak — secara runcit dan borong, dihantar ke seluruh Malaysia.',
-      en: 'MNA supplies CVT and automatic transmission parts — belts, variators, valve bodies, torque converters, overhaul kits and fluids — retail and wholesale, shipped Malaysia-wide.',
+      bm: 'MNA membekalkan alat ganti CVT dan automatik: belt, variator, valve body, torque converter, overhaul kit dan minyak. Runcit dan borong, dihantar ke seluruh Malaysia.',
+      en: 'MNA supplies CVT and automatic transmission parts: belts, variators, valve bodies, torque converters, overhaul kits and fluids. Retail and wholesale, shipped Malaysia-wide.',
     },
     cta: { bm: 'Tanya alat ganti', en: 'Ask about parts' },
   },
 
   points: [
     {
-      icon: 'scan',
       title: { bm: 'Diagnostik dahulu', en: 'Diagnostics first' },
       desc: {
-        bm: 'Kerosakan dibuktikan dengan data sebelum harga diberi. Tiada tukar alat ganti secara teka-teki.',
-        en: 'The fault is proven with data before a price is given. No blind part-swapping.',
+        bm: 'Kerosakan dibuktikan dengan data sebelum harga diberi.',
+        en: 'The fault is proven with data before a price is given.',
       },
     },
     {
-      icon: 'quote',
       title: { bm: 'Sebut harga bertulis', en: 'Written quotes' },
       desc: {
-        bm: 'Harga jelas sebelum kerja bermula. Tiada kejutan semasa ambil kereta.',
-        en: 'A clear price before work starts. No surprises when you collect the car.',
+        bm: 'Harga jelas sebelum kerja bermula.',
+        en: 'A clear price before work starts.',
       },
     },
     {
-      icon: 'warranty',
       title: { bm: 'Waranti kerja 6 bulan', en: '6-month workmanship warranty' },
       desc: {
         bm: 'Untuk setiap pembaikan dan rebuild.',
@@ -963,7 +941,6 @@ const mna: Partner = {
       },
     },
     {
-      icon: 'parts',
       title: { bm: 'Alat ganti tulen & gred OEM', en: 'Genuine & OEM-grade parts' },
       desc: {
         bm: 'Alat ganti mempunyai waranti pengeluar masing-masing.',
@@ -971,7 +948,6 @@ const mna: Partner = {
       },
     },
     {
-      icon: 'team',
       title: { bm: 'Hanya transmisi', en: 'Transmissions only' },
       desc: {
         bm: 'Gearbox ialah fokus harian bengkel ini: CVT, automatik dan DSG.',
@@ -979,7 +955,6 @@ const mna: Partner = {
       },
     },
     {
-      icon: 'return',
       title: { bm: 'Alat ganti lama dipulangkan', en: 'Old parts returned' },
       desc: {
         bm: 'Atas permintaan, supaya anda nampak apa yang ditukar.',
@@ -1019,7 +994,7 @@ const mna: Partner = {
     },
   ],
 
-  proofTitle: { bm: 'Dinilai 5 bintang oleh pelanggan', en: 'Rated 5 stars by customers' },
+  proofTitle: { bm: 'Ulasan Google', en: 'Google reviews' },
 
   finalCta: {
     title: { bm: 'Tempah diagnostik gearbox anda', en: 'Book your gearbox diagnostic' },
@@ -1040,8 +1015,8 @@ const mna: Partner = {
     {
       q: { bm: 'Jenama kereta apa yang dibaiki?', en: 'Which car brands do they handle?' },
       a: {
-        bm: 'Kebanyakan transmisi CVT dan automatik — Proton, Perodua, Honda, Nissan, Toyota, Mitsubishi dan lain-lain. Hantar model kereta anda untuk pengesahan.',
-        en: 'Most CVT and automatic transmissions — Proton, Perodua, Honda, Nissan, Toyota, Mitsubishi and more. Send your car model and they will confirm.',
+        bm: 'Kebanyakan transmisi CVT dan automatik: Proton, Perodua, Honda, Nissan, Toyota, Mitsubishi dan lain-lain. Hantar model kereta anda untuk pengesahan.',
+        en: 'Most CVT and automatic transmissions: Proton, Perodua, Honda, Nissan, Toyota, Mitsubishi and more. Send your car model and they will confirm.',
       },
     },
     {
@@ -1068,8 +1043,8 @@ const mna: Partner = {
     {
       q: { bm: 'Apa kaitan BYKI dengan bengkel ini?', en: 'How is BYKI connected to this workshop?' },
       a: {
-        bm: 'BYKI ialah aplikasi diagnostik kereta. MNA Dynamic Torque ialah rakan bengkel BYKI di Shah Alam — anda boleh scan kereta dengan BYKI, kemudian bawa laporan ke bengkel. Semua kerja, harga dan waranti adalah antara anda dan bengkel.',
-        en: "BYKI is a car diagnostics app. MNA Dynamic Torque is BYKI's workshop partner in Shah Alam — you can scan your car with BYKI, then take the report to the workshop. All work, pricing and warranty are between you and the workshop.",
+        bm: 'BYKI ialah aplikasi diagnostik kereta. MNA Dynamic Torque ialah rakan bengkel BYKI di Shah Alam. Anda boleh scan kereta dengan BYKI, kemudian bawa laporan ke bengkel. Semua kerja, harga dan waranti adalah antara anda dan bengkel.',
+        en: "BYKI is a car diagnostics app. MNA Dynamic Torque is BYKI's workshop partner in Shah Alam. You can scan your car with BYKI, then take the report to the workshop. All work, pricing and warranty are between you and the workshop.",
       },
     },
   ],
