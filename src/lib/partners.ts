@@ -47,7 +47,8 @@ type PartnerImage = { src: string; width: number; height: number; alt: L10n };
 export interface PartnerCampaign {
   /** Short id used in tracking events. */
   id: string;
-  seo: { title: string; description: string };
+  /** `image` is the 1200x630 share image, as a path under /public. */
+  seo: { title: string; description: string; image: string };
   eyebrow: L10n;
   /** Wrap the words to highlight in asterisks, e.g. "Car scanner *PERCUMA* ...". */
   title: L10n;
@@ -134,7 +135,8 @@ export interface Partner {
   heroImage: { src: string; width: number; height: number };
   gallery: { src: string; width: number; height: number; alt: L10n }[];
 
-  seo: { title: string; description: string };
+  /** `image` is the 1200x630 share image, as a path under /public. */
+  seo: { title: string; description: string; image: string };
   hero: { title: L10n; sub: L10n };
   stats: PartnerStat[];
   symptoms: PartnerSymptom[];
@@ -231,9 +233,10 @@ const dseventeen: Partner = {
   campaign: {
     id: 'free-car-scanner',
     seo: {
-      title: 'Car Scanner PERCUMA Bila Servis Kereta di DSeventeen, Johor Bahru | BYKI',
+      title: 'Car Scanner Percuma Bila Servis di DSeventeen, Johor Bahru',
       description:
-        'Servis kereta di DSeventeen Work Motor (Pakar Gearbox Tampoi), Johor Bahru dan dapatkan car scanner BYKI OBD2 percuma. Gearbox, enjin, aircond & servis berkala. Free car scanner with your service.',
+        'Servis kereta di DSeventeen (Pakar Gearbox Tampoi), Johor Bahru dan dapatkan car scanner BYKI OBD2 percuma. Gearbox, enjin, aircond dan servis berkala.',
+      image: `${IMG}/og-free-car-scanner.jpg`,
     },
     eyebrow: { bm: 'Promosi DSeventeen × BYKI · Johor Bahru', en: 'DSeventeen × BYKI offer · Johor Bahru' },
     title: {
@@ -416,9 +419,10 @@ const dseventeen: Partner = {
   },
 
   seo: {
-    title: 'Pakar Gearbox Tampoi (DSeventeen Work Motor) | Rakan Bengkel BYKI, Johor Bahru',
+    title: 'Pakar Gearbox Tampoi, Johor Bahru | DSeventeen Work Motor',
     description:
-      'Baik pulih gearbox, enjin & aircond di Tampoi, Johor Bahru. Pemeriksaan percuma, sebut harga jelas, waranti overhaul hingga 6 bulan. Gearbox, engine & air-cond repair. BYKI Workshop Partner.',
+      'Baik pulih gearbox, enjin dan aircond di Tampoi, Johor Bahru. Pemeriksaan percuma, sebut harga jelas, waranti overhaul hingga 6 bulan.',
+    image: `${IMG}/og.jpg`,
   },
 
   hero: {
@@ -768,9 +772,10 @@ const mna: Partner = {
   ],
 
   seo: {
-    title: 'MNA Dynamic Torque | Pakar Gearbox CVT & Automatik, Shah Alam | Rakan Bengkel BYKI',
+    title: 'Pakar Gearbox CVT & Automatik Shah Alam | MNA Dynamic Torque',
     description:
-      'Pakar gearbox CVT, automatik & DSG di Alam Impian, Shah Alam. Diagnostik dahulu, sebut harga bertulis, waranti kerja 6 bulan. CVT & automatic transmission specialist. BYKI Workshop Partner.',
+      'Pakar gearbox CVT, automatik dan DSG di Alam Impian, Shah Alam. Diagnostik dahulu, sebut harga bertulis, waranti kerja 6 bulan.',
+    image: `${MNA_IMG}/og.jpg`,
   },
 
   hero: {

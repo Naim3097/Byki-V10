@@ -1,11 +1,20 @@
 import type { Metadata } from "next";
 import Script from "next/script";
 import AppShellWrapper from "../components/app-shell-wrapper";
+import { SITE_NAME, SITE_URL } from "../lib/site";
 import "./globals.css";
 
+const title = "BYKI — OBD2 Vehicle Diagnostics";
+const description = "Browser-based OBD2 vehicle diagnostic scanner powered by Web Bluetooth";
+const shareImage = { url: "/og-byki.jpg", width: 1200, height: 630, alt: "BYKI OBD2 vehicle diagnostics" };
+
 export const metadata: Metadata = {
-  title: "BYKI — OBD2 Vehicle Diagnostics",
-  description: "Browser-based OBD2 vehicle diagnostic scanner powered by Web Bluetooth",
+  // Makes relative canonical and share-image paths resolve to full addresses.
+  metadataBase: new URL(SITE_URL),
+  title,
+  description,
+  openGraph: { title, description, siteName: SITE_NAME, type: "website", images: [shareImage] },
+  twitter: { card: "summary_large_image", title, description, images: [shareImage.url] },
 };
 
 export default function RootLayout({

@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import PartnerLanding from '@/components/partner-landing';
-import { PARTNERS, getPartner } from '@/lib/partners';
+import { PARTNERS, getPartner, type Partner } from '@/lib/partners';
+import { SITE_NAME, SITE_URL } from '@/lib/site';
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -11,20 +12,36 @@ export function generateStaticParams() {
   return PARTNERS.map((p) => ({ slug: p.slug }));
 }
 
+/** A running campaign sets the page's title and share image so they match the ad. */
+const seoFor = (partner: Partner) => partner.campaign?.seo ?? partner.seo;
+
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params;
   const partner = getPartner(slug);
   if (!partner) return {};
-  // A running campaign sets the page's title so it matches the ad.
-  const seo = partner.campaign?.seo ?? partner.seo;
+  const seo = seoFor(partner);
+  // One address per page: ?lang= and ad tracking parameters all point back here.
+  const path = `/partner/${partner.slug}`;
+  const image = { url: seo.image, width: 1200, height: 630, alt: seo.title };
   return {
     title: seo.title,
     description: seo.description,
+    alternates: { canonical: path },
     openGraph: {
       title: seo.title,
       description: seo.description,
+      url: path,
+      siteName: SITE_NAME,
       type: 'website',
       locale: 'ms_MY',
+      alternateLocale: ['en_MY'],
+      images: [image],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: seo.title,
+      description: seo.description,
+      images: [image.url],
     },
   };
 }
@@ -45,9 +62,13 @@ export default async function PartnerPage({ params }: Params) {
     name: partner.legalName.includes(partner.name)
       ? partner.legalName
       : `${partner.legalName} (${partner.name})`,
+    description: partner.seo.description,
+    image: `${SITE_URL}${partner.heroImage.src}`,
+    logo: `${SITE_URL}${partner.logo.src}`,
     telephone: partner.phoneE164,
     email: partner.email,
-    url: partner.links.website,
+    url: partner.links.website ?? `${SITE_URL}/partner/${partner.slug}`,
+    hasMap: partner.links.maps,
     address: {
       '@type': 'PostalAddress',
       streetAddress: partner.address.lines.join(', '),
